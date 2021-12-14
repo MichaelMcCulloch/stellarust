@@ -1,0 +1,40 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Deploy Server",
+            "type": "shell",
+            "command": "systemfd --no-pid -s http::8000 -- cargo-watch -x run",
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}/backend"
+            },
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "label": "Deploy Client",
+            "type": "shell",
+            "command": "trunk serve --release",
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+            "dependsOn": [
+                "Build Frontend"
+            ],
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
+        {
+            "label": "Deploy All",
+            "group": "build",
+            "dependsOn": [
+                "Attach Server to systemd",
+                "Deploy Client"
+            ]
+        }
+    ]
+}
