@@ -22,3 +22,14 @@ impl Component for App {
         todo!()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use wasm_bindgen_test::*;
+
+    #[wasm_bindgen_test]
+    fn it_works() {
+        let result = 2 + 2;
+        assert_eq!(result, 4);
+    }
+}

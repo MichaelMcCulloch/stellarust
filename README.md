@@ -11,6 +11,6 @@
 | target | run | test |
 |--------|-----|------|
 | backend | `systemfd --no-pid -s http::8000 -- cargo-watch -x run`   | `cargo test`    |
-| frontend | `trunk serve --release` | `wasm-pack test` |
+| frontend | `trunk serve --release` | `wasm-pack test --node` |
 
 navigate to [localhost:3000](localhost:3000)
