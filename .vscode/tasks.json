@@ -11,6 +11,9 @@
             },
             "problemMatcher": [
                 "$rustc"
+            ],
+            "dependsOn": [
+                "Unit Test Server"
             ]
         },
         {
@@ -22,22 +25,22 @@
                 "cwd": "${workspaceFolder}/frontend"
             },
             "dependsOn": [
-                "Build Frontend"
+                "Unit Test Frontend"
             ],
             "problemMatcher": [
                 "$rustc"
-            ]
+            ],
         },
         {
             "label": "Deploy All",
             "group": "build",
             "dependsOn": [
-                "Attach Server to systemd",
+                "Deploy Server",
                 "Deploy Client"
             ]
         },
         {
-            "label": "Test Frontend",
+            "label": "Unit Test Frontend",
             "group": "build",
             "type": "shell",
             "command": "wasm-pack test --node",
@@ -46,7 +49,7 @@
             },
         },
         {
-            "label": "Test Server",
+            "label": "Unit Test Server",
             "type": "shell",
             "command": "cargo test",
             "group": "build",
@@ -55,6 +58,14 @@
             },
             "problemMatcher": [
                 "$rustc"
+            ]
+        },
+        {
+            "label": "Unit Test All",
+            "group": "build",
+            "dependsOn": [
+                "Unit Test Frontend",
+                "Unit Test Server"
             ]
         },
     ]
