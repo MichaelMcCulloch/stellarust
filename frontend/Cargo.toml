@@ -17,3 +17,4 @@ anyhow = "1.0.51"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.28"
+gloo-utils = "0.1.1"
