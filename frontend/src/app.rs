@@ -1,7 +1,11 @@
 use yew::{html, Component};
 
-pub struct App {}
-pub enum Msg {}
+pub struct App {
+    str: String,
+}
+pub enum Msg {
+    Change,
+}
 
 impl Component for App {
     type Message = Msg;
@@ -9,17 +13,33 @@ impl Component for App {
     type Properties = ();
 
     fn create(ctx: &yew::Context<Self>) -> Self {
-        Self {}
+        Self {
+            str: String::from("Hello World!"),
+        }
     }
 
     fn view(&self, ctx: &yew::Context<Self>) -> yew::Html {
-        html! {}
+        html! {
+            <>
+                <button
+                    class="whatever"
+                    onclick={ctx.link().callback(|_| Msg::Change)}>
+                    {"Click Me!"}
+                </button>
+                <p class="label"> {&self.str} </p>
+            </>
+        }
     }
     fn changed(&mut self, ctx: &yew::Context<Self>) -> bool {
         todo!()
     }
     fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
-        todo!()
+        match msg {
+            Msg::Change => {
+                self.str = String::from("Goodbye World");
+                true
+            }
+        }
     }
 }
 
