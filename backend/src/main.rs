@@ -38,12 +38,7 @@ async fn main() -> std::io::Result<()> {
 mod tests {
 
     use crate::index;
-    use actix_web::{
-        body::Body,
-        test,
-        web::{self, Data},
-        App,
-    };
+    use actix_web::{body::Body, test, web::Data, App};
     use serde_json::json;
 
     #[actix_rt::test]

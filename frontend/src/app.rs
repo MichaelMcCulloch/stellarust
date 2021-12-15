@@ -12,7 +12,7 @@ impl Component for App {
 
     type Properties = ();
 
-    fn create(ctx: &yew::Context<Self>) -> Self {
+    fn create(_ctx: &yew::Context<Self>) -> Self {
         Self {
             str: String::from("Hello World!"),
         }
@@ -30,10 +30,10 @@ impl Component for App {
             </>
         }
     }
-    fn changed(&mut self, ctx: &yew::Context<Self>) -> bool {
+    fn changed(&mut self, _ctx: &yew::Context<Self>) -> bool {
         todo!()
     }
-    fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::Change => {
                 self.str = String::from("Goodbye World");
