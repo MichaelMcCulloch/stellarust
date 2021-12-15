@@ -15,7 +15,7 @@ mod tests {
         time::Duration,
     };
 
-    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    #[tokio::test]
     async fn button_click() -> Result<()> {
         let port = 4444;
 
@@ -43,7 +43,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    #[tokio::test]
     async fn button_click_2() -> Result<()> {
         let port = 5555;
 
