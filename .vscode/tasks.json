@@ -40,7 +40,7 @@
             "label": "Test Frontend",
             "group": "build",
             "type": "shell",
-            "command": "wasm-pack test",
+            "command": "wasm-pack test --node",
             "options": {
                 "cwd": "${workspaceFolder}/frontend"
             },
