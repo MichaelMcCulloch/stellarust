@@ -1,11 +1,15 @@
 #[cfg(test)]
 mod tests {
-    use fantoccini::{ClientBuilder, Locator};
-    use tokio::time::sleep;
-    use wasm_bindgen_test::*;
+    use anyhow::Result;
+    use fantoccini::{Client, ClientBuilder, Locator};
+    use std::sync::Once;
+
+    struct TestState {
+        client: Option<Client>,
+    }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn button_click() {
+    async fn button_click() -> Result<()> {
         let mut client = ClientBuilder::native()
             .connect("http://localhost:4444")
             .await
@@ -33,5 +37,8 @@ mod tests {
         let text = label.text().await.unwrap();
 
         assert_eq!(text, String::from("Goodbye World"));
+        client.close_window().await.unwrap();
+        client.close().await.unwrap();
+        Ok(())
     }
 }
