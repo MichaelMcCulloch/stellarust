@@ -13,6 +13,7 @@ wasm-bindgen = "0.2.63"
 wasm-bindgen-futures = "0.4.3"
 wasm-logger = "0.2.0"
 yew = "0.19.3"
+anyhow = "1.0.51"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.28"

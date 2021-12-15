@@ -1,6 +1,6 @@
 #![recursion_limit = "256"]
 
-pub(crate) mod app;
+pub mod app;
 
 use wasm_bindgen::prelude::*;
 
