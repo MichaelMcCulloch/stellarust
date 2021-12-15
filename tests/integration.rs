@@ -1,19 +1,8 @@
-use anyhow::Result;
-
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
-    use fantoccini::{Client, ClientBuilder, Locator};
-    use std::{
-        io::{BufRead, BufReader, Write},
-        process::{Child, Command, Stdio},
-        sync::{
-            mpsc::{channel, Receiver, Sender, TryRecvError},
-            Once,
-        },
-        thread::{self, sleep},
-        time::Duration,
-    };
+    use fantoccini::{ClientBuilder, Locator};
+    use std::process::{Child, Command, Stdio};
 
     #[tokio::test]
     async fn button_click() -> Result<()> {
