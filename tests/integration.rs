@@ -1,44 +1,90 @@
+use anyhow::Result;
+
 #[cfg(test)]
 mod tests {
     use anyhow::Result;
     use fantoccini::{Client, ClientBuilder, Locator};
-    use std::sync::Once;
-
-    struct TestState {
-        client: Option<Client>,
-    }
+    use std::{
+        io::{BufRead, BufReader, Write},
+        process::{Child, Command, Stdio},
+        sync::{
+            mpsc::{channel, Receiver, Sender, TryRecvError},
+            Once,
+        },
+        thread::{self, sleep},
+        time::Duration,
+    };
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn button_click() -> Result<()> {
+        let port = 4444;
+
+        let mut child = start_geckodriver(port);
+
         let mut client = ClientBuilder::native()
-            .connect("http://localhost:4444")
-            .await
-            .expect("Failed to connect to Webdriver");
+            .connect(format!("http://localhost:{}", port).as_str())
+            .await?;
 
-        client
-            .goto("http://localhost:3000")
-            .await
-            .expect("host page not found");
+        client.goto("http://localhost:3000").await?;
 
-        let button = client
-            .wait()
-            .for_element(Locator::Css(".whatever"))
-            .await
-            .unwrap();
+        let button = client.wait().for_element(Locator::Css(".whatever")).await?;
 
-        button.click().await.unwrap();
+        button.click().await?;
 
-        let mut label = client
-            .wait()
-            .for_element(Locator::Css(".label"))
-            .await
-            .unwrap();
+        let mut label = client.wait().for_element(Locator::Css(".label")).await?;
 
-        let text = label.text().await.unwrap();
+        let text = label.text().await?;
 
         assert_eq!(text, String::from("Goodbye World"));
-        client.close_window().await.unwrap();
-        client.close().await.unwrap();
+        client.close_window().await?;
+        client.close().await?;
+
+        child.kill()?;
         Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn button_click_2() -> Result<()> {
+        let port = 5555;
+
+        let mut child = start_geckodriver(port);
+
+        let mut client = ClientBuilder::native()
+            .connect(format!("http://localhost:{}", port).as_str())
+            .await?;
+
+        client.goto("http://localhost:3000").await?;
+
+        let button = client.wait().for_element(Locator::Css(".whatever")).await?;
+
+        button.click().await?;
+
+        let mut label = client.wait().for_element(Locator::Css(".label")).await?;
+
+        let text = label.text().await?;
+
+        assert_eq!(text, String::from("Goodbye World"));
+        client.close_window().await?;
+        client.close().await?;
+
+        child.kill()?;
+        Ok(())
+    }
+
+    fn start_geckodriver(port: u32) -> Child {
+        let child = Command::new("geckodriver")
+            .arg(format!("--port={}", port))
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to start process");
+
+        println!(
+            "Started Process geckodriver with pid {} on port {}",
+            child.id(),
+            port
+        );
+
+        child
     }
 }
