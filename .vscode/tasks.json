@@ -35,6 +35,27 @@
                 "Attach Server to systemd",
                 "Deploy Client"
             ]
-        }
+        },
+        {
+            "label": "Test Frontend",
+            "group": "build",
+            "type": "shell",
+            "command": "wasm-pack test",
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            },
+        },
+        {
+            "label": "Test Server",
+            "type": "shell",
+            "command": "cargo test",
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}/backend"
+            },
+            "problemMatcher": [
+                "$rustc"
+            ]
+        },
     ]
 }
