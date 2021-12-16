@@ -47,6 +47,7 @@ impl App {
     fn view_app() -> Html {
         html! {
             <div>
+                <button id="fetch" class="fetch">{"Fetch"}</button>
                 <label id="number" class="number">{"0"}</label>
             </div>
         }
@@ -119,19 +120,19 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn view_shows_0() {
+    fn view_shows_a_button_and_label_field() {
         yew::start_app_with_props_in_element::<App>(
             gloo_utils::document().get_element_by_id("output").unwrap(),
             (),
         );
 
-        let number_field = gloo_utils::document()
+        gloo_utils::document()
+            .get_element_by_id("fetch")
+            .expect("No field with id 'fetch'");
+
+        gloo_utils::document()
             .get_element_by_id("number")
             .expect("No field with id 'number'");
-
-        let field_text = number_field.text_content().unwrap();
-
-        assert_eq!(field_text.as_str(), "0")
     }
 
     #[wasm_bindgen_test]
