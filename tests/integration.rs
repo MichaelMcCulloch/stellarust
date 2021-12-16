@@ -41,7 +41,7 @@ mod tests {
     async fn open_page_read_0_from_server() -> Result<()> {
         let (mut client, mut child) = setup(4444).await.unwrap();
 
-        let mut button = client
+        let button = client
             .wait()
             .for_element(Locator::Css(".fetch"))
             .await
