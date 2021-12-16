@@ -209,8 +209,8 @@ mod tests {
             .expect("No field with id 'fetch'");
 
         gloo_utils::document()
-            .get_element_by_id("number")
-            .expect("No field with id 'number'");
+            .get_element_by_id("fetch-result")
+            .expect("No field with id 'fetch-result'");
     }
 
     #[wasm_bindgen_test]
