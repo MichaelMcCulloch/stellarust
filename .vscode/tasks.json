@@ -43,7 +43,7 @@
             "label": "Unit Test Frontend",
             "group": "build",
             "type": "shell",
-            "command": "wasm-pack test --node",
+            "command": "wasm-pack test --firefox --headless",
             "options": {
                 "cwd": "${workspaceFolder}/frontend"
             },
@@ -61,11 +61,23 @@
             ]
         },
         {
-            "label": "Unit Test All",
+            "label": "Integration Test Command",
+            "type": "shell",
+            "command": "cargo test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Integration Test",
             "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "dependsOn": [
-                "Unit Test Frontend",
-                "Unit Test Server"
+                "Deploy Server",
+                "Deploy Client",
+                "Integration Test Command"
             ]
         },
     ]
