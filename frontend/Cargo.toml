@@ -14,7 +14,22 @@ wasm-bindgen-futures = "0.4.3"
 wasm-logger = "0.2.0"
 yew = "0.19.3"
 anyhow = "1.0.51"
+gloo-utils = "0.1.1"
+log = "0.4.14"
+serde = "1.0.132"
+serde_derive = "1.0.132"
+serde_json = "1.0.73"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.28"
-gloo-utils = "0.1.1"
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "Headers",
+  "Request",
+  "RequestInit",
+  "RequestMode",
+  "Response",
+  "Window",
+]

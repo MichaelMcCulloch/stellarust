@@ -1,17 +1,24 @@
+use crate::fetch::{FetchError, FetchState};
+use anyhow::Result;
+use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen_futures::JsFuture;
+use web_sys::{MouseEvent, Request, RequestInit, RequestMode, Response};
 use yew::{html, Component, Context, Html};
+type AppData = Vec<u32>;
 
-use crate::fetch::FetchState;
+const APPDATA_URL: &str = "http://localhost:8000/";
 
 #[derive(Clone)]
 pub struct AppState {
-    data: FetchState<Vec<u32>>,
+    data: FetchState<AppData>,
 }
 
 pub struct App {
     state: AppState,
 }
 pub enum Msg {
-    Change,
+    GetData,
+    SetFetchState(FetchState<AppData>),
 }
 
 impl Component for App {
@@ -24,19 +31,71 @@ impl Component for App {
     }
 
     fn view(&self, ctx: &yew::Context<Self>) -> yew::Html {
-        App::view_app()
+        App::view_app(&self.state, ctx)
     }
-    fn changed(&mut self, _ctx: &yew::Context<Self>) -> bool {
-        todo!()
-    }
-    fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
+
+    fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::Change => true,
+            Msg::GetData => {
+                ctx.link().send_future(async {
+                    match App::fetch_data(APPDATA_URL).await {
+                        Ok(app_data) => Msg::SetFetchState(FetchState::Success(app_data)),
+                        Err(err) => Msg::SetFetchState(FetchState::Failed(err)),
+                    }
+                });
+                ctx.link()
+                    .send_message(Msg::SetFetchState(FetchState::Fetching));
+                false
+            }
+            Msg::SetFetchState(fetch_state) => {
+                self.state.data = fetch_state;
+                true
+            }
         }
     }
 }
 
 impl App {
+    async fn process_request(
+        window: web_sys::Window,
+        request: Request,
+    ) -> Result<JsValue, JsValue> {
+        let response_value = JsFuture::from(window.fetch_with_request(&request)).await?;
+        let resp: Response = response_value
+            .dyn_into()
+            .expect("Couldnt get Response from Response Value");
+        let text = JsFuture::from(resp.text()?)
+            .await
+            .expect("Couldn't get Response Text Content");
+
+        Ok(text)
+    }
+
+    fn create_request_from_url(url: &str) -> Result<Request, JsValue> {
+        let mut request_init = RequestInit::new();
+        request_init.method("GET");
+        request_init.mode(RequestMode::Cors);
+        Request::new_with_str_and_init(url, &request_init)
+    }
+
+    async fn fetch_data(url: &str) -> Result<AppData, FetchError> {
+        let response_text = App::process_request(
+            gloo_utils::window(),
+            App::create_request_from_url(url).expect("Couldn't create Request"),
+        )
+        .await
+        .expect("Couldn't process Request");
+
+        let string = response_text
+            .as_string()
+            .expect("Couldnt get text from Response");
+        let vec: AppData = serde_json::from_str(string.as_str()).expect(&format!(
+            "Could not deserialize '{}' to JSON",
+            string.as_str()
+        ));
+        Ok(vec)
+    }
+
     fn new() -> Self {
         Self {
             state: AppState {
@@ -44,11 +103,31 @@ impl App {
             },
         }
     }
-    fn view_app() -> Html {
+    fn view_app(state: &AppState, ctx: &Context<Self>) -> Html {
+        let data = state.data.clone();
+        let onclick = ctx.link().callback(|_: MouseEvent| Msg::GetData);
         html! {
             <div>
-                <button id="fetch" class="fetch">{"Fetch"}</button>
-                <label id="number" class="number">{"0"}</label>
+                <button id="fetch" class="fetch" onclick={onclick}>{"Fetch"}</button>
+                <label id="fetch-result" class="fetch-result">
+                {
+                    match data{
+                        FetchState::NotFetching => html!(
+                            "Not Fetching"
+                        ),
+                        FetchState::Fetching => html!(
+                            "Fetching"
+                        ),
+                        FetchState::Success(vec) => html!(
+                            format!("{:?}", &vec)
+                        ),
+                        FetchState::Failed(err) => html!(
+                            format!("{}", &err)
+                        ),
+                    }
+                }
+                </label>
+
             </div>
         }
     }
@@ -59,7 +138,6 @@ mod tests {
     use super::*;
     use wasm_bindgen_test::*;
     use yew::{html, FunctionComponent, FunctionProvider, Properties};
-
     trait TestAppState {
         fn getState(&self) -> AppState;
     }
@@ -87,7 +165,7 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn it_works() {
+    async fn it_works() {
         struct PropsPassedFunction {}
         #[derive(Properties, Clone, PartialEq)]
         struct PropsPassedFunctionProps {
@@ -120,7 +198,7 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn view_shows_a_button_and_label_field() {
+    async fn view_shows_a_button_and_label_field() {
         yew::start_app_with_props_in_element::<App>(
             gloo_utils::document().get_element_by_id("output").unwrap(),
             (),
@@ -136,7 +214,7 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    fn app_create_state_is_not_fetching() {
+    async fn app_create_state_is_not_fetching() {
         let app = App::new();
 
         let data = app.getState().data;

@@ -25,11 +25,11 @@
                 "cwd": "${workspaceFolder}/frontend"
             },
             "dependsOn": [
-                "Unit Test Frontend"
+                "Unit Test Client"
             ],
             "problemMatcher": [
                 "$rustc"
-            ],
+            ]
         },
         {
             "label": "Deploy All",
@@ -40,13 +40,14 @@
             ]
         },
         {
-            "label": "Unit Test Frontend",
+            "label": "Unit Test Client",
             "group": "build",
             "type": "shell",
             "command": "wasm-pack test --firefox --headless",
             "options": {
                 "cwd": "${workspaceFolder}/frontend"
             },
+            "problemMatcher": []
         },
         {
             "label": "Unit Test Server",
@@ -79,6 +80,6 @@
                 "Deploy Client",
                 "Integration Test Command"
             ]
-        },
+        }
     ]
 }
