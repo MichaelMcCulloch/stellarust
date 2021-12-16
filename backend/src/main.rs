@@ -19,7 +19,7 @@ async fn main() -> std::io::Result<()> {
     let mut server = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
-            .wrap(Cors::default())
+            .wrap(Cors::default().allow_any_origin())
             .app_data(data.clone())
             .service(index)
     });
