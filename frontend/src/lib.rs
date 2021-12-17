@@ -2,6 +2,8 @@
 
 pub(crate) mod app;
 pub(crate) mod fetch;
+pub(crate) mod pages;
+pub(crate) mod route;
 
 use wasm_bindgen::prelude::*;
 
