@@ -1,14 +1,17 @@
-use crate::fetch::{FetchError, FetchState};
+use crate::{
+    fetch::{FetchError, FetchState},
+    route::{switch, Route},
+};
 use anyhow::Result;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{MouseEvent, Request, RequestInit, RequestMode, Response};
+use web_sys::{MouseEvent, Request, RequestInit, RequestMode, Response, Window};
 use yew::{html, Component, Context, Html};
 type AppData = Vec<u32>;
+use yew_router::prelude::*;
 
 const APPDATA_URL: &str = "http://localhost:8000/";
 
-#[derive(Clone)]
 pub struct AppState {
     data: FetchState<AppData>,
 }
@@ -30,8 +33,8 @@ impl Component for App {
         App::new()
     }
 
-    fn view(&self, ctx: &yew::Context<Self>) -> yew::Html {
-        App::view_app(&self.state, ctx)
+    fn view(&self, _ctx: &yew::Context<Self>) -> yew::Html {
+        App::view_app()
     }
 
     fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
@@ -56,10 +59,7 @@ impl Component for App {
 }
 
 impl App {
-    async fn process_request(
-        window: web_sys::Window,
-        request: Request,
-    ) -> Result<JsValue, JsValue> {
+    async fn process_request(window: Window, request: Request) -> Result<JsValue, JsValue> {
         let response_value = JsFuture::from(window.fetch_with_request(&request)).await?;
         let resp: Response = response_value
             .dyn_into()
@@ -89,11 +89,11 @@ impl App {
         let string = response_text
             .as_string()
             .expect("Couldnt get text from Response");
-        let vec: AppData = serde_json::from_str(string.as_str()).expect(&format!(
+        let data: AppData = serde_json::from_str(string.as_str()).expect(&format!(
             "Could not deserialize '{}' to JSON",
             string.as_str()
         ));
-        Ok(vec)
+        Ok(data)
     }
 
     fn new() -> Self {
@@ -103,32 +103,13 @@ impl App {
             },
         }
     }
-    fn view_app(state: &AppState, ctx: &Context<Self>) -> Html {
-        let data = state.data.clone();
-        let onclick = ctx.link().callback(|_: MouseEvent| Msg::GetData);
+    fn view_app() -> Html {
         html! {
-            <div>
-                <button id="fetch" class="fetch" onclick={onclick}>{"Fetch"}</button>
-                <label id="fetch-result" class="fetch-result">
-                {
-                    match data{
-                        FetchState::NotFetching => html!(
-                            "Not Fetching"
-                        ),
-                        FetchState::Fetching => html!(
-                            "Fetching"
-                        ),
-                        FetchState::Success(vec) => html!(
-                            format!("{:?}", &vec)
-                        ),
-                        FetchState::Failed(err) => html!(
-                            format!("{}", &err)
-                        ),
-                    }
-                }
-                </label>
-
-            </div>
+            <BrowserRouter>
+                <main>
+                    <Switch<Route> render={Switch::render(switch)}/>
+                </main>
+            </BrowserRouter>
         }
     }
 }
@@ -138,16 +119,6 @@ mod tests {
     use super::*;
     use wasm_bindgen_test::*;
     use yew::{html, FunctionComponent, FunctionProvider, Properties};
-    trait TestAppState {
-        fn getState(&self) -> AppState;
-    }
-
-    impl TestAppState for App {
-        fn getState(&self) -> AppState {
-            self.state.clone()
-        }
-    }
-
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
     pub fn obtain_result() -> String {
@@ -198,26 +169,10 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
-    async fn view_shows_a_button_and_label_field() {
-        yew::start_app_with_props_in_element::<App>(
-            gloo_utils::document().get_element_by_id("output").unwrap(),
-            (),
-        );
-
-        gloo_utils::document()
-            .get_element_by_id("fetch")
-            .expect("No field with id 'fetch'");
-
-        gloo_utils::document()
-            .get_element_by_id("fetch-result")
-            .expect("No field with id 'fetch-result'");
-    }
-
-    #[wasm_bindgen_test]
     async fn app_create_state_is_not_fetching() {
         let app = App::new();
 
-        let data = app.getState().data;
+        let data = app.state.data;
 
         assert_eq!(data, FetchState::NotFetching);
     }

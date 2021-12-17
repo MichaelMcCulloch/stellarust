@@ -38,32 +38,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn open_page_read_0_from_server() -> Result<()> {
-        let (mut client, mut child) = setup(4444).await.unwrap();
-
-        let button = client
-            .wait()
-            .for_element(Locator::Css(".fetch"))
-            .await
-            .expect("could not locate class 'fetch'");
-
-        button.click().await.expect("couldn't click the button");
-
-        let mut label = client
-            .wait()
-            .for_element(Locator::Css(".fetch-result"))
-            .await
-            .expect("could not locate class 'fetch-result'");
-
-        let text = label.text().await?;
-
-        assert_eq!(text, String::from("[0]"));
-        teardown(&mut client, &mut child).await.unwrap();
-
-        Ok(())
-    }
-
-    #[tokio::test]
     async fn open_home_page_read_list_of_empire_names() -> Result<()> {
         let (mut client, mut child) = setup(4445).await.unwrap();
 

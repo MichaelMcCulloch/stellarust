@@ -21,13 +21,23 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
 
     let data = Data::new(vec![0]);
+    let empire_list = Data::new(vec![
+        String::from("The Great Khanate"),
+        String::from("The Federation Of The Planets"),
+        String::from("The Borg"),
+        String::from("Q"),
+        String::from("123434"),
+        String::from("!@##$$()(*&())"),
+    ]);
 
     let mut server = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
             .wrap(Cors::default().allow_any_origin())
             .app_data(data.clone())
+            .app_data(empire_list.clone())
             .service(index)
+            .service(empires)
     });
 
     server = if let Some(listener) = ListenFd::from_env().take_tcp_listener(0)? {
