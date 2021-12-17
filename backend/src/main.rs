@@ -3,6 +3,12 @@ use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Respo
 use listenfd::ListenFd;
 use std::panic;
 
+#[get("/empires")]
+pub async fn empires(player_data: Data<Vec<String>>) -> impl Responder {
+    let data = player_data.get_ref().clone();
+    HttpResponse::Ok().json(data)
+}
+
 #[get("/")]
 pub async fn index(player_data: Data<Vec<i32>>) -> impl Responder {
     let data = player_data.get_ref().clone();
@@ -37,19 +43,48 @@ async fn main() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::index;
+    use crate::{empires, index};
     use actix_web::{body::Body, test, web::Data, App};
     use serde_json::json;
 
     #[actix_rt::test]
     async fn test_index_returnsJsonVec0() {
-        let data = Data::new(vec![0]);
-        let mut app = test::init_service(App::new().app_data(data.clone()).service(index)).await;
-        let req = test::TestRequest::with_header("content-type", "application/json").to_request();
+        let vec_0 = vec![0];
+        let mut app =
+            test::init_service(App::new().app_data(Data::new(vec_0.clone())).service(index)).await;
+        let req = test::TestRequest::with_header("content-type", "application/json")
+            .uri("/")
+            .to_request();
+
         let mut resp = test::call_service(&mut app, req).await;
+
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
         assert!(resp.status().is_success());
-        assert_eq!(&Body::from(json!(vec![0])), body);
+        assert_eq!(&Body::from(json!(vec_0)), body);
+    }
+
+    #[actix_rt::test]
+    async fn test_empires_returnsListOfEmpireNames() {
+        let empire_names = vec![
+            String::from("The Great Khanate"),
+            String::from("The Federation Of The Planets"),
+        ];
+        let mut app = test::init_service(
+            App::new()
+                .app_data(Data::new(empire_names.clone()))
+                .service(empires),
+        )
+        .await;
+        let req = test::TestRequest::with_header("content-type", "application/json")
+            .uri("/empires")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+
+        let body = resp.take_body();
+        let body = body.as_ref().unwrap();
+        assert!(resp.status().is_success());
+        assert_eq!(&Body::from(json!(empire_names.clone())), body);
     }
 }
