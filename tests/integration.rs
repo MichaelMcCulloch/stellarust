@@ -62,4 +62,19 @@ mod tests {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn open_home_page_read_list_of_empire_names() -> Result<()> {
+        let (mut client, mut child) = setup(4445).await.unwrap();
+
+        let labels = client
+            .wait()
+            .for_element(Locator::Css(".empire-name"))
+            .await
+            .expect("Couldn't find label empire name");
+
+        teardown(&mut client, &mut child).await.unwrap();
+
+        Ok(())
+    }
 }
