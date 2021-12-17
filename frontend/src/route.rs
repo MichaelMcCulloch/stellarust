@@ -5,12 +5,12 @@ use yew_router::prelude::*;
 #[derive(Routable, PartialEq, Clone, Debug)]
 pub enum Route {
     #[at("/")]
-    Home,
+    EmpireSelect,
 }
 
-fn switch(routes: &Route) -> Html {
+pub fn switch(routes: &Route) -> Html {
     match routes.clone() {
-        Route::Home => {
+        Route::EmpireSelect => {
             html! { <EmpireSelect /> }
         }
     }
