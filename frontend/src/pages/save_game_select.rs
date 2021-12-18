@@ -1,5 +1,5 @@
 use crate::fetch::{FetchError, FetchState};
-use stellarust::save_game_dto::SaveGameDto;
+use stellarust::dto::SaveGameDto;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
