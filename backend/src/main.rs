@@ -7,7 +7,7 @@ use std::panic;
 use stellarust::dto::SaveGameDto;
 
 #[get("/saves")]
-pub async fn saves(save_games: Data<SaveGameDto>) -> impl Responder {
+pub async fn saves(save_games: Data<Vec<SaveGameDto>>) -> impl Responder {
     let data = save_games.get_ref().clone();
     HttpResponse::Ok().json(data)
 }
@@ -66,12 +66,16 @@ async fn main() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{empires, index};
+    use crate::{empires, index, saves};
     use actix_web::{body::Body, test, web::Data, App};
     use serde_json::json;
+    use std::panic;
+    use std::str;
+    use stellarust::dto::SaveGameDto;
+    use time::macros::datetime;
 
     #[actix_rt::test]
-    async fn test_index_returnsJsonVec0() {
+    async fn test_index__returns_json_vec0() {
         let vec_0 = vec![0];
         let mut app =
             test::init_service(App::new().app_data(Data::new(vec_0.clone())).service(index)).await;
@@ -88,7 +92,7 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn test_empires_returnsListOfEmpireNames() {
+    async fn test_empires__returns_list_of_empire_names() {
         let empire_names = vec![
             String::from("The Great Khanate"),
             String::from("The Federation Of The Planets"),
@@ -109,5 +113,40 @@ mod tests {
         let body = body.as_ref().unwrap();
         assert!(resp.status().is_success());
         assert_eq!(&Body::from(json!(empire_names.clone())), body);
+    }
+
+    #[actix_rt::test]
+    async fn test_saves__returns_list_of_saves() {
+        let save_objects = vec![SaveGameDto {
+            save_name: "".into(),
+            empires: vec![],
+            last_save_zoned_date_time: datetime!(2021-12-25 0:00 UTC),
+        }];
+
+        let mut app = test::init_service(
+            App::new()
+                .app_data(Data::new(save_objects.clone()))
+                .service(saves),
+        )
+        .await;
+        let req = test::TestRequest::with_header("content-type", "application/json")
+            .uri("/saves")
+            .to_request();
+
+        let mut resp = test::call_service(&mut app, req).await;
+
+        let body = resp.take_body();
+        let body = body.as_ref().unwrap();
+        assert!(resp.status().is_success());
+
+        if let Body::Bytes(bytes) = body {
+            let x = bytes.as_ref();
+
+            let string = str::from_utf8(x).unwrap();
+            let actual_dto: Vec<SaveGameDto> = serde_json::from_str(string).unwrap();
+            assert_eq!(actual_dto, save_objects)
+        } else {
+            panic!("body was not bytes");
+        }
     }
 }
