@@ -58,12 +58,7 @@ impl Component for SaveGameSelect {
     }
 }
 
-impl Fetch<SaveGameSelectData> for SaveGameSelect {
-    fn deserialize_response(str: &str) -> SaveGameSelectData {
-        let data: SaveGameSelectData = serde_json::from_str(str).unwrap();
-        data
-    }
-}
+impl Fetch<SaveGameSelectData> for SaveGameSelect {}
 
 impl SaveGameSelect {
     async fn process_request(window: Window, request: Request) -> Result<JsValue, JsValue> {

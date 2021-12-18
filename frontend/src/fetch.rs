@@ -1,12 +1,12 @@
-use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
+use async_trait::async_trait; //TODO wait for rustc to support async fn natively
+use serde::de::DeserializeOwned;
 use std::{
     error::Error,
     fmt::{self, Debug, Display, Formatter},
 };
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response, Window}; //TODO wait for rustc to support async fn natively
+use web_sys::{Request, RequestInit, RequestMode, Response};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct FetchError {
@@ -36,9 +36,10 @@ pub enum FetchState<T> {
 }
 
 #[async_trait(?Send)]
-pub trait Fetch<T> {
-    fn deserialize_response(str: &str) -> T;
-
+pub trait Fetch<T>
+where
+    T: DeserializeOwned,
+{
     async fn fetch_data(url: &str) -> Result<T, FetchError> {
         let mut request_init = RequestInit::new();
         request_init.method("GET");
@@ -58,12 +59,10 @@ pub trait Fetch<T> {
             .as_string()
             .expect("Couldnt get text from Response");
 
-        let data: T = Self::deserialize_response(string.as_str());
-
-        // let data: T = serde_json::from_str(string.as_str()).expect(&format!(
-        //     "Could not deserialize '{}' to JSON",
-        //     string.as_str()
-        // ));
+        let data: T = serde_json::from_str(string.as_str()).expect(&format!(
+            "Could not deserialize '{}' to JSON",
+            string.as_str()
+        ));
         Ok(data)
     }
 }
