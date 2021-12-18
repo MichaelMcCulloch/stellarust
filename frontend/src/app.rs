@@ -19,10 +19,7 @@ pub struct AppState {
 pub struct App {
     state: AppState,
 }
-pub enum Msg {
-    GetData,
-    SetFetchState(FetchState<AppData>),
-}
+pub enum Msg {}
 
 impl Component for App {
     type Message = Msg;
@@ -37,31 +34,8 @@ impl Component for App {
         App::view_app()
     }
 
-    fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
-        match msg {
-            Msg::GetData => {
-                ctx.link().send_future(async {
-                    match App::fetch_data(APPDATA_URL).await {
-                        Ok(app_data) => Msg::SetFetchState(FetchState::Success(app_data)),
-                        Err(err) => Msg::SetFetchState(FetchState::Failed(err)),
-                    }
-                });
-                ctx.link()
-                    .send_message(Msg::SetFetchState(FetchState::Fetching));
-                false
-            }
-            Msg::SetFetchState(fetch_state) => {
-                self.state.data = fetch_state;
-                true
-            }
-        }
-    }
-}
-
-impl Fetch<AppData> for App {
-    fn deserialize_response(str: &str) -> AppData {
-        let data: AppData = serde_json::from_str(str).unwrap();
-        data
+    fn update(&mut self, _ctx: &yew::Context<Self>, _msg: Self::Message) -> bool {
+        true
     }
 }
 
@@ -136,14 +110,5 @@ mod tests {
         let result = obtain_result();
 
         assert_eq!(result.as_str(), "done");
-    }
-
-    #[wasm_bindgen_test]
-    async fn app_create_state_is_not_fetching() {
-        let app = App::new();
-
-        let data = app.state.data;
-
-        assert_eq!(data, FetchState::NotFetching);
     }
 }
