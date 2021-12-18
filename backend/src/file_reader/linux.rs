@@ -8,6 +8,7 @@ const SAVE_DATA_PATH: &str = "$HOME/.local/share/Paradox Interactive/Stellaris/s
 pub struct LinuxFileReader {}
 
 impl FileReader for LinuxFileReader {
+    
     fn read_from_path(path: &PathBuf) -> Vec<SaveGameDto> {
         let paths = fs::read_dir(path).unwrap();
         let save_dtos: Vec<SaveGameDto> = paths
@@ -46,16 +47,6 @@ mod tests {
     use std::{fs, path::PathBuf, collections::HashSet};
 
     const TEST_DATA_PATH: &str = ".local/share/Paradox Interactive/Stellaris/save games";
-
-    #[tokio::test]
-    async fn linux() {
-        let home = std::env::var("HOME").unwrap();
-        let path = format!("{}/{}", home, TEST_DATA_PATH);
-        let paths = fs::read_dir(path).unwrap();
-        for path in paths {
-            println!("Name: {}", path.unwrap().path().display())
-        }
-    }
 
     #[tokio::test]
     async fn test_empires_returnsListOfEmpireNames() {
