@@ -1,7 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Responder};
-use backend::file_reader::SaveFileReader;
-use backend::savedata;
+use backend::file_reader::{reader::FileReader, SaveFileReader};
 use listenfd::ListenFd;
 use std::panic;
 use stellarust::dto::SaveGameDto;
@@ -29,6 +28,8 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
+    let save_dtos = Data::new(SaveFileReader::read());
+
     let data = Data::new(vec![0]);
     let empire_list = Data::new(vec![
         String::from("The Great Khanate"),
@@ -47,9 +48,10 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::default().allow_any_origin())
             .app_data(data.clone())
             .app_data(empire_list.clone())
-            //.app_data(empire_list_from_files)
+            .app_data(save_dtos.clone())
             .service(index)
             .service(empires)
+            .service(saves)
     });
 
     server = if let Some(listener) = ListenFd::from_env().take_tcp_listener(0)? {

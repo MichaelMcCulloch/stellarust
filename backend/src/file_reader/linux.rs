@@ -3,13 +3,14 @@ use std::{fs, path::PathBuf};
 use stellarust::dto::SaveGameDto;
 use time::macros::datetime;
 
-const SAVE_DATA_PATH: &str = "$HOME/.local/share/Paradox Interactive/Stellaris/save games";
+const SAVE_DATA_PATH: &str = ".local/share/Paradox Interactive/Stellaris/save games";
 
 pub struct LinuxFileReader {}
 
 impl FileReader for LinuxFileReader {
     
     fn read_from_path(path: &PathBuf) -> Vec<SaveGameDto> {
+        log::info!("{:?}", path);
         let paths = fs::read_dir(path).unwrap();
         let save_dtos: Vec<SaveGameDto> = paths
             .filter_map(|f| {
