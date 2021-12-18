@@ -23,9 +23,6 @@ mod tests {
     async fn setup(port: u32) -> Result<(Client, Child)> {
         let child = start_geckodriver(port);
         let mut client = connect_client(port).await?;
-        client
-            .goto(format!("{}:{}", LOCALHOST, 3000).as_str())
-            .await?;
 
         Ok((client, child))
     }
@@ -38,9 +35,28 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn open_home_page_read_list_of_empire_names() -> Result<()> {
-        let (mut client, mut child) = setup(4445).await.unwrap();
+    async fn open_save_select_page_read_list_of_empire_names() -> Result<()> {
+        let (mut client, mut child) = setup(4444).await.unwrap();
+        client
+            .goto(format!("{}:{}", LOCALHOST, 3000).as_str())
+            .await?;
+        let labels = client
+            .wait()
+            .for_element(Locator::Css(".empire-name"))
+            .await
+            .expect("Couldn't find label empire name");
 
+        teardown(&mut client, &mut child).await.unwrap();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn open_empire_page_read_list_of_empire_names() -> Result<()> {
+        let (mut client, mut child) = setup(4445).await.unwrap();
+        client
+            .goto(format!("{}:{}/empires", LOCALHOST, 3000).as_str())
+            .await?;
         let labels = client
             .wait()
             .for_element(Locator::Css(".empire-name"))
