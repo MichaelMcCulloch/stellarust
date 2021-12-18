@@ -211,6 +211,7 @@ mod tests {
     #[wasm_bindgen_test]
     async fn save_game_select__view_save_game_dto__label() {
         let save_game_dto = SaveGameDto {
+            save_name: "Save Name".into(),
             empires: vec![
                 String::from("The Great Khanate"),
                 String::from("Something Or Other"),

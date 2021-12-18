@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Hash)]
 pub struct SaveGameDto {
+    pub save_name: String,
     pub empires: Vec<String>,
     pub last_save_zoned_date_time: OffsetDateTime,
 }
