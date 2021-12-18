@@ -1,4 +1,4 @@
-use crate::fetch::{FetchError, FetchState};
+use crate::fetch::{Fetch, FetchError, FetchState};
 use stellarust::dto::SaveGameDto;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
@@ -55,6 +55,13 @@ impl Component for SaveGameSelect {
                 true
             }
         }
+    }
+}
+
+impl Fetch<SaveGameSelectData> for SaveGameSelect {
+    fn deserialize_response(str: &str) -> SaveGameSelectData {
+        let data: SaveGameSelectData = serde_json::from_str(str).unwrap();
+        data
     }
 }
 

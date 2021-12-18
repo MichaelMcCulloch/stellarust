@@ -1,5 +1,5 @@
 use crate::{
-    fetch::{FetchError, FetchState},
+    fetch::{Fetch, FetchError, FetchState},
     route::{switch, Route},
 };
 use anyhow::Result;
@@ -58,44 +58,14 @@ impl Component for App {
     }
 }
 
+impl Fetch<AppData> for App {
+    fn deserialize_response(str: &str) -> AppData {
+        let data: AppData = serde_json::from_str(str).unwrap();
+        data
+    }
+}
+
 impl App {
-    async fn process_request(window: Window, request: Request) -> Result<JsValue, JsValue> {
-        let response_value = JsFuture::from(window.fetch_with_request(&request)).await?;
-        let resp: Response = response_value
-            .dyn_into()
-            .expect("Couldnt get Response from Response Value");
-        let text = JsFuture::from(resp.text()?)
-            .await
-            .expect("Couldn't get Response Text Content");
-
-        Ok(text)
-    }
-
-    fn create_request_from_url(url: &str) -> Result<Request, JsValue> {
-        let mut request_init = RequestInit::new();
-        request_init.method("GET");
-        request_init.mode(RequestMode::Cors);
-        Request::new_with_str_and_init(url, &request_init)
-    }
-
-    async fn fetch_data(url: &str) -> Result<AppData, FetchError> {
-        let response_text = App::process_request(
-            gloo_utils::window(),
-            App::create_request_from_url(url).expect("Couldn't create Request"),
-        )
-        .await
-        .expect("Couldn't process Request");
-
-        let string = response_text
-            .as_string()
-            .expect("Couldnt get text from Response");
-        let data: AppData = serde_json::from_str(string.as_str()).expect(&format!(
-            "Could not deserialize '{}' to JSON",
-            string.as_str()
-        ));
-        Ok(data)
-    }
-
     fn new() -> Self {
         Self {
             state: AppState {
