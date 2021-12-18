@@ -57,12 +57,7 @@ impl Component for EmpireSelect {
     }
 }
 
-impl Fetch<EmpireSelectData> for EmpireSelect {
-    fn deserialize_response(str: &str) -> EmpireSelectData {
-        let data: EmpireSelectData = serde_json::from_str(str).unwrap();
-        data
-    }
-}
+impl Fetch<EmpireSelectData> for EmpireSelect {}
 
 impl EmpireSelect {
     fn new() -> Self {
