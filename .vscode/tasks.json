@@ -12,6 +12,7 @@
             "problemMatcher": [
                 "$rustc"
             ],
+            "isBackground": true,
             "dependsOn": [
                 "Unit Test Server"
             ]
@@ -27,6 +28,7 @@
             "dependsOn": [
                 "Unit Test Client"
             ],
+            "isBackground": true,
             "problemMatcher": [
                 "$rustc"
             ]
