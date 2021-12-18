@@ -21,6 +21,7 @@ serde = "1.0.132"
 serde_derive = "1.0.132"
 serde_json = "1.0.73"
 time = {version = "0.3.5", features = ["serde", "macros"]}
+async-trait = "0.1.52"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.28"
