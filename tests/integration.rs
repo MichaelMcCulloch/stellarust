@@ -35,7 +35,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn open_save_select_page_read_list_of_empire_names() -> Result<()> {
+    async fn open_save_select_page_read_list_of_save_games() -> Result<()> {
         let (mut client, mut child) = setup(4444).await.unwrap();
         client
             .goto(format!("{}:{}", LOCALHOST, 3000).as_str())
