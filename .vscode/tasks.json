@@ -80,6 +80,39 @@
                 "Deploy Client",
                 "Integration Test Command"
             ]
+        },
+        {
+            "label": "Cargo Fix",
+            "group": "build",
+            "dependsOn": [
+                "Cargo Fix Frontend",
+                "Cargo Fix Backend",
+                "Cargo Fix Stellarust",
+            ]
+        },
+        {
+            "label": "Cargo Fix Frontend",
+            "type": "shell",
+            "command": "cargo fix --allow-dirty --allow-staged",
+            "options": {
+                "cwd": "${workspaceFolder}/frontend"
+            }
+        },
+        {
+            "label": "Cargo Fix Backend",
+            "type": "shell",
+            "command": "cargo fix --allow-dirty --allow-staged",
+            "options": {
+                "cwd": "${workspaceFolder}/backend"
+            }
+        },
+        {
+            "label": "Cargo Fix Stellarust",
+            "type": "shell",
+            "command": "cargo fix --allow-dirty --allow-staged",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
         }
     ]
 }
