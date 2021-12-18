@@ -1,12 +1,9 @@
 use crate::{
-    fetch::{Fetch, FetchError, FetchState},
+    fetch::FetchState,
     route::{switch, Route},
 };
-use anyhow::Result;
-use wasm_bindgen::{JsCast, JsValue};
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{MouseEvent, Request, RequestInit, RequestMode, Response, Window};
-use yew::{html, Component, Context, Html};
+
+use yew::{html, Component, Html};
 type AppData = Vec<u32>;
 use yew_router::prelude::*;
 
@@ -60,7 +57,7 @@ impl App {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+
     use wasm_bindgen_test::*;
     use yew::{html, FunctionComponent, FunctionProvider, Properties};
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);

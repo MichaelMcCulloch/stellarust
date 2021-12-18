@@ -1,7 +1,5 @@
-use crate::fetch::{Fetch, FetchError, FetchState};
-use wasm_bindgen::{JsCast, JsValue};
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Response, Window};
+use crate::fetch::{Fetch, FetchState};
+
 use yew::{html, Component, Html};
 
 type EmpireSelectData = Vec<String>;
@@ -104,6 +102,7 @@ impl EmpireSelect {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::fetch::FetchError;
     use wasm_bindgen::JsValue;
     use wasm_bindgen_test::*;
     use yew::html;
