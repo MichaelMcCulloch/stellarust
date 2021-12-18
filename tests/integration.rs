@@ -42,7 +42,7 @@ mod tests {
             .await?;
         let labels = client
             .wait()
-            .for_element(Locator::Css(".empire-name"))
+            .for_element(Locator::Css(".save-game"))
             .await
             .expect("Couldn't find label empire name");
 
