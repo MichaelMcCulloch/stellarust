@@ -14,13 +14,3 @@ pub use windows::WindowsFileReader as SaveFileReader;
 mod mac;
 #[cfg(target_os = "macos")]
 pub use mac::MacFileReader as SaveFileReader;
-
-#[cfg(test)]
-mod tests {
-
-    #[tokio::test]
-    async fn test_index_returnsJsonVec0() {}
-
-    #[tokio::test]
-    async fn test_empires_returnsListOfEmpireNames() {}
-}
