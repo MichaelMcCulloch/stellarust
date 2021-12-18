@@ -1,17 +1,25 @@
 use actix_cors::Cors;
 use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Responder};
+use backend::savedata;
 use listenfd::ListenFd;
 use std::panic;
+use stellarust::dto::SaveGameDto;
+
+#[get("/saves")]
+pub async fn saves(save_games: Data<SaveGameDto>) -> impl Responder {
+    let data = save_games.get_ref().clone();
+    HttpResponse::Ok().json(data)
+}
 
 #[get("/empires")]
-pub async fn empires(player_data: Data<Vec<String>>) -> impl Responder {
-    let data = player_data.get_ref().clone();
+pub async fn empires(empire_list: Data<Vec<String>>) -> impl Responder {
+    let data = empire_list.get_ref().clone();
     HttpResponse::Ok().json(data)
 }
 
 #[get("/")]
-pub async fn index(player_data: Data<Vec<i32>>) -> impl Responder {
-    let data = player_data.get_ref().clone();
+pub async fn index(vec_32: Data<Vec<i32>>) -> impl Responder {
+    let data = vec_32.get_ref().clone();
     HttpResponse::Ok().json(data)
 }
 
@@ -30,12 +38,15 @@ async fn main() -> std::io::Result<()> {
         String::from("!@##$$()(*&())"),
     ]);
 
+    //empire list:= fileReader.get()
+
     let mut server = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
             .wrap(Cors::default().allow_any_origin())
             .app_data(data.clone())
             .app_data(empire_list.clone())
+            //.app_data(empire_list_from_files)
             .service(index)
             .service(empires)
     });
@@ -50,6 +61,7 @@ async fn main() -> std::io::Result<()> {
     server.run().await
 }
 
+//These are int tests in disguise.
 #[cfg(test)]
 mod tests {
 

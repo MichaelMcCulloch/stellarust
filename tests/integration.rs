@@ -55,7 +55,7 @@ mod tests {
     async fn open_empire_page_read_list_of_empire_names() -> Result<()> {
         let (mut client, mut child) = setup(4445).await.unwrap();
         client
-            .goto(format!("{}:{}/empires", LOCALHOST, 3000).as_str())
+            .goto(format!("{}:{}/{}", LOCALHOST, 3000, "empires").as_str())
             .await?;
         let labels = client
             .wait()
