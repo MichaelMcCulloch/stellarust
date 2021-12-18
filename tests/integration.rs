@@ -22,7 +22,7 @@ mod tests {
     }
     async fn setup(port: u32) -> Result<(Client, Child)> {
         let child = start_geckodriver(port);
-        let mut client = connect_client(port).await?;
+        let client = connect_client(port).await?;
 
         Ok((client, child))
     }
@@ -40,7 +40,7 @@ mod tests {
         client
             .goto(format!("{}:{}", LOCALHOST, 3000).as_str())
             .await?;
-        let labels = client
+        let _labels = client
             .wait()
             .for_element(Locator::Css(".save-game"))
             .await
@@ -57,7 +57,7 @@ mod tests {
         client
             .goto(format!("{}:{}/{}", LOCALHOST, 3000, "empires").as_str())
             .await?;
-        let labels = client
+        let _labels = client
             .wait()
             .for_element(Locator::Css(".empire-name"))
             .await
