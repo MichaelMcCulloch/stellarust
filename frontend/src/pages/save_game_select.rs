@@ -61,44 +61,6 @@ impl Component for SaveGameSelect {
 impl Fetch<SaveGameSelectData> for SaveGameSelect {}
 
 impl SaveGameSelect {
-    async fn process_request(window: Window, request: Request) -> Result<JsValue, JsValue> {
-        let response_value = JsFuture::from(window.fetch_with_request(&request)).await?;
-        let resp: Response = response_value
-            .dyn_into()
-            .expect("Couldnt get Response from Response Value");
-        let text = JsFuture::from(resp.text()?)
-            .await
-            .expect("Couldn't get Response Text Content");
-
-        Ok(text)
-    }
-
-    fn create_request_from_url(url: &str) -> Result<Request, JsValue> {
-        let mut request_init = RequestInit::new();
-        request_init.method("GET");
-        request_init.mode(RequestMode::Cors);
-        Request::new_with_str_and_init(url, &request_init)
-    }
-
-    async fn fetch_data(url: &str) -> Result<SaveGameSelectData, FetchError> {
-        let response_text = SaveGameSelect::process_request(
-            gloo_utils::window(),
-            SaveGameSelect::create_request_from_url(url).expect("Couldn't create Request"),
-        )
-        .await
-        .expect("Couldn't process Request");
-
-        let string = response_text
-            .as_string()
-            .expect("Couldnt get text from Response");
-        let data: SaveGameSelectData = serde_json::from_str(string.as_str()).expect(&format!(
-            "Could not deserialize '{}' to JSON",
-            string.as_str()
-        ));
-
-        Ok(data)
-    }
-
     fn new() -> Self {
         Self {
             state: SaveGameSelectState {
@@ -114,22 +76,36 @@ impl SaveGameSelect {
             .into_iter()
             .map(|empire| {
                 html! {
-                    <li class="" id="">{empire}</li>
+                    <li class="" >{empire}</li>
                 }
             })
             .collect::<Html>();
 
         html! {
-            <li class="" id="">
-                <div class="" id="">
-                    <ul class="" id="">
+            <li class="select-item">
+                    <label class="" >
+                        {game_dto.save_name.clone()}
+                    </label>
+                    <ul class="" >
                         {empires_html}
                     </ul>
-                    <label class="" id="">
+                    <label class="" >
                         {game_dto.last_save_zoned_date_time}
                     </label>
-                </div>
             </li>
+        }
+    }
+
+    fn view_save_game_select_list(save_game_dtos: &Vec<SaveGameDto>) -> Html {
+        let save_game_dtos_html = save_game_dtos
+            .into_iter()
+            .map(|dto| SaveGameSelect::view_save_game_dto(dto))
+            .collect::<Html>();
+
+        html! {
+            <ul>
+                {save_game_dtos_html
+            }</ul>
         }
     }
 
@@ -146,11 +122,7 @@ impl SaveGameSelect {
                 </label>
             },
             FetchState::Success(save_game_dtos) => {
-                let cards = save_game_dtos
-                    .into_iter()
-                    .map(|dto| SaveGameSelect::view_save_game_dto(dto))
-                    .collect::<Html>();
-                cards
+                SaveGameSelect::view_save_game_select_list(save_game_dtos)
             }
             FetchState::Failed(_) => html! {
                 <label id="fetch-status failed" class="fetch-status failed">
@@ -171,83 +143,4 @@ mod tests {
     use wasm_bindgen_test::*;
     use yew::html;
     wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
-
-    #[wasm_bindgen_test]
-    async fn save_game_select__view_save_game_select__not_fetching_label_not_fetching() {
-        let html = SaveGameSelect::view_save_game_select(&FetchState::NotFetching);
-
-        assert_eq!(
-            html,
-            html! {<label id="fetch-status not-fetching" class="fetch-status not-fetching">
-                 {"Not Fetching"}
-            </label>}
-        )
-    }
-
-    #[wasm_bindgen_test]
-    async fn save_game_select__view_save_game_select__fetching_label_fetching() {
-        let html = SaveGameSelect::view_save_game_select(&FetchState::Fetching);
-
-        assert_eq!(
-            html,
-            html! {<label id="fetch-status fetching" class="fetch-status fetching">
-                 {"Fetching"}
-            </label>}
-        )
-    }
-
-    #[wasm_bindgen_test]
-    async fn save_game_select__view_save_game_select__error_label_error() {
-        let html = SaveGameSelect::view_save_game_select(&FetchState::Failed(FetchError::from(
-            JsValue::from("_"),
-        )));
-
-        assert_eq!(
-            html,
-            html! {<label id="fetch-status failed" class="fetch-status failed">
-                {"Error"}
-            </label>}
-        )
-    }
-
-    #[wasm_bindgen_test]
-    async fn save_game_select__view_save_game_dto__label() {
-        let save_game_dto = SaveGameDto {
-            save_name: "Save Name".into(),
-            empires: vec![
-                String::from("The Great Khanate"),
-                String::from("Something Or Other"),
-                String::from("A Third Thing"),
-            ],
-            last_save_zoned_date_time: datetime!(2021-12-25 0:00 UTC),
-        };
-
-        let empires_html = save_game_dto
-            .empires
-            .as_slice()
-            .into_iter()
-            .map(|empire| {
-                html! {
-                    <li class="" id="">{empire}</li>
-                }
-            })
-            .collect::<Html>();
-
-        let expected = html! {
-            <li class="" id="">
-                <div class="" id="">
-                    <ul class="" id="">
-                        {empires_html}
-                    </ul>
-                    <label class="" id="">
-                        {save_game_dto.last_save_zoned_date_time}
-                    </label>
-                </div>
-            </li>
-        };
-
-        let html = SaveGameSelect::view_save_game_dto(&save_game_dto);
-
-        assert_eq!(html, expected)
-    }
 }
