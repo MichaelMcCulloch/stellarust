@@ -3,11 +3,11 @@ use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Respo
 use backend::file_reader::{reader::FileReader, SaveFileReader};
 use listenfd::ListenFd;
 use std::panic;
-use stellarust::dto::SaveGameDto;
+use stellarust::dto::CampaignDto;
 
-#[get("/saves")]
-pub async fn saves(save_games: Data<Vec<SaveGameDto>>) -> impl Responder {
-    let data = save_games.get_ref().clone();
+#[get("/campaigns")]
+pub async fn campaigns(campaigns: Data<Vec<CampaignDto>>) -> impl Responder {
+    let data = campaigns.get_ref().clone();
     HttpResponse::Ok().json(data)
 }
 
@@ -51,7 +51,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(save_dtos.clone())
             .service(index)
             .service(empires)
-            .service(saves)
+            .service(campaigns)
     });
 
     server = if let Some(listener) = ListenFd::from_env().take_tcp_listener(0)? {
@@ -68,12 +68,13 @@ async fn main() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{empires, index, saves};
+    use crate::campaigns;
+    use crate::{empires, index};
     use actix_web::{body::Body, test, web::Data, App};
     use serde_json::json;
     use std::panic;
     use std::str;
-    use stellarust::dto::SaveGameDto;
+    use stellarust::dto::CampaignDto;
     use time::macros::datetime;
 
     #[actix_rt::test]
@@ -118,8 +119,8 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn test_saves__returns_list_of_saves() {
-        let save_objects = vec![SaveGameDto {
+    async fn test_campaigns__returns_list_of_campaigns() {
+        let save_objects = vec![CampaignDto {
             save_name: "".into(),
             empires: vec![],
             last_save_zoned_date_time: datetime!(2021-12-25 0:00 UTC),
@@ -128,11 +129,11 @@ mod tests {
         let mut app = test::init_service(
             App::new()
                 .app_data(Data::new(save_objects.clone()))
-                .service(saves),
+                .service(campaigns),
         )
         .await;
         let req = test::TestRequest::with_header("content-type", "application/json")
-            .uri("/saves")
+            .uri("/campaigns")
             .to_request();
 
         let mut resp = test::call_service(&mut app, req).await;
@@ -145,7 +146,7 @@ mod tests {
             let x = bytes.as_ref();
 
             let string = str::from_utf8(x).unwrap();
-            let actual_dto: Vec<SaveGameDto> = serde_json::from_str(string).unwrap();
+            let actual_dto: Vec<CampaignDto> = serde_json::from_str(string).unwrap();
             assert_eq!(actual_dto, save_objects)
         } else {
             panic!("body was not bytes");

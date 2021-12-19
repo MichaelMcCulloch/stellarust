@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use stellarust::dto::SaveGameDto;
+use stellarust::dto::CampaignDto;
 
 pub trait FileReader {
-    fn read_from_path(path: &PathBuf) -> Vec<SaveGameDto>;
-    fn read() -> Vec<SaveGameDto>;
+    fn read_from_path(path: &PathBuf) -> Vec<CampaignDto>;
+    fn read() -> Vec<CampaignDto>;
 }
