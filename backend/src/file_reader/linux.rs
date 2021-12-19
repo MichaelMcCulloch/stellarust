@@ -18,7 +18,7 @@ impl FileReader for LinuxFileReader {
                 if let Ok(dir_entry) = f {
                     let out = SaveGameDto {
                         save_name: format!("{}", dir_entry.path().display()),
-                        empires: vec![],
+                        empires: vec!["One".into(), "Two".into(), "Three".into()],
                         last_save_zoned_date_time: datetime!(2021-12-25 0:00 UTC),
                     };
                     Some(out)
@@ -58,15 +58,15 @@ mod tests {
         let expected = vec![
             SaveGameDto { 
                 save_name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/earthcustodianship2_-1731632235".into(), 
-                empires: vec![], 
+                empires: vec!["One".into(), "Two".into(), "Three".into()], 
                 last_save_zoned_date_time:datetime!(2021-12-25 0:00 UTC) },
             SaveGameDto {
                 save_name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/xt489eliminator_452026845".into(), 
-                empires: vec![], 
+                empires: vec!["One".into(), "Two".into(), "Three".into()], 
                 last_save_zoned_date_time:datetime!(2021-12-25 0:00 UTC) },
             SaveGameDto { 
                 save_name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/deleted_404510102".into(),
-                empires: vec![],
+                empires: vec!["One".into(), "Two".into(), "Three".into()],
                 last_save_zoned_date_time:datetime!(2021-12-25 0:00 UTC) 
             }];
 
