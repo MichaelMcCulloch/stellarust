@@ -1,4 +1,5 @@
 pub mod reader;
+pub mod selector;
 
 #[cfg(target_os = "linux")]
 mod linux;

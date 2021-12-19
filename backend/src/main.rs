@@ -1,8 +1,8 @@
 use actix_cors::Cors;
 use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Responder};
-use backend::campaign_select::{reader::FileReader, SaveFileReader};
+use backend::campaign_select::{reader::FileReader, selector::CampaignSelector, SaveFileReader};
 use listenfd::ListenFd;
-use std::panic;
+use std::{panic, path::PathBuf};
 use stellarust::dto::CampaignDto;
 
 #[get("/campaigns")]
@@ -25,8 +25,15 @@ pub async fn index(vec_32: Data<Vec<i32>>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let args: Vec<String> = std::env::args().collect();
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
+
+    let campaign_path = if let Some(arg) = args.get(1) {
+        PathBuf::from(arg)
+    } else {
+        CampaignSelector::select()
+    };
 
     let save_dtos = Data::new(SaveFileReader::read());
 
