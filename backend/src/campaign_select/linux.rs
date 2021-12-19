@@ -6,8 +6,6 @@ use time::macros::datetime;
 const SAVE_DATA_PATH: &str = ".local/share/Paradox Interactive/Stellaris/save games";
 
 pub struct LinuxFileReader {}
-
-
 impl FileReader for LinuxFileReader {
     
     fn read_from_path(path: &PathBuf) -> Vec<CampaignDto> {
