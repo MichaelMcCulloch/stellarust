@@ -17,9 +17,9 @@ impl FileReader for LinuxFileReader {
             .filter_map(|f| {
                 if let Ok(dir_entry) = f {
                     let out = CampaignDto {
-                        save_name: format!("{}", dir_entry.path().display()),
+                        name: format!("{}", dir_entry.path().display()),
                         empires: vec!["One".into(), "Two".into(), "Three".into()],
-                        last_save_zoned_date_time: datetime!(2021-12-25 0:00 UTC),
+                        last_write: datetime!(2021-12-25 0:00 UTC),
                     };
                     Some(out)
                 } else {
@@ -57,17 +57,17 @@ mod tests {
 
         let expected = vec![
             CampaignDto { 
-                save_name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/earthcustodianship2_-1731632235".into(), 
+                name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/earthcustodianship2_-1731632235".into(), 
                 empires: vec!["One".into(), "Two".into(), "Three".into()], 
-                last_save_zoned_date_time:datetime!(2021-12-25 0:00 UTC) },
+                last_write:datetime!(2021-12-25 0:00 UTC) },
             CampaignDto {
-                save_name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/xt489eliminator_452026845".into(), 
+                name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/xt489eliminator_452026845".into(), 
                 empires: vec!["One".into(), "Two".into(), "Three".into()], 
-                last_save_zoned_date_time:datetime!(2021-12-25 0:00 UTC) },
+                last_write:datetime!(2021-12-25 0:00 UTC) },
             CampaignDto { 
-                save_name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/deleted_404510102".into(),
+                name: "/home/michael/.local/share/Paradox Interactive/Stellaris/save games/deleted_404510102".into(),
                 empires: vec!["One".into(), "Two".into(), "Three".into()],
-                last_save_zoned_date_time:datetime!(2021-12-25 0:00 UTC) 
+                last_write:datetime!(2021-12-25 0:00 UTC) 
             }];
 
         let save_dtos = LinuxFileReader::read_from_path(&PathBuf::from(path));
