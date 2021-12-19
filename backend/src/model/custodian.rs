@@ -1,7 +1,6 @@
 use anyhow::Result;
 use std::path::PathBuf;
 use stellarust::dto::CampaignDto;
-use tokio::sync::mpsc::Receiver;
 
 pub struct ModelCustodian {
     pub directory: PathBuf,

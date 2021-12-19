@@ -45,7 +45,7 @@ mod tests {
     use time::{macros::datetime};
 
     use super::LinuxFileReader;
-    use crate::file_reader::reader::FileReader;
+    use crate::campaign_select::reader::FileReader;
     use std::{path::PathBuf, collections::HashSet};
 
     const TEST_DATA_PATH: &str = ".local/share/Paradox Interactive/Stellaris/save games";
