@@ -1,47 +1,47 @@
 use crate::fetch::{Fetch, FetchError, FetchState};
-use stellarust::dto::SaveGameDto;
+use stellarust::dto::CampaignDto;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
 use yew::{html, Component, Html};
 
-type SaveGameSelectData = Vec<SaveGameDto>;
+type CampaignSelectData = Vec<CampaignDto>;
 
-const SAVE_GAME_SELECT_DATA_URL: &str = "http://localhost:8000/saves";
+const SAVE_GAME_SELECT_DATA_URL: &str = "http://localhost:8000/campaigns";
 
-pub struct SaveGameSelectState {
-    empire_list: FetchState<SaveGameSelectData>,
+pub struct CampaignSelectState {
+    campaigns_fetch_state: FetchState<CampaignSelectData>,
 }
 
-pub struct SaveGameSelect {
-    state: SaveGameSelectState,
+pub struct CampaignSelect {
+    state: CampaignSelectState,
 }
 
 pub enum Msg {
     GetEmpireList,
-    SetFetchState(FetchState<SaveGameSelectData>),
+    SetFetchState(FetchState<CampaignSelectData>),
 }
 
-impl Component for SaveGameSelect {
+impl Component for CampaignSelect {
     type Message = Msg;
 
     type Properties = ();
 
     fn create(ctx: &yew::Context<Self>) -> Self {
-        let save_game_select = SaveGameSelect::new();
+        let campaign_select = CampaignSelect::new();
         ctx.link().callback(|_: ()| Msg::GetEmpireList).emit(());
-        save_game_select
+        campaign_select
     }
 
     fn view(&self, _ctx: &yew::Context<Self>) -> Html {
-        SaveGameSelect::view_save_game_select(&self.state.empire_list)
+        CampaignSelect::view_save_game_select(&self.state.campaigns_fetch_state)
     }
 
     fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::GetEmpireList => {
                 ctx.link().send_future(async {
-                    match SaveGameSelect::fetch_data(SAVE_GAME_SELECT_DATA_URL).await {
+                    match CampaignSelect::fetch_data(SAVE_GAME_SELECT_DATA_URL).await {
                         Ok(app_data) => Msg::SetFetchState(FetchState::Success(app_data)),
                         Err(err) => Msg::SetFetchState(FetchState::Failed(err)),
                     }
@@ -51,26 +51,26 @@ impl Component for SaveGameSelect {
                 false
             }
             Msg::SetFetchState(fetch_state) => {
-                self.state.empire_list = fetch_state;
+                self.state.campaigns_fetch_state = fetch_state;
                 true
             }
         }
     }
 }
 
-impl Fetch<SaveGameSelectData> for SaveGameSelect {}
+impl Fetch<CampaignSelectData> for CampaignSelect {}
 
-impl SaveGameSelect {
+impl CampaignSelect {
     fn new() -> Self {
         Self {
-            state: SaveGameSelectState {
-                empire_list: FetchState::NotFetching,
+            state: CampaignSelectState {
+                campaigns_fetch_state: FetchState::NotFetching,
             },
         }
     }
 
-    fn view_save_game_dto(game_dto: &SaveGameDto) -> Html {
-        let empires = game_dto.empires.as_slice();
+    fn view_save_game_dto(campaign: &CampaignDto) -> Html {
+        let empires = campaign.empires.as_slice();
 
         let empires_html = empires
             .into_iter()
@@ -84,48 +84,46 @@ impl SaveGameSelect {
         html! {
             <li class="select-item">
                     <label class="" >
-                        {game_dto.save_name.clone()}
+                        {campaign.save_name.clone()}
                     </label>
                     <ul class="" >
                         {empires_html}
                     </ul>
                     <label class="" >
-                        {game_dto.last_save_zoned_date_time}
+                        {campaign.last_save_zoned_date_time}
                     </label>
             </li>
         }
     }
 
-    fn view_save_game_select_list(save_game_dtos: &Vec<SaveGameDto>) -> Html {
-        let save_game_dtos_html = save_game_dtos
+    fn view_save_game_select_list(campaigns: &Vec<CampaignDto>) -> Html {
+        let campaigns_html = campaigns
             .into_iter()
-            .map(|dto| SaveGameSelect::view_save_game_dto(dto))
+            .map(|campaign| CampaignSelect::view_save_game_dto(campaign))
             .collect::<Html>();
 
         html! {
             <ul>
-                {save_game_dtos_html
-            }</ul>
+                {campaigns_html}
+            </ul>
         }
     }
 
-    fn view_save_game_select(state: &FetchState<SaveGameSelectData>) -> Html {
+    fn view_save_game_select(state: &FetchState<CampaignSelectData>) -> Html {
         match state {
             FetchState::NotFetching => html! {
-                <label id="fetch-status not-fetching" class="fetch-status not-fetching">
+                <label class="fetch-info">
                      {"Not Fetching"}
                 </label>
             },
             FetchState::Fetching => html! {
-                <label id="fetch-status fetching" class="fetch-status fetching">
+                <label class="fetch-info">
                     {"Fetching"}
                 </label>
             },
-            FetchState::Success(save_game_dtos) => {
-                SaveGameSelect::view_save_game_select_list(save_game_dtos)
-            }
+            FetchState::Success(campaigns) => CampaignSelect::view_save_game_select_list(campaigns),
             FetchState::Failed(_) => html! {
-                <label id="fetch-status failed" class="fetch-status failed">
+                <label class="fetch-info">
                     {"Error"}
                 </label>
             },

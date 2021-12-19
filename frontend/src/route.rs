@@ -1,11 +1,11 @@
-use crate::pages::{empire_select::EmpireSelect, save_game_select::SaveGameSelect};
+use crate::pages::{campaign_select::CampaignSelect, empire_select::EmpireSelect};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 #[derive(Routable, PartialEq, Clone, Debug)]
 pub enum Route {
     #[at("/")]
-    SaveGameSelect,
+    CampaignSelect,
     #[at("/empires")]
     EmpireSelect,
 }
@@ -15,8 +15,8 @@ pub fn switch(routes: &Route) -> Html {
         Route::EmpireSelect => {
             html! { <EmpireSelect /> }
         }
-        Route::SaveGameSelect => {
-            html! { <SaveGameSelect/>}
+        Route::CampaignSelect => {
+            html! { <CampaignSelect/>}
         }
     }
 }

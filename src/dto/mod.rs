@@ -1,5 +1,5 @@
+mod campaign_dto;
 mod empire_dto;
-mod save_game_dto;
 
+pub use campaign_dto::CampaignDto;
 pub use empire_dto::EmpireDto;
-pub use save_game_dto::SaveGameDto;
