@@ -84,13 +84,13 @@ impl CampaignSelect {
         html! {
             <li class="select-item">
                     <label class="" >
-                        {campaign.save_name.clone()}
+                        {campaign.name.clone()}
                     </label>
                     <ul class="" >
                         {empires_html}
                     </ul>
                     <label class="" >
-                        {campaign.last_save_zoned_date_time}
+                        {campaign.last_write}
                     </label>
             </li>
         }

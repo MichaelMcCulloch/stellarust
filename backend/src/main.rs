@@ -121,9 +121,9 @@ mod tests {
     #[actix_rt::test]
     async fn test_campaigns__returns_list_of_campaigns() {
         let save_objects = vec![CampaignDto {
-            save_name: "".into(),
+            name: "".into(),
             empires: vec![],
-            last_save_zoned_date_time: datetime!(2021-12-25 0:00 UTC),
+            last_write: datetime!(2021-12-25 0:00 UTC),
         }];
 
         let mut app = test::init_service(
