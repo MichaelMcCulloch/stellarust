@@ -1,6 +1,6 @@
 use super::reader::FileReader;
 use crate::campaign_select::{unzipper::Unzipper, SaveFileReader};
-use std::{arch, borrow::Borrow, collections::HashMap, fs, path::PathBuf};
+use std::{arch, borrow::Borrow, collections::HashMap, fs, path::PathBuf, time::SystemTime};
 use stellarust::dto::CampaignDto;
 use time::OffsetDateTime;
 
@@ -53,7 +53,7 @@ impl CampaignSelector {
         CampaignDto {
             name: get_name_from_meta(meta),
             empires: vec![],
-            last_write: OffsetDateTime::from(modified),
+            last_write: modified,
         }
     }
 }
