@@ -4,7 +4,7 @@
         {
             "label": "Deploy Server",
             "type": "shell",
-            "command": "systemfd --no-pid -s http::8000 -- cargo-watch -x 'run -- /home/michael/Dev/stellarust/res/test_data/campaign/unitednationsofearth_-15512622'",
+            "command": "systemfd --no-pid -s http::8000 -- cargo-watch -x 'run -- ${workspaceFolder}/res/test_data/campaign/unitednationsofearth_-15512622'",
             "group": "build",
             "options": {
                 "cwd": "${workspaceFolder}/backend"
