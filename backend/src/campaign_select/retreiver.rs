@@ -81,3 +81,23 @@ fn get_empires_from_gamestate(gamestate: String) -> Vec<String> {
         .collect();
     names
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn get_name_from_meta__truncated__happy_path__returns_empire_name() {
+        let meta_string = "name=\"United Nations of Whatever\"\n";
+        let name = get_name_from_meta(meta_string.into());
+        assert_eq!(name, "United Nations of Whatever");
+    }
+
+    #[test]
+    fn get_empires_from_gamestate__truncated__happy_path__returns_empire_name() {
+        let gamestate_string =
+            "color_index=-1\nwhatever_you_like_here=\"United Nations of Whatever\"\n";
+        let empires = get_empires_from_gamestate(gamestate_string.into());
+        assert!(empires.contains(&String::from("United Nations of Whatever")));
+    }
+}
