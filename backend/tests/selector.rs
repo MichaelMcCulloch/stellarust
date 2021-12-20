@@ -21,13 +21,12 @@ mod tests {
     use time::{macros::datetime, OffsetDateTime};
 
     #[tokio::test]
-    async fn campaign_select__get_campaign_option() {
+    async fn campaign_select__get_campaign_options() {
         let test_resource_dir = {
             let mut dir = get_resourc_dir();
             dir.push("unitednationsofearth_-15512622");
             dir
         };
-
         let expected_time = datetime!(2021-12-18 19:26:12.142231637 -7);
 
         let expected_dto = CampaignDto {
@@ -84,10 +83,16 @@ mod tests {
             last_write: expected_time.into(),
         };
 
-        let actual_dto = CampaignSelector::get_campaign_option(&test_resource_dir);
+        let map = CampaignSelector::get_campaign_options(vec![test_resource_dir.clone()]);
+
+        let keys: Vec<CampaignDto> = map.clone().into_keys().collect();
+        let actual_dto = keys.get(0).unwrap();
+        let actual_path = map.get(actual_dto).unwrap();
 
         assert_eq!(actual_dto.name, expected_dto.name);
         assert_eq!(actual_dto.empires, expected_dto.empires);
         assert_eq!(actual_dto.last_write, expected_dto.last_write);
+
+        assert_eq!(actual_path, &test_resource_dir);
     }
 }
