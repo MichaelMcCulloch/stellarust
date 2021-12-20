@@ -8,9 +8,11 @@ pub struct ModelCustodian {
 
 impl ModelCustodian {
     pub fn create(campaign_directory: &PathBuf) -> Self {
-        ModelCustodian {
+        let me = ModelCustodian {
             directory: campaign_directory.clone(),
-        }
+        };
+        me.start();
+        me
     }
     pub fn start(&self) {}
 
