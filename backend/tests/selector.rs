@@ -18,7 +18,7 @@ mod tests {
     use super::*;
     use backend::campaign_select::selector::CampaignSelector;
     use stellarust::dto::CampaignDto;
-    use time::macros::datetime;
+    use time::{macros::datetime, OffsetDateTime};
 
     #[tokio::test]
     async fn campaign_select__get_campaign_option() {
@@ -28,10 +28,60 @@ mod tests {
             dir
         };
 
+        let expected_time = datetime!(2021-12-18 19:26:12.142231637 -7);
+
         let expected_dto = CampaignDto {
             name: String::from("United Nations of Earth"),
-            empires: vec![],
-            last_write: SystemTime::now(),
+            empires: vec![
+                "United Nations of Earth",
+                "Yaanari Imperium",
+                "Confederation of Jakaro",
+                "Scyldari Confederacy",
+                "Maloqui Hierarchy",
+                "Desstican Monopoly",
+                "Techarus Core",
+                "United Panaxala Imperium",
+                "Republic of Yapathinor",
+                "Cormathani Trading Consortium",
+                "Vivisandia Guardians",
+                "Queptilium Remnant",
+                "Mathin Civilization",
+                "Placid Leviathans",
+                "Placid Leviathans",
+                "Tiyanki Space Whale Ancient",
+                "Commonwealth of Man",
+                "Andigonj Corsairs",
+                "Curator Order",
+                "Prism",
+                "Artisan Troupe",
+                "Caravansary Caravan Coalition",
+                "The Numistic Order",
+                "Racket Industrial Enterprise",
+                "XuraCorp",
+                "Space Amoeba Gathering",
+                "Enigmatic Fortress",
+                "Menjeti Freebooters",
+                "Riggan Commerce Exchange",
+                "Automated Dreadnought",
+                "Spaceborne Organics",
+                "Mineral Extraction Operation",
+                "Armistice Initiative",
+                "Tavurite Civilization",
+                "Enigmatic Energy",
+                "Xu'Lokako Civilization",
+                "Sinrath Civilization",
+                "Pelisimus Civilization",
+                "H'Runi Civilization",
+                "Belmacosa Civilization",
+                "global_event_country",
+                "The Shroud",
+                "Creatures of the Shroud",
+                "VLUUR",
+            ]
+            .into_iter()
+            .map(|s| String::from(s))
+            .collect(),
+            last_write: expected_time.into(),
         };
 
         let actual_dto = CampaignSelector::get_campaign_option(&test_resource_dir);
