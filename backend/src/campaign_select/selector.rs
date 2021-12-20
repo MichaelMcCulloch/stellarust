@@ -1,5 +1,5 @@
 use super::reader::FileReader;
-use crate::campaign_select::SaveFileReader;
+use crate::campaign_select::{unzipper::Unzipper, SaveFileReader};
 use std::{arch, borrow::Borrow, collections::HashMap, fs, path::PathBuf};
 use stellarust::dto::CampaignDto;
 use time::OffsetDateTime;
@@ -24,7 +24,7 @@ impl CampaignSelector {
         HashMap::new()
     }
 
-    fn get_campaign_option(path: PathBuf) -> CampaignDto {
+    pub fn get_campaign_option(path: &PathBuf) -> CampaignDto {
         println!("{}", path.display());
         let paths = std::fs::read_dir(path).unwrap();
         let (modified, most_recent_path) = paths
@@ -48,26 +48,25 @@ impl CampaignSelector {
             })
             .unwrap();
 
-        let content = Self::get_zipped_content(&most_recent_path);
-        //get latest modified file and modify date
-        //name from zipped metadata
-        //empires from zipped game.countries
+        let (meta, gamestate) = Unzipper::get_zipped_content(&most_recent_path);
 
         CampaignDto {
-            name: format!("{}", 0),
+            name: get_name_from_meta(meta),
             empires: vec![],
             last_write: OffsetDateTime::from(modified),
         }
     }
+}
 
-    fn get_zipped_content(zip: &PathBuf) -> (String, String) {
-        let file = fs::File::open(zip).unwrap();
-        let mut archive = zip::ZipArchive::new(file).unwrap();
-        let mut v: Vec<String> = vec![];
-
-        let meta = archive.by_name("meta").unwrap();
-        let meta = archive.by_name("gamestate").unwrap();
-
-        (String::new(), String::new())
-    }
+fn get_name_from_meta(meta: String) -> String {
+    let lines = meta.split('\n');
+    let name_lines = lines
+        .into_iter()
+        .filter(|l| l.starts_with("name="))
+        .collect::<Vec<&str>>();
+    let name_line = name_lines.get(0).unwrap();
+    let name = name_line.split("=").collect::<Vec<&str>>();
+    let namemn = *name.get(1).unwrap();
+    let s: String = serde_json::from_str(namemn).unwrap();
+    s
 }

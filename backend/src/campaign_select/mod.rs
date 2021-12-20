@@ -1,5 +1,6 @@
 pub mod reader;
 pub mod selector;
+pub mod unzipper;
 
 #[cfg(target_os = "linux")]
 mod linux;
