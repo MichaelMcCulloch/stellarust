@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
 fn get_resource_dir() -> PathBuf {
     let test_resource_dir = {
@@ -14,10 +14,9 @@ fn get_resource_dir() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use std::time::SystemTime;
 
     use super::*;
-    use backend::campaign_select::selector::CampaignSelector;
+    use backend::campaign_select::retreiver;
     use stellarust::dto::CampaignDto;
     use time::{macros::datetime, OffsetDateTime};
 
@@ -84,7 +83,7 @@ mod tests {
             last_write: expected_time.into(),
         };
 
-        let map = CampaignSelector::get_campaign_options(vec![test_resource_dir.clone()]);
+        let map = retreiver::get_campaign_options(vec![test_resource_dir.clone()]);
 
         let keys: Vec<CampaignDto> = map.clone().into_keys().collect();
         let actual_dto = keys.get(0).unwrap();
