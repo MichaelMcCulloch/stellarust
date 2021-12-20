@@ -1,5 +1,5 @@
 use super::reader::FileReader;
-use crate::campaign_select::{unzipper::Unzipper, SaveFileReader};
+use crate::campaign_select::unzipper::Unzipper;
 use std::{
     arch,
     borrow::Borrow,
@@ -10,6 +10,7 @@ use std::{
     time::SystemTime,
 };
 use stellarust::dto::CampaignDto;
+use text_io::read;
 use time::OffsetDateTime;
 
 #[cfg(target_os = "linux")]
@@ -43,18 +44,9 @@ impl CampaignSelector {
             println!("{}.\t{}", key.0, key.1)
         }
         let _ = stdout().flush();
-        let mut s = String::new();
-        stdin()
-            .read_line(&mut s)
-            .expect("Did not enter a number! Exploding!");
-        if let Some('\n') = s.chars().next_back() {
-            s.pop();
-        }
-        if let Some('\r') = s.chars().next_back() {
-            s.pop();
-        }
-        let selection_index = s.parse::<i32>().unwrap();
-        let selection = keys.get(selection_index as usize).unwrap();
+
+        let index: usize = read!();
+        let selection = keys.get(index).unwrap();
         let selected_path = campaign_options.get(&selection.1);
 
         selected_path.unwrap().clone()
