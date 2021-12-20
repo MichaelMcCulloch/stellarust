@@ -1,5 +1,6 @@
 use crate::fetch::{Fetch, FetchError, FetchState};
 use stellarust::dto::CampaignDto;
+use time::OffsetDateTime;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Request, RequestInit, RequestMode, Response, Window};
@@ -90,7 +91,7 @@ impl CampaignSelect {
                         {empires_html}
                     </ul>
                     <label class="" >
-                        {campaign.last_write}
+                        {OffsetDateTime::from(campaign.last_write)}
                     </label>
             </li>
         }
