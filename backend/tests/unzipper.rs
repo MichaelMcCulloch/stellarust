@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-fn get_resourc_dir() -> PathBuf {
+fn get_resource_dir() -> PathBuf {
     let test_resource_dir = {
         let mut dir: PathBuf = PathBuf::from(std::env::current_dir().unwrap());
         dir.pop();
@@ -19,7 +19,7 @@ mod tests {
     #[tokio::test]
     async fn unzipper__get_zipped_content() {
         let test_resource_dir = {
-            let mut dir = get_resourc_dir();
+            let mut dir = get_resource_dir();
             dir.push("unzipper/zipped.sav");
             dir
         };

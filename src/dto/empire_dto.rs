@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+use super::CampaignDto;
+
 #[derive(Deserialize, Serialize)]
 pub struct EmpireDto {
-    pub empire_name: String,
+    pub name: String,
 }
