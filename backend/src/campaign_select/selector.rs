@@ -20,15 +20,29 @@ impl CampaignSelector {
         PathBuf::new()
     }
 
-    fn get_campaign_options(paths: Vec<PathBuf>) -> HashMap<CampaignDto, PathBuf> {
-        HashMap::new()
+    pub fn get_campaign_options(paths: Vec<PathBuf>) -> HashMap<CampaignDto, PathBuf> {
+        let mut map: HashMap<CampaignDto, PathBuf> = HashMap::new();
+        for path in paths {
+            map.insert(CampaignSelector::get_campaign_option(&path), path);
+        }
+        map
     }
 
-    pub fn get_campaign_option(path: &PathBuf) -> CampaignDto {
+    fn get_campaign_option(path: &PathBuf) -> CampaignDto {
         println!("{}", path.display());
         let paths = std::fs::read_dir(path).unwrap();
+        let (modified, most_recent_path) = CampaignSelector::find_newest_save(paths);
+
+        let (meta, gamestate) = Unzipper::get_zipped_content(&most_recent_path);
+
+        CampaignDto {
+            name: CampaignSelector::get_name_from_meta(meta),
+            empires: CampaignSelector::get_empires_from_gamestate(gamestate),
+            last_write: modified,
+        }
+    }
+    fn find_newest_save(paths: fs::ReadDir) -> (SystemTime, PathBuf) {
         let (modified, most_recent_path) = paths
-            .into_iter()
             .filter_map(|file_result| {
                 if let Ok(file) = file_result {
                     let metadata = file.metadata().unwrap();
@@ -47,49 +61,42 @@ impl CampaignSelector {
                 }
             })
             .unwrap();
-
-        let (meta, gamestate) = Unzipper::get_zipped_content(&most_recent_path);
-
-        CampaignDto {
-            name: get_name_from_meta(meta),
-            empires: get_empires_from_gamestate(gamestate),
-            last_write: modified,
-        }
+        (modified, most_recent_path)
     }
-}
 
-fn get_name_from_meta(meta: String) -> String {
-    let lines = meta.split('\n');
-    let name_line_vec = lines
-        .into_iter()
-        .filter(|l| l.starts_with("name="))
-        .collect::<Vec<&str>>();
-    let name_line = name_line_vec.get(0).unwrap();
-    let name_assignment_vec = name_line.split("=").collect::<Vec<&str>>();
-    let name = name_assignment_vec.get(1).unwrap();
-    let parsed_name: String = serde_json::from_str(name).unwrap();
-    parsed_name
-}
+    fn get_name_from_meta(meta: String) -> String {
+        let lines = meta.split('\n');
+        let name_line_vec = lines
+            .into_iter()
+            .filter(|l| l.starts_with("name="))
+            .collect::<Vec<&str>>();
+        let name_line = name_line_vec.get(0).unwrap();
+        let name_assignment_vec = name_line.split("=").collect::<Vec<&str>>();
+        let name = name_assignment_vec.get(1).unwrap();
+        let parsed_name: String = serde_json::from_str(name).unwrap();
+        parsed_name
+    }
 
-fn get_empires_from_gamestate(gamestate: String) -> Vec<String> {
-    let indicator = "color_index";
-    let indicated_line_numbers: Vec<usize> = gamestate
-        .split('\n')
-        .enumerate()
-        .filter(|(_, line)| line.contains(indicator))
-        .map(|(index, _)| index + 1)
-        .collect();
+    fn get_empires_from_gamestate(gamestate: String) -> Vec<String> {
+        let indicator = "color_index";
+        let indicated_line_numbers: Vec<usize> = gamestate
+            .split('\n')
+            .enumerate()
+            .filter(|(_, line)| line.contains(indicator))
+            .map(|(index, _)| index + 1)
+            .collect();
 
-    let names: Vec<String> = gamestate
-        .split('\n')
-        .enumerate()
-        .filter(|(index, _)| indicated_line_numbers.contains(index))
-        .map(|(_, line)| {
-            let name_assignment_vec = line.split("=").collect::<Vec<&str>>();
-            let name = name_assignment_vec.get(1).unwrap();
-            let parsed_name: String = serde_json::from_str(name).unwrap();
-            String::from(parsed_name)
-        })
-        .collect();
-    names
+        let names: Vec<String> = gamestate
+            .split('\n')
+            .enumerate()
+            .filter(|(index, _)| indicated_line_numbers.contains(index))
+            .map(|(_, line)| {
+                let name_assignment_vec = line.split("=").collect::<Vec<&str>>();
+                let name = name_assignment_vec.get(1).unwrap();
+                let parsed_name: String = serde_json::from_str(name).unwrap();
+                String::from(parsed_name)
+            })
+            .collect();
+        names
+    }
 }
