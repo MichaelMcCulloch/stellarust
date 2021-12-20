@@ -13,17 +13,21 @@ use text_io::read;
 use time::OffsetDateTime;
 
 #[cfg(target_os = "linux")]
-const SAVE_DATA_PATH: &str = ".local/share/Paradox Interactive/Stellaris/save games";
+const SAVE_DATA_PATH: &str = ".local/share/Paradox Interactive/Stellaris/save games/";
 
 pub struct CampaignSelector {}
 
 impl CampaignSelector {
     pub fn select() -> PathBuf {
-        Self::select_from_path(&PathBuf::from(SAVE_DATA_PATH))
+        let home = std::env::var("HOME").unwrap();
+        let home_str = home.as_str();
+        let path = PathBuf::from_iter(vec![home_str, SAVE_DATA_PATH]);
+        Self::select_from_path(&PathBuf::from(path))
     }
 
     pub fn select_from_path(dir: &PathBuf) -> PathBuf {
         println!("Reading list of saves...");
+        println!("{:?}", &dir);
         let read_dir = fs::read_dir(dir).unwrap();
         let paths: Vec<PathBuf> = read_dir
             .into_iter()
