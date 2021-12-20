@@ -13,6 +13,8 @@ fn get_resourc_dir() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
+    use std::time::SystemTime;
+
     use super::*;
     use backend::campaign_select::selector::CampaignSelector;
     use stellarust::dto::CampaignDto;
@@ -29,7 +31,7 @@ mod tests {
         let expected_dto = CampaignDto {
             name: String::from("United Nations of Earth"),
             empires: vec![],
-            last_write: datetime!(2021-12-19 19:26 -7),
+            last_write: SystemTime::now(),
         };
 
         let actual_dto = CampaignSelector::get_campaign_option(&test_resource_dir);
