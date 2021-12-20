@@ -28,7 +28,7 @@ mod tests {
             dir.push("unitednationsofearth_-15512622");
             dir
         };
-        let expected_time = datetime!(2021-12-18 19:26:12.142231637 -7);
+        let expected_time = datetime!(2021-12-20 18:26:57.465998796 UTC);
 
         let expected_dto = CampaignDto {
             name: String::from("United Nations of Earth"),
@@ -89,6 +89,8 @@ mod tests {
         let keys: Vec<CampaignDto> = map.clone().into_keys().collect();
         let actual_dto = keys.get(0).unwrap();
         let actual_path = map.get(actual_dto).unwrap();
+
+        println!("{}", OffsetDateTime::from(actual_dto.last_write));
 
         assert_eq!(actual_dto.name, expected_dto.name);
         assert_eq!(actual_dto.empires, expected_dto.empires);
