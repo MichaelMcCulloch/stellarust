@@ -1,4 +1,3 @@
-use super::reader::FileReader;
 use crate::campaign_select::unzipper::Unzipper;
 use std::{
     arch,

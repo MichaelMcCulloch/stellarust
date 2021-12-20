@@ -22,11 +22,6 @@ mod tests {
     use time::{macros::datetime, OffsetDateTime};
 
     #[tokio::test]
-    async fn campaign_select__select_from_path() {
-        let path_to_save = CampaignSelector::select_from_path(&get_resource_dir());
-    }
-
-    #[tokio::test]
     async fn campaign_select__get_campaign_options() {
         let test_resource_dir = {
             let mut dir = get_resource_dir();
