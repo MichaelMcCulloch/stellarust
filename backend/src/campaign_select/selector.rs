@@ -52,7 +52,7 @@ impl CampaignSelector {
 
         CampaignDto {
             name: get_name_from_meta(meta),
-            empires: vec![],
+            empires: get_empires_from_gamestate(gamestate),
             last_write: modified,
         }
     }
@@ -60,13 +60,36 @@ impl CampaignSelector {
 
 fn get_name_from_meta(meta: String) -> String {
     let lines = meta.split('\n');
-    let name_lines = lines
+    let name_line_vec = lines
         .into_iter()
         .filter(|l| l.starts_with("name="))
         .collect::<Vec<&str>>();
-    let name_line = name_lines.get(0).unwrap();
-    let name = name_line.split("=").collect::<Vec<&str>>();
-    let namemn = *name.get(1).unwrap();
-    let s: String = serde_json::from_str(namemn).unwrap();
-    s
+    let name_line = name_line_vec.get(0).unwrap();
+    let name_assignment_vec = name_line.split("=").collect::<Vec<&str>>();
+    let name = name_assignment_vec.get(1).unwrap();
+    let parsed_name: String = serde_json::from_str(name).unwrap();
+    parsed_name
+}
+
+fn get_empires_from_gamestate(gamestate: String) -> Vec<String> {
+    let indicator = "color_index";
+    let indicated_line_numbers: Vec<usize> = gamestate
+        .split('\n')
+        .enumerate()
+        .filter(|(_, line)| line.contains(indicator))
+        .map(|(index, _)| index + 1)
+        .collect();
+
+    let names: Vec<String> = gamestate
+        .split('\n')
+        .enumerate()
+        .filter(|(index, _)| indicated_line_numbers.contains(index))
+        .map(|(_, line)| {
+            let name_assignment_vec = line.split("=").collect::<Vec<&str>>();
+            let name = name_assignment_vec.get(1).unwrap();
+            let parsed_name: String = serde_json::from_str(name).unwrap();
+            String::from(parsed_name)
+        })
+        .collect();
+    names
 }
