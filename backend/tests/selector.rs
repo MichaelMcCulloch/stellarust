@@ -1,11 +1,12 @@
 use std::{fs, path::PathBuf};
 
-fn get_resourc_dir() -> PathBuf {
+fn get_resource_dir() -> PathBuf {
     let test_resource_dir = {
         let mut dir: PathBuf = PathBuf::from(std::env::current_dir().unwrap());
         dir.pop();
         dir.push("res");
         dir.push("test_data");
+        dir.push("campaign");
         dir
     };
     test_resource_dir
@@ -21,9 +22,14 @@ mod tests {
     use time::{macros::datetime, OffsetDateTime};
 
     #[tokio::test]
+    async fn campaign_select__select_from_path() {
+        let path_to_save = CampaignSelector::select_from_path(&get_resource_dir());
+    }
+
+    #[tokio::test]
     async fn campaign_select__get_campaign_options() {
         let test_resource_dir = {
-            let mut dir = get_resourc_dir();
+            let mut dir = get_resource_dir();
             dir.push("unitednationsofearth_-15512622");
             dir
         };
