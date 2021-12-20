@@ -27,7 +27,6 @@ impl CampaignSelector {
 
     pub fn select_from_path(dir: &PathBuf) -> PathBuf {
         println!("Reading list of saves...");
-        println!("{:?}", &dir);
         let read_dir = fs::read_dir(dir).unwrap();
         let paths: Vec<PathBuf> = read_dir
             .into_iter()
