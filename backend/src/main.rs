@@ -1,15 +1,9 @@
 use actix_cors::Cors;
 use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Responder};
-use backend::campaign_select::{reader::FileReader, selector::CampaignSelector, SaveFileReader};
+use backend::campaign_select::selector::CampaignSelector;
 use listenfd::ListenFd;
 use std::{panic, path::PathBuf};
 use stellarust::dto::CampaignDto;
-
-#[get("/campaigns")]
-pub async fn campaigns(campaigns: Data<Vec<CampaignDto>>) -> impl Responder {
-    let data = campaigns.get_ref().clone();
-    HttpResponse::Ok().json(data)
-}
 
 #[get("/empires")]
 pub async fn empires(empire_list: Data<Vec<String>>) -> impl Responder {
@@ -35,8 +29,6 @@ async fn main() -> std::io::Result<()> {
         CampaignSelector::select()
     };
 
-    let save_dtos = Data::new(SaveFileReader::read());
-
     let data = Data::new(vec![0]);
     let empire_list = Data::new(vec![
         String::from("The Great Khanate"),
@@ -55,10 +47,8 @@ async fn main() -> std::io::Result<()> {
             .wrap(Cors::default().allow_any_origin())
             .app_data(data.clone())
             .app_data(empire_list.clone())
-            .app_data(save_dtos.clone())
             .service(index)
             .service(empires)
-            .service(campaigns)
     });
 
     server = if let Some(listener) = ListenFd::from_env().take_tcp_listener(0)? {
@@ -75,7 +65,6 @@ async fn main() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::campaigns;
     use crate::{empires, index};
     use actix_web::{body::Body, test, web::Data, App};
     use serde_json::json;
@@ -123,40 +112,5 @@ mod tests {
         let body = body.as_ref().unwrap();
         assert!(resp.status().is_success());
         assert_eq!(&Body::from(json!(empire_names.clone())), body);
-    }
-
-    #[actix_rt::test]
-    async fn test_campaigns__returns_list_of_campaigns() {
-        let save_objects = vec![CampaignDto {
-            name: "".into(),
-            empires: vec![],
-            last_write: datetime!(2021-12-25 0:00 UTC),
-        }];
-
-        let mut app = test::init_service(
-            App::new()
-                .app_data(Data::new(save_objects.clone()))
-                .service(campaigns),
-        )
-        .await;
-        let req = test::TestRequest::with_header("content-type", "application/json")
-            .uri("/campaigns")
-            .to_request();
-
-        let mut resp = test::call_service(&mut app, req).await;
-
-        let body = resp.take_body();
-        let body = body.as_ref().unwrap();
-        assert!(resp.status().is_success());
-
-        if let Body::Bytes(bytes) = body {
-            let x = bytes.as_ref();
-
-            let string = str::from_utf8(x).unwrap();
-            let actual_dto: Vec<CampaignDto> = serde_json::from_str(string).unwrap();
-            assert_eq!(actual_dto, save_objects)
-        } else {
-            panic!("body was not bytes");
-        }
     }
 }
