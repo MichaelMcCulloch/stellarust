@@ -8,7 +8,10 @@ use notify::{Op, RawEvent};
 
 #[cfg(target_os = "linux")]
 use crate::dirwatcher::linux::LinuxWatcher as DirectoryWatcher;
-use crate::{dirwatcher::DirWatcher, model::CustodianMsg};
+use crate::{
+    dirwatcher::DirWatcher,
+    model::{CustodianMsg, Parser},
+};
 
 pub struct DirectoryEventHandler {
     watcher: DirectoryWatcher,
@@ -20,6 +23,7 @@ impl DirectoryEventHandler {
         let (custodian_message_sender, custodian_message_receiver) = channel::<CustodianMsg>();
 
         let me = DirectoryEventHandler { watcher };
+
         me.start_directory_event_handler(raw_event_receiver, custodian_message_sender);
         (custodian_message_receiver, me)
     }
@@ -47,9 +51,9 @@ fn forward_event_to_path(
     (match event {
         RawEvent {
             op: Ok(Op::CLOSE_WRITE),
-            path: Some(_path),
+            path: Some(path),
             cookie: _cookie,
-        } => pathbuf_sender.send(CustodianMsg::Data(0)),
+        } => pathbuf_sender.send(CustodianMsg::Data(Parser::from_file(&path))),
         _ => Ok(()),
     })?;
 
