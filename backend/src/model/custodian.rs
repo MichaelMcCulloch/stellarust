@@ -5,15 +5,15 @@ use std::{
 
 use anyhow::Result;
 
-type ModelData = usize;
+use super::data::ModelDataPoint;
 
 pub struct ModelCustodian {
-    history: Arc<Mutex<Vec<ModelData>>>,
+    history: Arc<Mutex<Vec<ModelDataPoint>>>,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum CustodianMsg {
-    Data(ModelData),
+    Data(ModelDataPoint),
     Exit,
 }
 
@@ -36,7 +36,7 @@ impl ModelCustodian {
         });
     }
 
-    pub fn get_campaign_data(&self) -> Result<Vec<ModelData>> {
+    pub fn get_campaign_data(&self) -> Result<Vec<ModelDataPoint>> {
         Ok(self.history.lock().unwrap().clone())
     }
 }

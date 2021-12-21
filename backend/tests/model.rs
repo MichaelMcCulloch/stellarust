@@ -15,7 +15,7 @@ fn get_resource_dir() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use backend::model::{CustodianMsg, ModelCustodian};
+    use backend::model::{CustodianMsg, ModelCustodian, ModelDataPoint};
     use std::{sync::mpsc::channel, thread, time::Duration};
 
     #[test]
@@ -26,10 +26,14 @@ mod tests {
 
         let s = sender.clone();
         thread::spawn(move || {
-            s.send(CustodianMsg::Data(0)).unwrap();
-            s.send(CustodianMsg::Data(2)).unwrap();
-            s.send(CustodianMsg::Data(3)).unwrap();
-            s.send(CustodianMsg::Data(6)).unwrap();
+            s.send(CustodianMsg::Data(ModelDataPoint { data: 0 }))
+                .unwrap();
+            s.send(CustodianMsg::Data(ModelDataPoint { data: 2 }))
+                .unwrap();
+            s.send(CustodianMsg::Data(ModelDataPoint { data: 3 }))
+                .unwrap();
+            s.send(CustodianMsg::Data(ModelDataPoint { data: 6 }))
+                .unwrap();
             s.send(CustodianMsg::Exit).unwrap();
         });
 
@@ -37,6 +41,14 @@ mod tests {
 
         let actual = model.get_campaign_data().unwrap();
 
-        assert_eq!(actual, vec![0, 2, 3, 6]);
+        assert_eq!(
+            actual,
+            vec![
+                ModelDataPoint { data: 0 },
+                ModelDataPoint { data: 2 },
+                ModelDataPoint { data: 3 },
+                ModelDataPoint { data: 6 }
+            ]
+        );
     }
 }

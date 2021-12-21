@@ -28,7 +28,10 @@ fn get_test_file_paths() -> Vec<PathBuf> {
 mod tests {
 
     use super::*;
-    use backend::{dirwatcher::DirectoryEventHandler, model::CustodianMsg};
+    use backend::{
+        dirwatcher::DirectoryEventHandler,
+        model::{CustodianMsg, ModelDataPoint},
+    };
     use std::{fs, io::Write, thread, time::Duration};
 
     #[test]
@@ -44,7 +47,6 @@ mod tests {
 
         let (msg_receiver, _watcher) = DirectoryEventHandler::create(&dir);
 
-        thread::sleep(Duration::from_secs(1));
         for (index, path) in file_paths.clone().into_iter().enumerate() {
             fs::write(path, format!("{}", index)).unwrap();
         }
@@ -54,8 +56,8 @@ mod tests {
             fs::remove_file(path).unwrap();
         }
         match result {
-            Ok(msg) => assert_eq!(CustodianMsg::Data(0), msg),
-            Err(error) => assert!(false),
+            Ok(msg) => assert_eq!(CustodianMsg::Data(ModelDataPoint { data: 0 }), msg),
+            Err(error) => panic!("{}", error),
         }
     }
 }
