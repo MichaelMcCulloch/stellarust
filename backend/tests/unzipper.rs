@@ -24,7 +24,7 @@ mod tests {
             dir
         };
 
-        let (meta, gamestate) = Unzipper::get_zipped_content(&test_resource_dir);
+        let (meta, gamestate) = Unzipper::get_zipped_content(&test_resource_dir).unwrap();
         assert_eq!(meta, String::from("Hello"));
         assert_eq!(gamestate, String::from("World!"));
     }
