@@ -11,6 +11,7 @@ pub struct ModelCustodian {
     history: Arc<Mutex<Vec<ModelData>>>,
 }
 
+#[derive(Debug)]
 pub enum CustodianMsg {
     Data(ModelData),
     Exit,

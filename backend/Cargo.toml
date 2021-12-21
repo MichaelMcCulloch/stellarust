@@ -24,5 +24,6 @@ time = {version = "0.3.5", features = ["serde", "macros"]}
 tokio = { version = "1.15.0", features = [ "full" ] }
 zip= "0.5.13"
 text_io="0.1.9"
+notify="4.0.17"
 
 [dev-dependencies]
