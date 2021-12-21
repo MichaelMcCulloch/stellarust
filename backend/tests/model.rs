@@ -16,9 +16,8 @@ fn get_resource_dir() -> PathBuf {
 #[cfg(test)]
 mod tests {
     use backend::model::{CustodianMsg, ModelCustodian};
-    use std::{path::PathBuf, sync::mpsc::channel, thread, time::Duration};
+    use std::{sync::mpsc::channel, thread, time::Duration};
 
-    use super::*;
     #[test]
     fn test_model() {
         let (sender, receiver) = channel();

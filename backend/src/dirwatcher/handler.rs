@@ -47,7 +47,7 @@ fn forward_event_to_path(
     (match event {
         RawEvent {
             op: Ok(Op::CLOSE_WRITE),
-            path: Some(path),
+            path: Some(_path),
             cookie: _cookie,
         } => pathbuf_sender.send(CustodianMsg::Data(0)),
         _ => Ok(()),

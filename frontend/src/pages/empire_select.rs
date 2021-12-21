@@ -1,5 +1,4 @@
 use crate::fetch::{Fetch, FetchState};
-
 use yew::{html, Component, Html};
 
 type EmpireSelectData = Vec<String>;

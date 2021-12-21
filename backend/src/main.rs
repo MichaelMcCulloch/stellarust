@@ -3,7 +3,6 @@ use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Respo
 use backend::campaign_select::selector::CampaignSelector;
 use listenfd::ListenFd;
 use std::{panic, path::PathBuf, process::exit};
-use stellarust::dto::CampaignDto;
 
 #[get("/empires")]
 pub async fn empires(empire_list: Data<Vec<String>>) -> impl Responder {
@@ -23,7 +22,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let campaign_path = if let Some(arg) = args.get(1) {
+    let _campaign_path = if let Some(arg) = args.get(1) {
         PathBuf::from(arg)
     } else {
         match CampaignSelector::select() {
@@ -74,10 +73,6 @@ mod tests {
     use crate::{empires, index};
     use actix_web::{body::Body, test, web::Data, App};
     use serde_json::json;
-    use std::panic;
-    use std::str;
-    use stellarust::dto::CampaignDto;
-    use time::macros::datetime;
 
     #[actix_rt::test]
     async fn test_index__returns_json_vec0() {

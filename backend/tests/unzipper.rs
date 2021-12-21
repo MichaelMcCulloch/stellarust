@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
 
 fn get_resource_dir() -> PathBuf {
     let test_resource_dir = {

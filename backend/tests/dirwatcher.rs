@@ -27,10 +27,10 @@ fn get_test_file_paths() -> Vec<PathBuf> {
 #[cfg(test)]
 mod tests {
 
-    use std::fs;
-
     use super::*;
     use backend::dirwatcher::DirectoryEventHandler;
+    use std::fs;
+
     #[test]
     fn test_dir_watcher__oncreate__existing_files_are_in_receiver_queue() {
         let file_paths = get_test_file_paths();
@@ -39,7 +39,7 @@ mod tests {
             fs::write(path, format!("{}", index)).unwrap();
         }
 
-        let (event_receiver, watcher) = DirectoryEventHandler::create(&get_resource_dir());
+        let (event_receiver, _watcher) = DirectoryEventHandler::create(&get_resource_dir());
         for event in event_receiver.into_iter() {
             println!("{:?}", event)
         }
@@ -49,9 +49,8 @@ mod tests {
         }
     }
 
-    use super::*;
     #[test]
     fn test_dir_watcher__receiver__new_files_are_in_receiver_queue() {
-        let new_files = vec!["f1, f2, f3"];
+        let _new_files = vec!["f1, f2, f3"];
     }
 }

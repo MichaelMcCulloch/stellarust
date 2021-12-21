@@ -3,7 +3,6 @@ use std::{
     sync::mpsc::{channel, Receiver},
 };
 
-use anyhow::Result;
 use notify::{raw_watcher, INotifyWatcher, RawEvent, Watcher};
 
 use super::DirWatcher;

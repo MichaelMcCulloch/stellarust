@@ -1,4 +1,4 @@
-use std::{char::MAX, fmt::Display, time::SystemTime};
+use std::{fmt::Display, time::SystemTime};
 
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
