@@ -2,7 +2,7 @@ use actix_cors::Cors;
 use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Responder};
 use backend::campaign_select::selector::CampaignSelector;
 use listenfd::ListenFd;
-use std::{panic, path::PathBuf};
+use std::{panic, path::PathBuf, process::exit};
 use stellarust::dto::CampaignDto;
 
 #[get("/empires")]
@@ -26,7 +26,13 @@ async fn main() -> std::io::Result<()> {
     let campaign_path = if let Some(arg) = args.get(1) {
         PathBuf::from(arg)
     } else {
-        CampaignSelector::select()?
+        match CampaignSelector::select() {
+            Ok(path) => path,
+            Err(error) => {
+                println!("{:?}", error);
+                exit(-1)
+            }
+        }
     };
 
     let data = Data::new(vec![0]);
