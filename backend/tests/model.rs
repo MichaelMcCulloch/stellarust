@@ -15,17 +15,29 @@ fn get_resource_dir() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use backend::model::ModelCustodian;
-    use std::path::PathBuf;
-    use tokio::sync::mpsc::channel;
+    use backend::model::{CustodianMsg, ModelCustodian};
+    use std::{path::PathBuf, sync::mpsc::channel, thread, time::Duration};
 
     use super::*;
     #[test]
     fn test_model() {
-        let model = ModelCustodian::create(&get_resource_dir());
-        model.start();
+        let (sender, receiver) = channel();
+
+        let model = ModelCustodian::create(receiver);
+
+        let s = sender.clone();
+        thread::spawn(move || {
+            s.send(CustodianMsg::Data(0)).unwrap();
+            s.send(CustodianMsg::Data(2)).unwrap();
+            s.send(CustodianMsg::Data(3)).unwrap();
+            s.send(CustodianMsg::Data(6)).unwrap();
+            s.send(CustodianMsg::Exit).unwrap();
+        });
+
+        thread::sleep(Duration::from_millis(500));
+
         let actual = model.get_campaign_data().unwrap();
 
-        assert_eq!(actual, vec![]);
+        assert_eq!(actual, vec![0, 2, 3, 6]);
     }
 }

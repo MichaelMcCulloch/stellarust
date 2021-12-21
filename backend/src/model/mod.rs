@@ -1,3 +1,3 @@
 mod custodian;
 
-pub use custodian::ModelCustodian;
+pub use custodian::{CustodianMsg, ModelCustodian};

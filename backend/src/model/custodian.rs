@@ -1,38 +1,44 @@
+use std::{
+    sync::{mpsc::Receiver, Arc, Mutex},
+    thread,
+};
+
 use anyhow::Result;
-use std::path::PathBuf;
-use stellarust::dto::CampaignDto;
+
+type ModelData = usize;
 
 pub struct ModelCustodian {
-    pub directory: PathBuf,
+    history: Arc<Mutex<Vec<ModelData>>>,
+}
+
+pub enum CustodianMsg {
+    Data(ModelData),
+    Exit,
 }
 
 impl ModelCustodian {
-    pub fn create(campaign_directory: &PathBuf) -> Self {
+    pub fn create(receiver: Receiver<CustodianMsg>) -> Self {
         let me = ModelCustodian {
-            directory: campaign_directory.clone(),
+            history: Arc::new(Mutex::new(vec![])),
         };
-        me.start();
+        me.start(receiver);
         me
     }
-    pub fn start(&self) {}
 
-    pub fn get_campaign_data(&self) -> Result<Vec<CampaignDto>> {
-        Ok(vec![])
+    fn start(&self, receiver: Receiver<CustodianMsg>) {
+        let history = self.history.clone();
+        thread::spawn(move || loop {
+            match receiver.recv().unwrap() {
+                CustodianMsg::Data(i) => history.lock().unwrap().push(i),
+                CustodianMsg::Exit => break,
+            };
+        });
+    }
+
+    pub fn get_campaign_data(&self) -> Result<Vec<ModelData>> {
+        Ok(self.history.lock().unwrap().clone())
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use std::path::PathBuf;
-    use tokio::sync::mpsc::channel;
-
-    use super::*;
-    #[test]
-    fn test_model() {
-        let model = ModelCustodian::create(&PathBuf::from(""));
-        model.start();
-        let actual = model.get_campaign_data().unwrap();
-
-        assert_eq!(actual, vec![]);
-    }
-}
+mod tests {}
