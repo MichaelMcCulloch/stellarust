@@ -1,4 +1,5 @@
 use crate::campaign_select::retreiver;
+use anyhow::Result;
 use std::{
     fs,
     io::{stdout, Write},
@@ -13,16 +14,17 @@ const SAVE_DATA_PATH: &str = ".local/share/Paradox Interactive/Stellaris/save ga
 pub struct CampaignSelector {}
 
 impl CampaignSelector {
-    pub fn select() -> PathBuf {
+    pub fn select() -> Result<PathBuf> {
         let home = std::env::var("HOME").unwrap();
         let home_str = home.as_str();
         let path = PathBuf::from_iter(vec![home_str, SAVE_DATA_PATH]);
-        Self::select_from_path(&PathBuf::from(path))
+        let campaign_path = Self::select_from_path(&PathBuf::from(path))?;
+        Ok(campaign_path)
     }
 
-    pub fn select_from_path(dir: &PathBuf) -> PathBuf {
+    pub fn select_from_path(dir: &PathBuf) -> Result<PathBuf> {
         println!("Reading list of saves...");
-        let read_dir = fs::read_dir(dir).unwrap();
+        let read_dir = fs::read_dir(dir)?;
         let paths: Vec<PathBuf> = read_dir
             .into_iter()
             .filter_map(|r| {
@@ -33,7 +35,7 @@ impl CampaignSelector {
                 }
             })
             .collect();
-        let campaign_options = retreiver::get_campaign_options(paths);
+        let campaign_options = retreiver::get_campaign_options(paths)?;
         let keys: Vec<(usize, CampaignDto)> =
             campaign_options.clone().into_keys().enumerate().collect();
         println!("Please Select Your Save by Number:");
@@ -43,9 +45,11 @@ impl CampaignSelector {
         let _ = stdout().flush();
 
         let index: usize = read!();
-        let selection = keys.get(index).unwrap();
-        let selected_path = campaign_options.get(&selection.1);
+        let selection = keys.get(index).expect("Invalid Selection, Try Again.");
+        let selected_path = campaign_options.get(&selection.1).unwrap();
 
-        selected_path.unwrap().clone()
+        let s_path = selected_path.clone();
+
+        Ok(s_path)
     }
 }

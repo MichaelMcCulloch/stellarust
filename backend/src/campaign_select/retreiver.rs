@@ -1,34 +1,39 @@
 use crate::campaign_select::unzipper::Unzipper;
+use anyhow::Result;
 use std::{collections::HashMap, fs, path::PathBuf, time::SystemTime};
 use stellarust::dto::CampaignDto;
 
-pub fn get_campaign_options(paths: Vec<PathBuf>) -> HashMap<CampaignDto, PathBuf> {
+pub fn get_campaign_options(paths: Vec<PathBuf>) -> Result<HashMap<CampaignDto, PathBuf>> {
     let mut map: HashMap<CampaignDto, PathBuf> = HashMap::new();
     for path in paths {
-        map.insert(get_campaign_option(&path), path);
+        map.insert(get_campaign_option(&path)?, path);
     }
-    map
+    Ok(map)
 }
 
-fn get_campaign_option(path: &PathBuf) -> CampaignDto {
-    let paths = std::fs::read_dir(path).unwrap();
-    let (modified, most_recent_path) = find_newest_save(paths);
+fn get_campaign_option(path: &PathBuf) -> Result<CampaignDto> {
+    let paths = std::fs::read_dir(path)?;
+    let (modified, most_recent_path) = find_newest_save(paths)?;
 
-    let (meta, gamestate) = Unzipper::get_zipped_content(&most_recent_path);
+    let (meta, gamestate) = Unzipper::get_zipped_content(&most_recent_path)?;
 
-    CampaignDto {
-        name: get_name_from_meta(meta),
-        empires: get_empires_from_gamestate(gamestate),
+    Ok(CampaignDto {
+        name: get_name_from_meta(meta)?,
+        empires: get_empires_from_gamestate(gamestate)?,
         last_write: modified,
-    }
+    })
 }
 
-fn find_newest_save(paths: fs::ReadDir) -> (SystemTime, PathBuf) {
+fn find_newest_save(paths: fs::ReadDir) -> Result<(SystemTime, PathBuf)> {
     let (modified, most_recent_path) = paths
-        .filter_map(|file_result| {
-            if let Ok(file) = file_result {
-                let metadata = file.metadata().unwrap();
-                Some((metadata.modified().unwrap(), file.path()))
+        .map(|file_result| {
+            let save_file = file_result?;
+            let metadata = save_file.metadata()?;
+            Ok((metadata.modified()?, save_file.path()))
+        })
+        .filter_map(|result: Result<(SystemTime, PathBuf)>| {
+            if let Ok(name) = result {
+                Some(name)
             } else {
                 None
             }
@@ -43,23 +48,28 @@ fn find_newest_save(paths: fs::ReadDir) -> (SystemTime, PathBuf) {
             }
         })
         .unwrap();
-    (modified, most_recent_path)
+    Ok((modified, most_recent_path))
 }
 
-fn get_name_from_meta(meta: String) -> String {
+fn get_name_from_meta(meta: String) -> Result<String> {
     let lines = meta.split('\n');
+    let indicator = "name=";
     let name_line_vec = lines
         .into_iter()
-        .filter(|l| l.starts_with("name="))
+        .filter(|l| l.starts_with(indicator))
         .collect::<Vec<&str>>();
-    let name_line = name_line_vec.get(0).unwrap();
+    let name_line = name_line_vec
+        .get(0)
+        .expect(format!("No found beginning with '{}'.", indicator).as_str());
     let name_assignment_vec = name_line.split("=").collect::<Vec<&str>>();
-    let name = name_assignment_vec.get(1).unwrap();
-    let parsed_name: String = serde_json::from_str(name).unwrap();
-    parsed_name
+    let name = name_assignment_vec
+        .get(1)
+        .expect("Name not assigned to anything.");
+    let parsed_name: String = serde_json::from_str(name)?;
+    Ok(parsed_name)
 }
 
-fn get_empires_from_gamestate(gamestate: String) -> Vec<String> {
+fn get_empires_from_gamestate(gamestate: String) -> Result<Vec<String>> {
     let indicator = "color_index";
     let indicated_line_numbers: Vec<usize> = gamestate
         .split('\n')
@@ -74,12 +84,19 @@ fn get_empires_from_gamestate(gamestate: String) -> Vec<String> {
         .filter(|(index, _)| indicated_line_numbers.contains(index))
         .map(|(_, line)| {
             let name_assignment_vec = line.split("=").collect::<Vec<&str>>();
-            let name = name_assignment_vec.get(1).unwrap();
-            let parsed_name: String = serde_json::from_str(name).unwrap();
-            String::from(parsed_name)
+            let name = name_assignment_vec.get(1).expect("");
+            let parsed_name: String = serde_json::from_str(name)?;
+            Ok(String::from(parsed_name))
+        })
+        .filter_map(|result: Result<String>| {
+            if let Ok(name) = result {
+                Some(name)
+            } else {
+                None
+            }
         })
         .collect();
-    names
+    Ok(names)
 }
 
 #[cfg(test)]
@@ -89,7 +106,7 @@ mod test {
     #[test]
     fn get_name_from_meta__truncated__happy_path__returns_empire_name() {
         let meta_string = "name=\"United Nations of Whatever\"\n";
-        let name = get_name_from_meta(meta_string.into());
+        let name = get_name_from_meta(meta_string.into()).unwrap();
         assert_eq!(name, "United Nations of Whatever");
     }
 
@@ -97,7 +114,7 @@ mod test {
     fn get_empires_from_gamestate__truncated__happy_path__returns_empire_name() {
         let gamestate_string =
             "color_index=-1\nwhatever_you_like_here=\"United Nations of Whatever\"\n";
-        let empires = get_empires_from_gamestate(gamestate_string.into());
+        let empires = get_empires_from_gamestate(gamestate_string.into()).unwrap();
         assert!(empires.contains(&String::from("United Nations of Whatever")));
     }
 }

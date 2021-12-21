@@ -26,7 +26,7 @@ async fn main() -> std::io::Result<()> {
     let campaign_path = if let Some(arg) = args.get(1) {
         PathBuf::from(arg)
     } else {
-        CampaignSelector::select()
+        CampaignSelector::select()?
     };
 
     let data = Data::new(vec![0]);
