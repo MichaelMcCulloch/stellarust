@@ -1,0 +1,40 @@
+version="Herbert v3.2.2"
+version_control_revision=83287
+name="United Nations of Earth"
+date="2200.05.01"
+required_dlcs={
+	"Ancient Relics Story Pack"
+	"Anniversary Portraits"
+	"Apocalypse"
+	"Distant Stars Story Pack"
+	"Federations"
+	"Horizon Signal"
+	"Humanoids Species Pack"
+	"Leviathans Story Pack"
+	"Lithoids Species Pack"
+	"Megacorp"
+	"Necroids Species Pack"
+	"Nemesis"
+	"Plantoids Species Pack"
+	"Synthetic Dawn Story Pack"
+	"Utopia"
+}
+player_portrait="human"
+flag={
+	icon={
+		category="human"
+		file="flag_human_9.dds"
+	}
+	background={
+		category="backgrounds"
+		file="00_solid.dds"
+	}
+	colors={
+		"blue"
+		"black"
+		"null"
+		"null"
+	}
+}
+meta_fleets=3
+meta_planets=1
