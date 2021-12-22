@@ -15,3 +15,11 @@ impl Parser {
         ModelDataPoint { data: i }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_string() {}
+}
