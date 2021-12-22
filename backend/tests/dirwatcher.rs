@@ -8,10 +8,10 @@ mod tests {
         dirwatcher::DirectoryEventHandler,
         model::{CustodianMsg, ModelDataPoint},
     };
-    use std::{fs, io::Write, thread, time::Duration};
+    use std::{fs, time::Duration};
 
     #[test]
-    fn test_dir_watcher__receiver__new_files_are_in_receiver_queue() {
+    fn test_dir_watcher__receiver__existing_and_new_files_are_in_receiver_queue() {
         let dir = get_resource_dir();
 
         let existing_files = get_test_file_paths(0);
