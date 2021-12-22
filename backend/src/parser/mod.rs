@@ -1,10 +1,7 @@
 use std::path::PathBuf;
 
-use std::fs;
-
+use crate::model::ModelDataPoint;
 use crate::unzipper::Unzipper;
-
-use super::data::ModelDataPoint;
 
 pub struct Parser {}
 

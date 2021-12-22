@@ -1,3 +1,5 @@
+use crate::{dirwatcher::DirWatcher, model::CustodianMsg};
+use notify::{Op, RawEvent};
 use std::{
     fs,
     path::PathBuf,
@@ -5,14 +7,10 @@ use std::{
     thread,
 };
 
-use notify::{Op, RawEvent};
+use crate::parser::Parser;
 
 #[cfg(target_os = "linux")]
 use crate::dirwatcher::linux::LinuxWatcher as DirectoryWatcher;
-use crate::{
-    dirwatcher::DirWatcher,
-    model::{CustodianMsg, Parser},
-};
 
 pub struct DirectoryEventHandler {
     watcher: DirectoryWatcher,
