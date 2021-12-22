@@ -13,7 +13,7 @@ fn get_resource_dir() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use backend::campaign_select::unzipper::Unzipper;
+    use backend::unzipper::Unzipper;
 
     use super::*;
     #[tokio::test]

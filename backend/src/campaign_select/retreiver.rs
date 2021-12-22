@@ -1,4 +1,4 @@
-use crate::campaign_select::unzipper::Unzipper;
+use crate::unzipper::Unzipper;
 use anyhow::Result;
 use std::{collections::HashMap, fs, path::PathBuf, time::SystemTime};
 use stellarust::dto::CampaignDto;
