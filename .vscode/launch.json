@@ -1,0 +1,178 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in library 'frontend'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--lib",
+					"--package=frontend"
+				],
+				"filter": {
+					"name": "frontend",
+					"kind": "lib"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in library 'stellarust'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--lib",
+					"--package=stellarust"
+				],
+				"filter": {
+					"name": "stellarust",
+					"kind": "lib"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug integration test 'integration'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--test=integration",
+					"--package=stellarust"
+				],
+				"filter": {
+					"name": "integration",
+					"kind": "test"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in library 'backend'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--lib",
+					"--package=backend"
+				],
+				"filter": {
+					"name": "backend",
+					"kind": "lib"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug executable 'backend'",
+			"cargo": {
+				"args": [
+					"build",
+					"--bin=backend",
+					"--package=backend"
+				],
+				"filter": {
+					"name": "backend",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in executable 'backend'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--bin=backend",
+					"--package=backend"
+				],
+				"filter": {
+					"name": "backend",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug integration test 'model'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--test=model",
+					"--package=backend"
+				],
+				"filter": {
+					"name": "model",
+					"kind": "test"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug integration test 'dirwatcher'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--test=dirwatcher",
+					"--package=backend"
+				],
+				"filter": {
+					"name": "dirwatcher",
+					"kind": "test"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug integration test 'unzipper'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--test=unzipper",
+					"--package=backend"
+				],
+				"filter": {
+					"name": "unzipper",
+					"kind": "test"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		}
+	]
+}
