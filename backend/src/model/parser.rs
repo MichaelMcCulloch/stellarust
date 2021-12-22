@@ -2,15 +2,26 @@ use std::path::PathBuf;
 
 use std::fs;
 
+use crate::unzipper::Unzipper;
+
 use super::data::ModelDataPoint;
 
 pub struct Parser {}
 
 impl Parser {
     pub fn from_file(path: &PathBuf) -> ModelDataPoint {
-        Parser::from_string(fs::read_to_string(path).unwrap().as_str())
+        let (meta, gamestate) = Unzipper::get_zipped_content(&path).unwrap();
+
+        Parser::from_meta(meta.as_str());
+        Parser::from_gamestate(gamestate.as_str());
+
+        todo!()
     }
-    pub fn from_string(string: &str) -> ModelDataPoint {
+    pub fn from_meta(string: &str) -> ModelDataPoint {
+        let i: usize = string.parse().unwrap();
+        ModelDataPoint { data: i }
+    }
+    pub fn from_gamestate(string: &str) -> ModelDataPoint {
         let i: usize = string.parse().unwrap();
         ModelDataPoint { data: i }
     }
