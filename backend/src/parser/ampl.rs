@@ -1,15 +1,18 @@
 use nom::{
     branch::alt,
     bytes::complete::{escaped, tag_no_case, take_while},
-    character::complete::{alphanumeric0, alphanumeric1, char, one_of},
-    combinator::{cut, map, value},
+    character::complete::{alphanumeric0, alphanumeric1, char, digit1, one_of},
+    combinator::{cut, map, map_res, opt, recognize, value},
     error::{context, ErrorKind, ParseError, VerboseError},
     multi::separated_list0,
-    number::{self, complete::double},
-    sequence::{preceded, separated_pair, terminated},
+    number::{self, complete::double as parse_double, complete::i64 as parse_i64},
+    sequence::{delimited, preceded, separated_pair, terminated},
     AsChar, IResult, InputTakeAtPosition,
 };
-use std::{collections::HashMap, hash::Hash};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+};
 
 type Res<NEXT_STR, RESULT> = IResult<NEXT_STR, RESULT, VerboseError<NEXT_STR>>;
 
@@ -20,6 +23,7 @@ pub enum AmplValue<'a> {
     Number(f64),
     Dict(HashMap<&'a str, Vec<AmplValue<'a>>>),
     Array(Vec<AmplValue<'a>>),
+    Set(Vec<AmplValue<'a>>),
 }
 
 fn sp<'a>(i: &'a str) -> Res<&'a str, &'a str> {
@@ -27,9 +31,9 @@ fn sp<'a>(i: &'a str) -> Res<&'a str, &'a str> {
     take_while(move |c| chars.contains(c))(i)
 }
 fn parse_str<'a>(i: &'a str) -> Res<&'a str, &'a str> {
-    escaped(alphanumeric_singlequote, '\\', one_of("\"n\\"))(i)
+    escaped(printing_characters, '\\', one_of("\"n\\"))(i)
 }
-fn alphanumeric_singlequote<T, E>(input: T) -> IResult<T, T, E>
+fn printing_characters<T, E>(input: T) -> IResult<T, T, E>
 where
     T: InputTakeAtPosition,
     E: ParseError<T>,
@@ -38,7 +42,10 @@ where
     input.split_at_position1_complete(
         |item| {
             let char_item = item.as_char();
-            !char_item.is_alphanum() && !(char_item == '\'')
+            !char_item.is_alphanumeric()
+                && !char_item.is_ascii_punctuation()
+                && !(char_item == ' ')
+                && !(char_item == '\'')
         },
         ErrorKind::AlphaNumeric,
     )
@@ -61,10 +68,21 @@ fn aampl_value<'a>(input: &'a str) -> Res<&'a str, AmplValue<'a>> {
         sp,
         alt((
             map(dict, AmplValue::Dict),
-            // map(array, AamplValue::Array),
+            map(array, AmplValue::Array),
+            map(set, AmplValue::Set),
             map(boolean, AmplValue::Boolean),
             map(string, |s| AmplValue::String(s)),
-            map(double, AmplValue::Number),
+            map(parse_double, AmplValue::Number),
+        )),
+    )(input)
+}
+
+fn root<'a>(input: &'a str) -> Res<&'a str, HashMap<&'a str, Vec<AmplValue<'a>>>> {
+    preceded(
+        sp,
+        cut(terminated(
+            map(separated_list0(sp, key_value), fold_into_hashmap),
+            sp,
         )),
     )(input)
 }
@@ -93,6 +111,44 @@ fn dict<'a>(input: &'a str) -> Res<&'a str, HashMap<&'a str, Vec<AmplValue<'a>>>
     )(input)
 }
 
+fn number_value<'a>(input: &'a str) -> Res<&'a str, (i64, AmplValue<'a>)> {
+    context(
+        "number_value",
+        separated_pair(
+            preceded(sp, map_res(recognize(digit1), str::parse)),
+            cut(preceded(sp, char('='))),
+            preceded(sp, aampl_value),
+        ),
+    )(input)
+}
+
+fn array<'a>(input: &'a str) -> Res<&'a str, Vec<AmplValue<'a>>> {
+    preceded(
+        char('{'),
+        preceded(
+            sp,
+            cut(terminated(
+                map(separated_list0(sp, number_value), fold_into_array),
+                preceded(sp, terminated(char('}'), sp)),
+            )),
+        ),
+    )(input)
+}
+
+fn set<'a>(input: &'a str) -> Res<&'a str, Vec<AmplValue<'a>>> {
+    preceded(
+        char('{'),
+        preceded(
+            sp,
+            cut(terminated(
+                map(separated_list0(sp, string), |d| {
+                    d.into_iter().map(|a| AmplValue::String(a)).collect()
+                }),
+                preceded(sp, terminated(char('}'), sp)),
+            )),
+        ),
+    )(input)
+}
 fn fold_into_hashmap<'a>(
     tuple_vec: Vec<(&'a str, AmplValue<'a>)>,
 ) -> HashMap<&'a str, Vec<AmplValue<'a>>> {
@@ -103,6 +159,15 @@ fn fold_into_hashmap<'a>(
                 let entry = acc.entry(key).or_insert(vec![]);
                 entry.push(value)
             }
+            acc
+        })
+}
+
+fn fold_into_array<'a>(tuple_vec: Vec<(i64, AmplValue<'a>)>) -> Vec<AmplValue<'a>> {
+    tuple_vec
+        .into_iter()
+        .fold(Vec::new(), |mut acc, (index, value)| {
+            acc.push(value);
             acc
         })
 }
@@ -155,10 +220,24 @@ mod tests {
     }
 
     #[test]
+    fn string__given_escaped_test_contains_space__returns_text() {
+        let text = "\"te xt\"";
+        let (_, actual) = string(text).unwrap();
+        assert_eq!(actual, "te xt");
+    }
+
+    #[test]
     fn key_value__given_assignment__returns_assignment() {
         let text = "name=\"Empire\"";
         let (_, actual) = key_value(text).unwrap();
         assert_eq!(actual, ("name", AmplValue::String("Empire")));
+    }
+
+    #[test]
+    fn number_value__given_assignment__returns_assignment() {
+        let text = "0=\"Empire\"";
+        let (_, actual) = number_value(text).unwrap();
+        assert_eq!(actual, (0, AmplValue::String("Empire")));
     }
 
     #[test]
@@ -210,5 +289,67 @@ mod tests {
 
         assert_eq!(name, &vec![AmplValue::String("Kingdom")]);
         assert_eq!(alias, &vec![AmplValue::String("Empire")]);
+    }
+
+    #[test]
+    fn set__single_element__returns_assignment_both_values() {
+        let text = "{\"Ancient Relics Story Pack\"\n}\n";
+
+        let expected_array = vec![AmplValue::String("Ancient Relics Story Pack")];
+
+        let (_, actual) = set(text).unwrap();
+
+        assert_eq!(actual, expected_array);
+    }
+
+    #[test]
+    fn set__untagged__returns_assignment_both_values() {
+        let text = r###"{
+            "Ancient Relics Story Pack"
+            "Anniversary Portraits"
+            "Apocalypse"
+            "Distant Stars Story Pack"
+        }
+        "###;
+
+        let expected_array = vec![
+            AmplValue::String("Ancient Relics Story Pack"),
+            AmplValue::String("Anniversary Portraits"),
+            AmplValue::String("Apocalypse"),
+            AmplValue::String("Distant Stars Story Pack"),
+        ];
+
+        let (_, actual) = set(text).unwrap();
+
+        assert_eq!(actual, expected_array);
+    }
+
+    #[test]
+    fn array__numbered__returns_ordered_list() {
+        let text = r###"{
+            0="toad"
+            1="frog"
+            2="amphibian"
+            3="polliwog"
+        }
+        "###;
+
+        let expected_array = vec![
+            AmplValue::String("toad"),
+            AmplValue::String("frog"),
+            AmplValue::String("amphibian"),
+            AmplValue::String("polliwog"),
+        ];
+
+        let (_, actual) = array(text).unwrap();
+
+        assert_eq!(actual, expected_array);
+    }
+
+    #[test]
+    fn root__one_liner__returns_dict() {
+        let real_file = "version=\"Herbert v3.2.2\"\n";
+
+        let (_, actual) = root(real_file).unwrap();
     }
 }
