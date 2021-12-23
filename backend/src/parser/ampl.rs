@@ -3,11 +3,11 @@ use nom::{
     bytes::complete::{escaped, tag_no_case, take_while},
     character::complete::{alphanumeric0, alphanumeric1, char, one_of},
     combinator::{cut, map, value},
-    error::{context, VerboseError},
+    error::{context, ErrorKind, ParseError, VerboseError},
     multi::separated_list0,
     number::{self, complete::double},
     sequence::{preceded, separated_pair, terminated},
-    IResult,
+    AsChar, IResult, InputTakeAtPosition,
 };
 use std::{collections::HashMap, hash::Hash};
 
@@ -27,7 +27,21 @@ fn sp<'a>(i: &'a str) -> Res<&'a str, &'a str> {
     take_while(move |c| chars.contains(c))(i)
 }
 fn parse_str<'a>(i: &'a str) -> Res<&'a str, &'a str> {
-    escaped(alphanumeric1, '\\', one_of("\"n\\"))(i)
+    escaped(alphanumeric_singlequote, '\\', one_of("\"n\\"))(i)
+}
+fn alphanumeric_singlequote<T, E>(input: T) -> IResult<T, T, E>
+where
+    T: InputTakeAtPosition,
+    E: ParseError<T>,
+    <T as InputTakeAtPosition>::Item: AsChar,
+{
+    input.split_at_position1_complete(
+        |item| {
+            let char_item = item.as_char();
+            !char_item.is_alphanum() && !(char_item == '\'')
+        },
+        ErrorKind::AlphaNumeric,
+    )
 }
 
 fn boolean<'a>(input: &'a str) -> Res<&'a str, bool> {
@@ -72,11 +86,8 @@ fn dict<'a>(input: &'a str) -> Res<&'a str, HashMap<&'a str, Vec<AmplValue<'a>>>
         preceded(
             sp,
             cut(terminated(
-                map(
-                    separated_list0(sp, key_value),
-                    |tuple_vec: Vec<(&str, AmplValue)>| fold_into_hashmap(tuple_vec),
-                ),
-                preceded(sp, char('}')),
+                map(separated_list0(sp, key_value), fold_into_hashmap),
+                preceded(sp, terminated(char('}'), sp)),
             )),
         ),
     )(input)
@@ -110,10 +121,17 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_str__given_ordinary_string__return_string() {
+    fn parse_str__given_ordinary_string__return_string() {
         let text = "Name";
         let (_, actual) = parse_str(text).unwrap();
         assert_eq!(actual, "Name");
+    }
+
+    #[test]
+    fn parse_str__single_quotes__return_string_with_single_quotes() {
+        let text = "'Name'";
+        let (_, actual) = parse_str(text).unwrap();
+        assert_eq!(actual, "'Name'");
     }
 
     #[test]
@@ -145,17 +163,24 @@ mod tests {
 
     #[test]
     fn dict__given_assignement__returns_assignment() {
-        let text = "{name=\"Empire\"\n}";
+        let text = r###"{
+            name="Empire"
+        }
+        "###;
         let (_, actual) = dict(text).unwrap();
 
-        println!("{:?}", actual);
+        assert!(actual.contains_key("name"));
+        let entry = actual.get("name").unwrap();
+        assert_eq!(entry, &vec![AmplValue::String("Empire")]);
     }
+
     #[test]
     fn dict__given_duplicate_keys__returns_assignment_both_values() {
         let text = r###"{
-	name="Empire"
-	name="Empire"
-}"###;
+            name="Empire"
+            name="Empire"
+        }
+        "###;
 
         let (_, actual) = dict(text).unwrap();
 
@@ -170,9 +195,10 @@ mod tests {
     #[test]
     fn dict__given_different_keys__returns_assignment_both_values() {
         let text = r###"{
-	alias="Empire"
-	name="Kingdom"
-}"###;
+            alias="Empire"
+            name="Kingdom"
+        }
+        "###;
 
         let (_, actual) = dict(text).unwrap();
 
