@@ -155,37 +155,34 @@ fn quoted<'a>(i: &'a str) -> Res<&'a str, Val<'a>> {
 fn array<'a>(i: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
     context(
         "array",
-        map(separated_list0(space, indexed_value), fold_into_array),
+        preceded(
+            char('{'),
+            terminated(
+                map(separated_list0(space, indexed_value), fold_into_array),
+                preceded(space, terminated(char('}'), space)),
+            ),
+        ),
     )(i)
 }
 fn dict<'a>(i: &'a str) -> Res<&'a str, HashMap<&'a str, Vec<Val<'a>>>> {
     context(
         "dict",
-        map(separated_list0(space, key_value), fold_into_hashmap),
-    )(i)
-}
-fn set<'a>(i: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
-    context("set", separated_list0(space, val))(i)
-}
-
-fn bracketed_contents<'a>(i: &'a str) -> Res<&'a str, Val<'a>> {
-    context(
-        "bracket_contents",
-        cut(alt((
-            map(dict, |h| Val::Dict(h)),
-            map(array, |v| Val::Array(v)),
-            map(set, |s| Val::Set(s)),
-        ))),
-    )(i)
-}
-
-fn bracketed<'a>(i: &'a str) -> Res<&'a str, Val<'a>> {
-    context(
-        "bracketed",
         preceded(
             char('{'),
             terminated(
-                bracketed_contents,
+                map(separated_list0(space, key_value), fold_into_hashmap),
+                preceded(space, terminated(char('}'), space)),
+            ),
+        ),
+    )(i)
+}
+fn set<'a>(i: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
+    context(
+        "set",
+        preceded(
+            char('{'),
+            terminated(
+                separated_list0(space, val),
                 preceded(space, terminated(char('}'), space)),
             ),
         ),
@@ -198,7 +195,9 @@ fn val<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         preceded(
             space,
             alt((
-                bracketed,
+                map(array, Val::Array),
+                map(dict, Val::Dict),
+                map(set, Val::Set),
                 quoted,
                 map(boolean, Val::Boolean),
                 map(decimal, Val::Decimal),
@@ -476,14 +475,27 @@ mod tests {
             assert_eq!(first, &vec![Val::String("Bond")]);
             assert_eq!(second, &vec![Val::String("James Bond")]);
         } else {
-            panic!("Val is not a dict")
+            let mut string = String::from("Expected an Dict, but received a ");
+
+            string.push_str(match val {
+                Val::Boolean(_) => "Boolean",
+                Val::String(_) => "String",
+                Val::Integer(_) => "Integer",
+                Val::Decimal(_) => "Decimal",
+                Val::Dict(_) => "Dict",
+                Val::Array(_) => "Array",
+                Val::Set(_) => "Set",
+                Val::Date(_) => "Date",
+            });
+            panic!("{}", string);
         }
     }
 
     #[test]
     fn key_value__array_assignment__returns_ordered_array() {
         let text = r###"name={
-0="bond"
+0="Bond"
+1="James Bond"
 }"###;
         let (_, (key, val)) = key_value(text).unwrap();
 
@@ -499,6 +511,38 @@ mod tests {
             assert_eq!(second, &Val::String("James Bond"));
         } else {
             let mut string = String::from("Expected an array, but received a ");
+
+            string.push_str(match val {
+                Val::Boolean(_) => "Boolean",
+                Val::String(_) => "String",
+                Val::Integer(_) => "Integer",
+                Val::Decimal(_) => "Decimal",
+                Val::Dict(_) => "Dict",
+                Val::Array(_) => "Array",
+                Val::Set(_) => "Set",
+                Val::Date(_) => "Date",
+            });
+            panic!("{}", string);
+        }
+    }
+
+    #[test]
+    fn key_value__set_assignment__returns_ordered_array() {
+        let text = r###"name={
+"Bond"
+"James Bond"
+}"###;
+        let (_, (key, val)) = key_value(text).unwrap();
+
+        assert_eq!(key, "name");
+
+        if let Val::Set(vec) = val {
+            assert_eq!(vec.len(), 2);
+
+            assert!(vec.contains(&Val::String("Bond")));
+            assert!(vec.contains(&Val::String("James Bond")));
+        } else {
+            let mut string = String::from("Expected an Set, but received a ");
 
             string.push_str(match val {
                 Val::Boolean(_) => "Boolean",
@@ -590,14 +634,14 @@ mod tests {
 
     #[test]
     fn set__new_line_separated_strings__returns_array_of_strings() {
-        let text = "\"hello\"\n\"world\"\n";
+        let text = "{\"hello\"\n\"world\"\n}";
         let (_, actual) = set(text).unwrap();
         assert_eq!(actual, vec![Val::String("hello"), Val::String("world")]);
     }
 
     #[test]
     fn set__new_line_separated_dates__returns_array_of_strings() {
-        let text = "\"2200.01.01\"\n\"2200.01.01\"\n";
+        let text = "{\"2200.01.01\"\n\"2200.01.01\"\n}";
         let (_, actual) = set(text).unwrap();
         assert_eq!(
             actual,
@@ -610,14 +654,14 @@ mod tests {
 
     #[test]
     fn set__new_line_separated_numbers__returns_array_of_strings() {
-        let text = "2200\n-7.2\n";
+        let text = "{2200\n-7.2\n}";
         let (_, actual) = set(text).unwrap();
         assert_eq!(actual, vec![Val::Integer(2200), Val::Decimal(-7.2)]);
     }
 
     #[test]
     fn array__indexed_dates__returns_array_of_dates() {
-        let text = "0=2200\n1=-7.2\n";
+        let text = "{0=2200\n1=-7.2\n}";
         let (_, actual) = array(text).unwrap();
         assert_eq!(actual, vec![Val::Integer(2200), Val::Decimal(-7.2)]);
     }
@@ -634,7 +678,7 @@ mod tests {
 
     #[test]
     fn dict__named_numbers__returns_array_of_dates() {
-        let text = "name=2200\nalias=-7.2\n";
+        let text = "{name=2200\nalias=-7.2\n}";
         let (_, actual) = dict(text).unwrap();
 
         assert!(actual.contains_key("name"));
@@ -653,13 +697,5 @@ mod tests {
         let (_, actual) = key(text).unwrap();
 
         assert_eq!(actual, text);
-    }
-
-    #[test]
-    fn bracketed__newline_terminated_list__returns_dict() {
-        let text = "{\nname=\"bond\"\n}";
-        let (_, actual) = bracketed(text).unwrap();
-
-        println!("{:?}", actual);
     }
 }
