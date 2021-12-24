@@ -159,7 +159,7 @@ fn array<'a>(i: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
             char('{'),
             terminated(
                 map(separated_list0(space, indexed_value), fold_into_array),
-                preceded(space, terminated(char('}'), space)),
+                preceded(space, char('}')),
             ),
         ),
     )(i)
@@ -171,7 +171,7 @@ fn dict<'a>(i: &'a str) -> Res<&'a str, HashMap<&'a str, Vec<Val<'a>>>> {
             char('{'),
             terminated(
                 map(separated_list0(space, key_value), fold_into_hashmap),
-                preceded(space, terminated(char('}'), space)),
+                preceded(space, char('}')),
             ),
         ),
     )(i)
@@ -181,10 +181,7 @@ fn set<'a>(i: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
         "set",
         preceded(
             char('{'),
-            terminated(
-                separated_list0(space, val),
-                preceded(space, terminated(char('}'), space)),
-            ),
+            terminated(separated_list0(space, val), preceded(space, char('}'))),
         ),
     )(i)
 }
@@ -205,6 +202,22 @@ fn val<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
             )),
         ),
     )(input)
+}
+
+fn root<'a>(i: &'a str) -> Res<&'a str, Val<'a>> {
+    context(
+        "root",
+        preceded(
+            space,
+            terminated(
+                map(
+                    map(separated_list0(space, key_value), fold_into_hashmap),
+                    Val::Dict,
+                ),
+                space,
+            ),
+        ),
+    )(i)
 }
 
 fn map_to_date<'a>(s: &'a str) -> anyhow::Result<Date> {
@@ -697,5 +710,91 @@ mod tests {
         let (_, actual) = key(text).unwrap();
 
         assert_eq!(actual, text);
+    }
+
+    #[test]
+    fn root__assignment__returns_dict() {
+        let text = "name=\"semantically_invalid\"\n";
+        let (_, actual) = root(text).unwrap();
+        if let Val::Dict(dict) = actual {
+            assert!(dict.contains_key("name"));
+
+            let first = dict.get("name").unwrap();
+
+            assert_eq!(first, &vec![Val::String("semantically_invalid")]);
+        } else {
+            let mut string = String::from("Expected an Dict, but received a ");
+
+            string.push_str(match actual {
+                Val::Boolean(_) => "Boolean",
+                Val::String(_) => "String",
+                Val::Integer(_) => "Integer",
+                Val::Decimal(_) => "Decimal",
+                Val::Dict(_) => "Dict",
+                Val::Array(_) => "Array",
+                Val::Set(_) => "Set",
+                Val::Date(_) => "Date",
+            });
+            panic!("{}", string);
+        }
+    }
+
+    #[test]
+    fn root__many_assignments__doesnt_break() {
+        let text = r###"
+name="semantically_invalid"
+name="semantically_invalid"
+date="2200.10.01"
+where={
+x=1
+z=2
+}
+"###;
+        let (_, _actual) = root(text).expect("did not parse dict successfully");
+    }
+    #[test]
+    fn root__many_assignments__doesnt_break_please() {
+        let text = r###"version="Herbert v3.2.2"
+        version_control_revision=83287
+        name="United Nations of Earth"
+        date="2200.02.01"
+        required_dlcs={
+            "Ancient Relics Story Pack"
+            "Anniversary Portraits"
+            "Apocalypse"
+            "Distant Stars Story Pack"
+            "Federations"
+            "Horizon Signal"
+            "Humanoids Species Pack"
+            "Leviathans Story Pack"
+            "Lithoids Species Pack"
+            "Megacorp"
+            "Necroids Species Pack"
+            "Nemesis"
+            "Plantoids Species Pack"
+            "Synthetic Dawn Story Pack"
+            "Utopia"
+        }
+        player_portrait="human"
+        flag={
+            icon={
+                category="human"
+                file="flag_human_9.dds"
+            }
+            background={
+                category="backgrounds"
+                file="00_solid.dds"
+            }
+            colors={
+                "blue"
+                "black"
+                "null"
+                "null"
+            }
+        }
+        meta_fleets=3
+        meta_planets=1
+        "###;
+        let (_, _actual) = root(text).expect("did not parse dict successfully");
     }
 }
