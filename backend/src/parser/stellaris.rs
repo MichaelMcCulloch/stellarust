@@ -100,20 +100,6 @@ fn raw_date<'a>(i: &'a str) -> Res<&'a str, Date> {
     )(i)
 }
 
-fn quoted_string<'a>(i: &'a str) -> Res<&'a str, &'a str> {
-    context(
-        "quoted_string",
-        preceded(char('\"'), cut(terminated(raw_string, char('\"')))),
-    )(i)
-}
-
-fn quoted_date<'a>(i: &'a str) -> Res<&'a str, Date> {
-    context(
-        "quoted_date",
-        preceded(char('\"'), cut(terminated(raw_date, char('\"')))),
-    )(i)
-}
-
 fn key_value<'a>(i: &'a str) -> Res<&'a str, (&'a str, Val<'a>)> {
     context(
         "key_value",
@@ -130,47 +116,45 @@ fn indexed_value<'a>(i: &'a str) -> Res<&'a str, (usize, Val<'a>)> {
         "indexed_value",
         separated_pair(
             preceded(space, map_res(recognize(digit1), str::parse)),
-            cut(preceded(space, char('='))),
+            preceded(space, char('=')),
             preceded(space, val),
         ),
     )(i)
 }
 
-fn quoted<'a>(i: &'a str) -> Res<&'a str, Val<'a>> {
+fn quoted_date<'a>(i: &'a str) -> Res<&'a str, Date> {
     context(
         "quoted_date",
-        preceded(
-            char('\"'),
-            cut(terminated(
-                alt((
-                    map(raw_date, |d| Val::Date(d)),
-                    map(raw_string, |s| Val::String(s)),
-                )),
-                char('\"'),
-            )),
-        ),
+        preceded(char('\"'), terminated(raw_date, char('\"'))),
     )(i)
 }
 
-fn array<'a>(i: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
+fn quoted_string<'a>(i: &'a str) -> Res<&'a str, &'a str> {
+    context(
+        "quoted_string",
+        preceded(char('\"'), terminated(raw_string, char('\"'))),
+    )(i)
+}
+
+fn array<'a>(i: &'a str) -> Res<&'a str, Vec<(usize, Val<'a>)>> {
     context(
         "array",
         preceded(
             char('{'),
             terminated(
-                map(separated_list0(space, indexed_value), fold_into_array),
+                separated_list0(space, indexed_value),
                 preceded(space, char('}')),
             ),
         ),
     )(i)
 }
-fn dict<'a>(i: &'a str) -> Res<&'a str, HashMap<&'a str, Vec<Val<'a>>>> {
+fn dict<'a>(i: &'a str) -> Res<&'a str, Vec<(&str, Val<'a>)>> {
     context(
         "dict",
         preceded(
             char('{'),
             terminated(
-                map(separated_list0(space, key_value), fold_into_hashmap),
+                separated_list0(space, key_value),
                 preceded(space, char('}')),
             ),
         ),
@@ -192,10 +176,11 @@ fn val<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         preceded(
             space,
             alt((
-                map(array, Val::Array),
-                map(dict, Val::Dict),
-                map(set, Val::Set),
-                quoted,
+                map(array, |pairs| Val::Array(fold_into_array(pairs))),
+                map(dict, |tuple| Val::Dict(fold_into_hashmap(tuple))),
+                map(set, |set| Val::Set(set)),
+                map(quoted_date, Val::Date),
+                map(quoted_string, Val::String),
                 map(boolean, Val::Boolean),
                 map(decimal, Val::Decimal),
                 map(integer, Val::Integer),
@@ -328,46 +313,46 @@ mod tests {
     #[test]
     fn quoted_string__simple_word__parses_word() {
         let text = "\"Text\"";
-        let (_, actual) = quoted(text).unwrap();
-        assert_eq!(actual, Val::String("Text"));
+        let (_, actual) = quoted_string(text).unwrap();
+        assert_eq!(actual, "Text");
     }
 
     #[test]
     fn quoted_string__two_words__parses_word() {
         let text = "\"Text part\"";
-        let (_, actual) = quoted(text).unwrap();
-        assert_eq!(actual, Val::String("Text part"));
+        let (_, actual) = quoted_string(text).unwrap();
+        assert_eq!(actual, "Text part");
     }
 
     #[test]
     fn quoted_string__two_words_and_numbers__parses_word() {
         let text = "\"Text part 2\"";
-        let (_, actual) = quoted(text).unwrap();
-        assert_eq!(actual, Val::String("Text part 2"));
+        let (_, actual) = quoted_string(text).unwrap();
+        assert_eq!(actual, "Text part 2");
     }
 
     #[test]
     fn quoted_string__two_words_numbers_and_period__parses_word() {
         let text = "\"Text part 2.\"";
-        let (_, actual) = quoted(text).unwrap();
-        assert_eq!(actual, Val::String("Text part 2."));
+        let (_, actual) = quoted_string(text).unwrap();
+        assert_eq!(actual, "Text part 2.");
     }
 
     #[test]
     fn quoted_string__two_words_numbers_period_and_symbol__parses_word() {
         let text = "\"Text part 2.~!@#$%^&*()_+`1234567890-[];',./{}|:<>?\"";
-        let (_, actual) = quoted(text).unwrap();
+        let (_, actual) = quoted_string(text).unwrap();
         assert_eq!(
             actual,
-            Val::String("Text part 2.~!@#$%^&*()_+`1234567890-[];',./{}|:<>?")
+            "Text part 2.~!@#$%^&*()_+`1234567890-[];',./{}|:<>?"
         );
     }
 
     #[test]
     fn quoted_string__quoted_numbers__parses_word() {
         let text = "\"-7.2\"";
-        let (_, actual) = quoted(text).unwrap();
-        assert_eq!(actual, Val::String("-7.2"));
+        let (_, actual) = quoted_string(text).unwrap();
+        assert_eq!(actual, "-7.2");
     }
 
     #[test]
@@ -607,30 +592,30 @@ mod tests {
     #[test]
     fn quoted_date__simple_quoted_date__returns_date() {
         let text = "\"2021.12.23\"";
-        let (_, actual) = quoted(text).unwrap();
+        let (_, actual) = quoted_date(text).unwrap();
         assert_eq!(
             actual,
-            Val::Date(Date::from_calendar_date(2021, Month::December, 23).unwrap())
+            Date::from_calendar_date(2021, Month::December, 23).unwrap()
         );
     }
 
     #[test]
     fn quoted_date__min_values___returns_date() {
         let text = "\"0000.01.01\"";
-        let (_, actual) = quoted(text).unwrap();
+        let (_, actual) = quoted_date(text).unwrap();
         assert_eq!(
             actual,
-            Val::Date(Date::from_calendar_date(0, Month::January, 01).unwrap())
+            Date::from_calendar_date(0, Month::January, 01).unwrap()
         );
     }
 
     #[test]
     fn quoted_date__max_values___returns_date() {
         let text = "\"9999.12.31\"";
-        let (_, actual) = quoted(text).unwrap();
+        let (_, actual) = quoted_date(text).unwrap();
         assert_eq!(
             actual,
-            Val::Date(Date::from_calendar_date(9999, Month::December, 31).unwrap())
+            Date::from_calendar_date(9999, Month::December, 31).unwrap()
         );
     }
 
@@ -679,7 +664,10 @@ mod tests {
     fn array__indexed_dates__returns_array_of_dates() {
         let text = "{0=2200\n1=-7.2\n}";
         let (_, actual) = array(text).unwrap();
-        assert_eq!(actual, vec![Val::Integer(2200), Val::Decimal(-7.2)]);
+        assert_eq!(
+            actual,
+            vec![(0, Val::Integer(2200)), (1, Val::Decimal(-7.2))]
+        );
     }
     #[test]
     fn indexed_value__simple_date__return_index_and_elem() {
@@ -697,14 +685,10 @@ mod tests {
         let text = "{name=2200\nalias=-7.2\n}";
         let (_, actual) = dict(text).unwrap();
 
-        assert!(actual.contains_key("name"));
-        assert!(actual.contains_key("alias"));
-
-        let name = actual.get("name").unwrap();
-        let alias = actual.get("alias").unwrap();
-
-        assert_eq!(name, &vec![Val::Integer(2200)]);
-        assert_eq!(alias, &vec![Val::Decimal(-7.2)]);
+        assert_eq!(
+            actual,
+            vec![("name", Val::Integer(2200)), ("alias", Val::Decimal(-7.2))]
+        );
     }
 
     #[test]
@@ -757,18 +741,18 @@ mod tests {
         }
     }
 
-    #[test]
-    fn root__sample_gamestate_file_assignments__doesnt_break_please() {
-        let path = PathBuf::from("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate");
+    // #[test]
+    // fn root__sample_gamestate_file_assignments__doesnt_break_please() {
+    //     let path = PathBuf::from("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate");
 
-        let gamestate = fs::read_to_string(path).unwrap();
+    //     let gamestate = fs::read_to_string(path).unwrap();
 
-        let (str, actual) = root(gamestate.as_str()).unwrap();
+    //     let (str, actual) = root(gamestate.as_str()).unwrap();
 
-        if let Val::Dict(d) = actual {
-            println!("{:#?}", d);
-        } else {
-            panic!()
-        }
-    }
+    //     if let Val::Dict(d) = actual {
+    //         println!("{:#?}", d);
+    //     } else {
+    //         panic!()
+    //     }
+    // }
 }
