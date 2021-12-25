@@ -278,6 +278,9 @@ fn fold_into_hashmap<'a>(tuple_vec: Vec<(&'a str, Val<'a>)>) -> HashMap<&'a str,
 #[cfg(test)]
 mod tests {
     use core::panic;
+    use std::path::PathBuf;
+
+    use std::fs;
 
     use super::*;
     #[test]
@@ -740,61 +743,32 @@ mod tests {
     }
 
     #[test]
-    fn root__many_assignments__doesnt_break() {
-        let text = r###"
-name="semantically_invalid"
-name="semantically_invalid"
-date="2200.10.01"
-where={
-x=1
-z=2
-}
-"###;
-        let (_, _actual) = root(text).expect("did not parse dict successfully");
+    fn root__sample_meta_file_assignments__doesnt_break_please() {
+        let path = PathBuf::from("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/meta");
+
+        let gamestate = fs::read_to_string(path).unwrap();
+
+        let (str, actual) = root(gamestate.as_str()).unwrap();
+
+        if let Val::Dict(d) = actual {
+            println!("{:#?}", d);
+        } else {
+            panic!()
+        }
     }
+
     #[test]
-    fn root__many_assignments__doesnt_break_please() {
-        let text = r###"version="Herbert v3.2.2"
-        version_control_revision=83287
-        name="United Nations of Earth"
-        date="2200.02.01"
-        required_dlcs={
-            "Ancient Relics Story Pack"
-            "Anniversary Portraits"
-            "Apocalypse"
-            "Distant Stars Story Pack"
-            "Federations"
-            "Horizon Signal"
-            "Humanoids Species Pack"
-            "Leviathans Story Pack"
-            "Lithoids Species Pack"
-            "Megacorp"
-            "Necroids Species Pack"
-            "Nemesis"
-            "Plantoids Species Pack"
-            "Synthetic Dawn Story Pack"
-            "Utopia"
+    fn root__sample_gamestate_file_assignments__doesnt_break_please() {
+        let path = PathBuf::from("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate");
+
+        let gamestate = fs::read_to_string(path).unwrap();
+
+        let (str, actual) = root(gamestate.as_str()).unwrap();
+
+        if let Val::Dict(d) = actual {
+            println!("{:#?}", d);
+        } else {
+            panic!()
         }
-        player_portrait="human"
-        flag={
-            icon={
-                category="human"
-                file="flag_human_9.dds"
-            }
-            background={
-                category="backgrounds"
-                file="00_solid.dds"
-            }
-            colors={
-                "blue"
-                "black"
-                "null"
-                "null"
-            }
-        }
-        meta_fleets=3
-        meta_planets=1
-        "###;
-        let (_, _actual) = root(text).expect("did not parse dict successfully");
     }
 }
