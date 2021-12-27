@@ -1,19 +1,6 @@
-use nom::{
-    branch::alt,
-    bytes::complete::take_while,
-    character::complete::{char, digit1},
-    combinator::{cut, map, map_res, opt, recognize, verify},
-    error::VerboseError,
-    multi::separated_list0,
-    sequence::{delimited, preceded, separated_pair, tuple},
-    IResult,
-};
-use std::{
-    collections::{HashMap, HashSet},
-    error::Error,
-    fmt::{self, Debug, Display, Formatter},
-};
-use time::{Date, Month};
+use nom::{error::VerboseError, IResult};
+use std::collections::HashMap;
+use time::Date;
 
 type Res<T, S> = IResult<T, S, VerboseError<T>>;
 
@@ -44,44 +31,70 @@ pub(self) mod space {
 
 pub(self) mod dict_array_set {
     use super::{
-        decimal_integer_identifier::identifier,
-        helper::{fold_into_array, fold_into_hashmap},
+        decimal_integer_identifier::{identifier, integer},
+        helper::{fold_into_array, fold_into_hashmap, trace},
         space::{opt_space, req_space},
         value::value,
         Res, Val,
     };
     use nom::{
         branch::alt,
+        bytes::complete::{take, take_while},
         character::complete::{char, digit1},
         combinator::{cut, map, map_res, recognize, verify},
+        error::{context, VerboseError},
         multi::separated_list0,
         sequence::{delimited, preceded, separated_pair},
     };
 
     fn dict_array_set_inner<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        alt((
-            map(dict, |pairs| {
-                if !pairs.is_empty() {
-                    Val::Dict(Some(fold_into_hashmap(pairs)))
-                } else {
-                    Val::Dict(None)
-                }
-            }),
-            map(array, |pairs| {
-                if !pairs.is_empty() {
-                    Val::Array(Some(fold_into_array(pairs)))
-                } else {
-                    Val::Array(None)
-                }
-            }),
-            map(set, |vec| {
+        println!("BEFORE: {}", input);
+        let (remainder, maybe_key_number_idenentifier): (&'a str, &'a str) =
+            take_while(move |character| !"=}".contains(character))(input)?;
+
+        let (_remainder, next_token) = take(1 as usize)(remainder)?;
+        println!(
+            "remainder, maybe_key_number_idenentifier: {},{}",
+            remainder, maybe_key_number_idenentifier
+        );
+        println!("_remainder, next_token: {},{}", _remainder, next_token);
+
+        if next_token == "}" {
+            println!("Found }}, parsing a set");
+            return cut(map(set, |vec| {
                 if !vec.is_empty() {
                     Val::Set(Some(vec))
                 } else {
                     Val::Set(None)
                 }
-            }),
-        ))(input)
+            }))(input);
+        } else if next_token == "=" {
+            print!("Found =, ");
+            return if integer(maybe_key_number_idenentifier).is_ok() {
+                println!("parsing an array");
+                cut(map(array, |pairs| {
+                    if !pairs.is_empty() {
+                        Val::Array(Some(fold_into_array(pairs)))
+                    } else {
+                        Val::Array(None)
+                    }
+                }))(input)
+            } else {
+                println!("parsing a dict");
+                cut(map(dict, |pairs| {
+                    if !pairs.is_empty() {
+                        Val::Dict(Some(fold_into_hashmap(pairs)))
+                    } else {
+                        Val::Dict(None)
+                    }
+                }))(input)
+            };
+        } else {
+            println!("AFTER: {}", input);
+
+            println!("{}", next_token);
+            panic!()
+        };
     }
     pub fn dict_array_set<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         delimited(
@@ -215,7 +228,7 @@ pub(self) mod helper {
 
     use time::{Date, Month};
 
-    use super::Val;
+    use super::{Res, Val};
 
     #[derive(Debug, Clone, PartialEq)]
     pub struct DateParseError {
@@ -228,6 +241,15 @@ pub(self) mod helper {
         fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
             Debug::fmt(&self.err, f)
         }
+    }
+
+    pub fn trace<'a>(name: &'a str, res: bool, debug: &'a str) {
+        println!(
+            "{} {} with {}",
+            name,
+            if res { "SUCCEEDED" } else { "FAILED" },
+            debug
+        );
     }
 
     pub fn map_to_date<'a>(s: &'a str) -> anyhow::Result<Date> {
