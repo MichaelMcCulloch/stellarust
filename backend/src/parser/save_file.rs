@@ -18,19 +18,6 @@ use time::{Date, Month};
 type Res<T, S> = IResult<T, S, VerboseError<T>>;
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct DateParseError {
-    err: String,
-}
-
-impl Error for DateParseError {}
-
-impl Display for DateParseError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        Debug::fmt(&self.err, f)
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
 pub enum Val<'a> {
     Dict(Option<HashMap<&'a str, Vec<Val<'a>>>>),
     Array(Option<Vec<Val<'a>>>),
@@ -42,184 +29,265 @@ pub enum Val<'a> {
     Identifier(&'a str),
 }
 
-fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-    take_while(move |character| " \t\r\n".contains(character))(input)
+pub(self) mod space {
+    use super::Res;
+    use nom::{bytes::complete::take_while, combinator::verify};
+
+    pub fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
+        take_while(move |character| " \t\r\n".contains(character))(input)
+    }
+
+    pub fn req_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
+        verify(opt_space, |spaces: &str| !spaces.is_empty())(input)
+    }
 }
 
-fn req_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-    verify(opt_space, |spaces: &str| !spaces.is_empty())(input)
-}
-
-fn dict_array_set_inner<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-    alt((
-        map(dict, |pairs| {
-            if !pairs.is_empty() {
-                Val::Dict(Some(fold_into_hashmap(pairs)))
-            } else {
-                Val::Dict(None)
-            }
-        }),
-        map(array, |pairs| {
-            if !pairs.is_empty() {
-                Val::Array(Some(fold_into_array(pairs)))
-            } else {
-                Val::Array(None)
-            }
-        }),
-        map(set, |vec| {
-            if !vec.is_empty() {
-                Val::Set(Some(vec))
-            } else {
-                Val::Set(None)
-            }
-        }),
-    ))(input)
-}
-
-fn dict_array_set<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-    delimited(
-        char('{'),
-        cut(delimited(opt_space, dict_array_set_inner, opt_space)),
-        char('}'),
-    )(input)
-}
-
-fn key_value<'a>(input: &'a str) -> Res<&'a str, (&'a str, Val<'a>)> {
-    separated_pair(
-        preceded(opt_space, identifier),
-        cut(preceded(opt_space, char('='))),
-        preceded(opt_space, value),
-    )(input)
-}
-
-fn dict<'a>(input: &'a str) -> Res<&'a str, Vec<(&str, Val<'a>)>> {
-    separated_list0(req_space, key_value)(input)
-}
-fn number_value<'a>(input: &'a str) -> Res<&'a str, (usize, Val<'a>)> {
-    separated_pair(
-        preceded(
-            opt_space,
-            map_res(
-                verify(recognize(digit1), |s: &str| !s.is_empty()),
-                str::parse,
-            ),
-        ),
-        cut(preceded(opt_space, char('='))),
-        preceded(opt_space, value),
-    )(input)
-}
-fn array<'a>(input: &'a str) -> Res<&'a str, Vec<(usize, Val<'a>)>> {
-    separated_list0(req_space, number_value)(input)
-}
-fn value<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-    alt((dict_array_set, date_string, decimal_integer_identifier))(input)
-}
-fn set<'a>(input: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
-    separated_list0(req_space, value)(input)
-}
-
-fn date_string<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-    delimited(
-        char('\"'),
-        cut(alt((map(date, Val::Date), map(string, Val::String)))),
-        char('\"'),
-    )(input)
-}
-fn date<'a>(input: &'a str) -> Res<&'a str, Date> {
-    map_res(
-        recognize(tuple((digit1, char('.'), digit1, char('.'), digit1))),
-        map_to_date,
-    )(input)
-}
-fn string<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-    let reserved = "\"={}";
-    take_while(move |character: char| {
-        !reserved.contains(character)
-            && (character.is_alphanumeric()
-                || character.is_whitespace()
-                || character.is_ascii_punctuation())
-    })(input)
-}
-
-fn decimal_integer_identifier<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-    alt((
-        map(decimal, Val::Decimal),
-        map(integer, Val::Integer),
-        map(identifier, Val::Identifier),
-    ))(input)
-}
-fn decimal<'a>(input: &'a str) -> Res<&'a str, f64> {
-    map_res(
-        recognize(tuple((opt(char('-')), digit1, char('.'), digit1))),
-        str::parse,
-    )(input)
-}
-fn integer<'a>(input: &'a str) -> Res<&'a str, i64> {
-    map_res(recognize(tuple((opt(char('-')), digit1))), str::parse)(input)
-}
-fn identifier<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-    verify(
-        take_while(move |c: char| c.is_alphabetic() || c == '_'),
-        |s: &str| !s.is_empty(),
-    )(input)
-}
-
-fn map_to_date<'a>(s: &'a str) -> anyhow::Result<Date> {
-    let parts: Vec<&'a str> = s.split(".").collect();
-
-    let year: i32 = parts
-        .get(0)
-        .ok_or(DateParseError {
-            err: String::from("Too Short"),
-        })?
-        .parse()?;
-    let month = match *parts.get(1).ok_or(DateParseError {
-        err: String::from("Too Short"),
-    })? {
-        "01" => Ok(Month::January),
-        "02" => Ok(Month::February),
-        "03" => Ok(Month::March),
-        "04" => Ok(Month::April),
-        "05" => Ok(Month::May),
-        "06" => Ok(Month::June),
-        "07" => Ok(Month::July),
-        "08" => Ok(Month::August),
-        "09" => Ok(Month::September),
-        "10" => Ok(Month::October),
-        "11" => Ok(Month::November),
-        "12" => Ok(Month::December),
-        _ => Err(DateParseError {
-            err: String::from("Months beyond December are not supported, dummy!"),
-        }),
+pub(self) mod dict_array_set {
+    use super::{
+        decimal_integer_identifier::identifier,
+        helper::{fold_into_array, fold_into_hashmap},
+        space::{opt_space, req_space},
+        value::value,
+        Res, Val,
     };
-    let day: u8 = parts
-        .get(2)
-        .ok_or(DateParseError {
-            err: String::from("Too Short"),
-        })?
-        .parse()?;
-    Ok(Date::from_calendar_date(year, month?, day)?)
-}
-fn fold_into_hashmap<'a>(tuple_vec: Vec<(&'a str, Val<'a>)>) -> HashMap<&'a str, Vec<Val<'a>>> {
-    tuple_vec
-        .into_iter()
-        .fold(HashMap::new(), |mut acc, (key, value)| {
-            {
-                let entry = acc.entry(key).or_insert(vec![]);
-                entry.push(value)
-            }
-            acc
-        })
-}
-fn fold_into_array<'a>(tuple_vec: Vec<(usize, Val<'a>)>) -> Vec<Val<'a>> {
-    tuple_vec
-        .into_iter()
-        .fold(Vec::new(), |mut acc, (index, value)| {
-            acc.push(value);
-            acc
-        })
+    use nom::{
+        branch::alt,
+        character::complete::{char, digit1},
+        combinator::{cut, map, map_res, recognize, verify},
+        multi::separated_list0,
+        sequence::{delimited, preceded, separated_pair},
+    };
+
+    fn dict_array_set_inner<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
+        alt((
+            map(dict, |pairs| {
+                if !pairs.is_empty() {
+                    Val::Dict(Some(fold_into_hashmap(pairs)))
+                } else {
+                    Val::Dict(None)
+                }
+            }),
+            map(array, |pairs| {
+                if !pairs.is_empty() {
+                    Val::Array(Some(fold_into_array(pairs)))
+                } else {
+                    Val::Array(None)
+                }
+            }),
+            map(set, |vec| {
+                if !vec.is_empty() {
+                    Val::Set(Some(vec))
+                } else {
+                    Val::Set(None)
+                }
+            }),
+        ))(input)
+    }
+    pub fn dict_array_set<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
+        delimited(
+            char('{'),
+            cut(delimited(opt_space, dict_array_set_inner, opt_space)),
+            char('}'),
+        )(input)
+    }
+    pub fn key_value<'a>(input: &'a str) -> Res<&'a str, (&'a str, Val<'a>)> {
+        separated_pair(
+            preceded(opt_space, identifier),
+            cut(preceded(opt_space, char('='))),
+            preceded(opt_space, value),
+        )(input)
+    }
+
+    pub fn number_value<'a>(input: &'a str) -> Res<&'a str, (usize, Val<'a>)> {
+        separated_pair(
+            preceded(
+                opt_space,
+                map_res(
+                    verify(recognize(digit1), |s: &str| !s.is_empty()),
+                    str::parse,
+                ),
+            ),
+            cut(preceded(opt_space, char('='))),
+            preceded(opt_space, value),
+        )(input)
+    }
+    pub fn array<'a>(input: &'a str) -> Res<&'a str, Vec<(usize, Val<'a>)>> {
+        separated_list0(req_space, number_value)(input)
+    }
+
+    pub fn set<'a>(input: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
+        separated_list0(req_space, value)(input)
+    }
+
+    pub fn dict<'a>(input: &'a str) -> Res<&'a str, Vec<(&str, Val<'a>)>> {
+        separated_list0(req_space, key_value)(input)
+    }
 }
 
+pub(self) mod date_string {
+    use super::{helper::map_to_date, Res, Val};
+    use nom::{
+        branch::alt,
+        bytes::complete::take_while,
+        character::complete::{char, digit1},
+        combinator::{cut, map, map_res, recognize},
+        sequence::{delimited, tuple},
+    };
+    use time::Date;
+
+    pub fn date_string<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
+        delimited(
+            char('\"'),
+            cut(alt((map(date, Val::Date), map(string, Val::String)))),
+            char('\"'),
+        )(input)
+    }
+    pub fn date<'a>(input: &'a str) -> Res<&'a str, Date> {
+        map_res(
+            recognize(tuple((digit1, char('.'), digit1, char('.'), digit1))),
+            map_to_date,
+        )(input)
+    }
+    pub fn string<'a>(input: &'a str) -> Res<&'a str, &'a str> {
+        let reserved = "\"={}";
+        take_while(move |character: char| {
+            !reserved.contains(character)
+                && (character.is_alphanumeric()
+                    || character.is_whitespace()
+                    || character.is_ascii_punctuation())
+        })(input)
+    }
+}
+
+pub(self) mod value {
+    use nom::branch::alt;
+
+    use super::{
+        date_string::date_string, decimal_integer_identifier::decimal_integer_identifier,
+        dict_array_set::dict_array_set, Res, Val,
+    };
+
+    pub fn value<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
+        alt((dict_array_set, date_string, decimal_integer_identifier))(input)
+    }
+}
+
+pub(self) mod decimal_integer_identifier {
+    use super::{Res, Val};
+    use nom::{
+        branch::alt,
+        bytes::complete::take_while,
+        character::complete::{char, digit1},
+        combinator::{map, map_res, opt, recognize, verify},
+        sequence::tuple,
+    };
+
+    pub fn decimal_integer_identifier<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
+        alt((
+            map(decimal, Val::Decimal),
+            map(integer, Val::Integer),
+            map(identifier, Val::Identifier),
+        ))(input)
+    }
+    pub fn decimal<'a>(input: &'a str) -> Res<&'a str, f64> {
+        map_res(
+            recognize(tuple((opt(char('-')), digit1, char('.'), digit1))),
+            str::parse,
+        )(input)
+    }
+    pub fn integer<'a>(input: &'a str) -> Res<&'a str, i64> {
+        map_res(recognize(tuple((opt(char('-')), digit1))), str::parse)(input)
+    }
+    pub fn identifier<'a>(input: &'a str) -> Res<&'a str, &'a str> {
+        verify(
+            take_while(move |c: char| c.is_alphabetic() || c == '_'),
+            |s: &str| !s.is_empty(),
+        )(input)
+    }
+}
+
+pub(self) mod helper {
+    use std::{
+        collections::HashMap,
+        error::Error,
+        fmt::{self, Debug, Display, Formatter},
+    };
+
+    use time::{Date, Month};
+
+    use super::Val;
+
+    #[derive(Debug, Clone, PartialEq)]
+    pub struct DateParseError {
+        err: String,
+    }
+
+    impl Error for DateParseError {}
+
+    impl Display for DateParseError {
+        fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+            Debug::fmt(&self.err, f)
+        }
+    }
+
+    pub fn map_to_date<'a>(s: &'a str) -> anyhow::Result<Date> {
+        let parts: Vec<&'a str> = s.split(".").collect();
+
+        let year: i32 = parts
+            .get(0)
+            .ok_or(DateParseError {
+                err: String::from("Too Short"),
+            })?
+            .parse()?;
+        let month = match *parts.get(1).ok_or(DateParseError {
+            err: String::from("Too Short"),
+        })? {
+            "01" => Ok(Month::January),
+            "02" => Ok(Month::February),
+            "03" => Ok(Month::March),
+            "04" => Ok(Month::April),
+            "05" => Ok(Month::May),
+            "06" => Ok(Month::June),
+            "07" => Ok(Month::July),
+            "08" => Ok(Month::August),
+            "09" => Ok(Month::September),
+            "10" => Ok(Month::October),
+            "11" => Ok(Month::November),
+            "12" => Ok(Month::December),
+            _ => Err(DateParseError {
+                err: String::from("Months beyond December are not supported, dummy!"),
+            }),
+        };
+        let day: u8 = parts
+            .get(2)
+            .ok_or(DateParseError {
+                err: String::from("Too Short"),
+            })?
+            .parse()?;
+        Ok(Date::from_calendar_date(year, month?, day)?)
+    }
+    pub fn fold_into_hashmap<'a>(
+        tuple_vec: Vec<(&'a str, Val<'a>)>,
+    ) -> HashMap<&'a str, Vec<Val<'a>>> {
+        tuple_vec
+            .into_iter()
+            .fold(HashMap::new(), |mut acc, (key, value)| {
+                {
+                    let entry = acc.entry(key).or_insert(vec![]);
+                    entry.push(value)
+                }
+                acc
+            })
+    }
+    pub fn fold_into_array<'a>(tuple_vec: Vec<(usize, Val<'a>)>) -> Vec<Val<'a>> {
+        tuple_vec
+            .into_iter()
+            .fold(Vec::new(), |mut acc, (index, value)| {
+                acc.push(value);
+                acc
+            })
+    }
+}
 #[cfg(test)]
 mod tests {
 
@@ -227,7 +295,7 @@ mod tests {
 
     #[cfg(test)]
     mod dict_array_set {
-        use crate::parser::save_file::{dict_array_set, Val};
+        use crate::parser::save_file::{dict_array_set::dict_array_set, Val};
 
         #[test]
         fn dict_array_set__array__returns_val_array() {
@@ -311,7 +379,7 @@ mod tests {
     }
     #[cfg(test)]
     mod array {
-        use crate::parser::save_file::{array, Val};
+        use crate::parser::save_file::{dict_array_set::array, Val};
 
         #[test]
         fn array__array_of_arrays__returns_map_of_key_array() {}
@@ -581,7 +649,7 @@ mod tests {
 
     #[cfg(test)]
     mod set {
-        use crate::parser::save_file::set;
+        use crate::parser::save_file::dict_array_set::set;
 
         #[test]
         fn set__set_of_arrays__returns_vec_of_arrays() {}
@@ -636,7 +704,7 @@ mod tests {
 
     #[cfg(test)]
     mod dicts {
-        use crate::parser::save_file::{dict, Val};
+        use crate::parser::save_file::{dict_array_set::dict, Val};
 
         #[test]
         fn dict__dict_of_arrays__returns_map_of_key_array() {}
@@ -806,7 +874,10 @@ mod tests {
     mod date_string {
         use time::{Date, Month};
 
-        use crate::parser::save_file::{date, date_string, string, Val};
+        use crate::parser::save_file::{
+            date_string::{date, date_string, string},
+            Val,
+        };
 
         #[test]
         fn date_string__escaped_date__returns_val_date() {
@@ -857,7 +928,9 @@ mod tests {
 
     #[cfg(test)]
     mod decimal_integer_identifier {
-        use crate::parser::save_file::{decimal_integer_identifier, Val};
+        use crate::parser::save_file::{
+            decimal_integer_identifier::decimal_integer_identifier, Val,
+        };
 
         #[test]
         fn decimal_integer_identifier__decimal__returns_val_decimal() {
@@ -883,7 +956,7 @@ mod tests {
     }
 
     mod identifiers {
-        use crate::parser::save_file::identifier;
+        use crate::parser::save_file::decimal_integer_identifier::identifier;
 
         #[test]
         fn identifier__string_with_underscores__returns_str() {
@@ -908,7 +981,7 @@ mod tests {
 
     #[cfg(test)]
     mod integers {
-        use crate::parser::save_file::integer;
+        use crate::parser::save_file::decimal_integer_identifier::integer;
 
         #[test]
         fn integer__negative__returns_i64() {
@@ -935,7 +1008,7 @@ mod tests {
 
     #[cfg(test)]
     mod decimals {
-        use crate::parser::save_file::decimal;
+        use crate::parser::save_file::decimal_integer_identifier::decimal;
 
         #[test]
         fn decimal__lt_one__returns_f64() {
@@ -964,7 +1037,7 @@ mod tests {
     mod key_value {
         use time::{Date, Month};
 
-        use crate::parser::save_file::{key_value, Val};
+        use crate::parser::save_file::{dict_array_set::key_value, Val};
 
         #[test]
         fn key_value__array__returns_key_val_array() {}
@@ -1020,7 +1093,7 @@ mod tests {
     mod number_value {
         use time::{Date, Month};
 
-        use crate::parser::save_file::{number_value, Val};
+        use crate::parser::save_file::{dict_array_set::number_value, Val};
 
         #[test]
         fn number_value__number__array__returns_ordered_vec_arrays() {}
@@ -1074,7 +1147,7 @@ mod tests {
     #[cfg(test)]
     mod space {
 
-        use crate::parser::save_file::{opt_space, req_space};
+        use crate::parser::save_file::space::{opt_space, req_space};
 
         #[test]
         fn opt_space__all_the_spaces__returns_them() {
