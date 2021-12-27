@@ -49,7 +49,7 @@ pub(self) mod dict_array_set {
 
     fn dict_array_set_inner<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         let (remainder, maybe_key_number_idenentifier): (&'a str, &'a str) =
-            take_while(move |character| !"=}".contains(character))(input)?;
+            take_while(move |character| !"={}".contains(character))(input)?;
 
         let (_remainder, next_token) = take(1 as usize)(remainder)?;
 
@@ -79,6 +79,14 @@ pub(self) mod dict_array_set {
                     }
                 }))(input)
             };
+        } else if next_token == "{" {
+            return cut(map(set_of_collections, |vec| {
+                if !vec.is_empty() {
+                    Val::Set(Some(vec))
+                } else {
+                    Val::Set(None)
+                }
+            }))(input);
         } else {
             println!("AFTER: {}", input);
             println!("{}", next_token);
@@ -119,6 +127,10 @@ pub(self) mod dict_array_set {
 
     pub fn set<'a>(input: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
         separated_list0(req_space, value)(input)
+    }
+
+    pub fn set_of_collections<'a>(input: &'a str) -> Res<&'a str, Vec<Val<'a>>> {
+        separated_list0(req_space, dict_array_set)(input)
     }
 
     pub fn dict<'a>(input: &'a str) -> Res<&'a str, Vec<(&str, Val<'a>)>> {
@@ -162,15 +174,33 @@ pub(self) mod date_string {
 }
 
 pub(self) mod value {
-    use nom::branch::alt;
+    use nom::{branch::alt, combinator::map, sequence::delimited};
 
     use super::{
-        date_string::date_string, decimal_integer_identifier::decimal_integer_identifier,
-        dict_array_set::dict_array_set, Res, Val,
+        date_string::date_string,
+        decimal_integer_identifier::decimal_integer_identifier,
+        dict_array_set::{dict, dict_array_set},
+        helper::fold_into_hashmap,
+        space::opt_space,
+        Res, Val,
     };
 
     pub fn value<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         alt((dict_array_set, date_string, decimal_integer_identifier))(input)
+    }
+
+    pub fn root<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
+        delimited(
+            opt_space,
+            map(dict, |pairs| {
+                if !pairs.is_empty() {
+                    Val::Dict(Some(fold_into_hashmap(pairs)))
+                } else {
+                    Val::Dict(None)
+                }
+            }),
+            opt_space,
+        )(input)
     }
 }
 
@@ -201,9 +231,10 @@ pub(self) mod decimal_integer_identifier {
         map_res(recognize(tuple((opt(char('-')), digit1))), str::parse)(input)
     }
     pub fn identifier<'a>(input: &'a str) -> Res<&'a str, &'a str> {
+        let numbers = "0123456789";
         verify(
-            take_while(move |c: char| c.is_alphabetic() || c == '_'),
-            |s: &str| !s.is_empty(),
+            take_while(move |c: char| c.is_alphanumeric() || c == '_'),
+            |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
         )(input)
     }
 }
@@ -1374,6 +1405,14 @@ mod tests {
             assert_eq!(actual, ("key", Val::String("value")));
             assert!(remainder.is_empty());
         }
+
+        #[test]
+        fn key_value__key_contains_number__returns_key_val_string() {
+            let text = "key0=\"value\"";
+            let (remainder, actual) = key_value(text).unwrap();
+            assert_eq!(actual, ("key0", Val::String("value")));
+            assert!(remainder.is_empty());
+        }
     }
 
     #[cfg(test)]
@@ -1473,7 +1512,94 @@ mod tests {
 
     #[cfg(test)]
     mod root {
+        use std::fs;
+
+        use nom::InputTake;
+
+        use crate::parser::save_file::value::root;
+
         #[test]
-        fn root() {}
+        fn root__meta_file__parses_dict() {
+            let text = r###"version="Herbert v3.2.2"
+            version_control_revision=83287
+            name="United Nations of Earth"
+            date="2200.02.01"
+            required_dlcs={
+                "Ancient Relics Story Pack"
+                "Anniversary Portraits"
+                "Apocalypse"
+                "Distant Stars Story Pack"
+                "Federations"
+                "Horizon Signal"
+                "Humanoids Species Pack"
+                "Leviathans Story Pack"
+                "Lithoids Species Pack"
+                "Megacorp"
+                "Necroids Species Pack"
+                "Nemesis"
+                "Plantoids Species Pack"
+                "Synthetic Dawn Story Pack"
+                "Utopia"
+            }
+            player_portrait="human"
+            flag={
+                icon={
+                    category="human"
+                    file="flag_human_9.dds"
+                }
+                background={
+                    category="backgrounds"
+                    file="00_solid.dds"
+                }
+                colors={
+                    "blue"
+                    "black"
+                    "null"
+                    "null"
+                }
+            }
+            meta_fleets=3
+            meta_planets=1
+            "###;
+
+            let (remainder, actual) = root(text).unwrap();
+
+            println!("{:#?}", actual);
+        }
+
+        #[test]
+        fn root__meta_gamestate_file__parses_dict() {
+            let text = fs::read_to_string("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate").unwrap();
+
+            let (remainder, actual) = root(text.as_str()).unwrap();
+
+            // println!("{:#?}", actual);
+            println!("{}", remainder.take(1000));
+            assert!(remainder.is_empty());
+        }
+
+        #[test]
+        fn root__meta_gamestate_file___parses_dict() {
+            let text = r###"hyperlane={
+                {
+                    to=204
+                    length=29
+                }
+                {
+                    to=575
+                    length=18
+                }
+                {
+                    to=422
+                    length=16
+                }
+     
+            }"###;
+
+            let (remainder, actual) = root(text).unwrap();
+
+            println!("{:#?}", actual);
+            assert!(remainder.is_empty());
+        }
     }
 }
