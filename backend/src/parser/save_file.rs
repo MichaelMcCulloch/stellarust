@@ -48,19 +48,12 @@ pub(self) mod dict_array_set {
     };
 
     fn dict_array_set_inner<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        println!("BEFORE: {}", input);
         let (remainder, maybe_key_number_idenentifier): (&'a str, &'a str) =
             take_while(move |character| !"=}".contains(character))(input)?;
 
         let (_remainder, next_token) = take(1 as usize)(remainder)?;
-        println!(
-            "remainder, maybe_key_number_idenentifier: {},{}",
-            remainder, maybe_key_number_idenentifier
-        );
-        println!("_remainder, next_token: {},{}", _remainder, next_token);
 
         if next_token == "}" {
-            println!("Found }}, parsing a set");
             return cut(map(set, |vec| {
                 if !vec.is_empty() {
                     Val::Set(Some(vec))
@@ -69,9 +62,7 @@ pub(self) mod dict_array_set {
                 }
             }))(input);
         } else if next_token == "=" {
-            print!("Found =, ");
             return if integer(maybe_key_number_idenentifier).is_ok() {
-                println!("parsing an array");
                 cut(map(array, |pairs| {
                     if !pairs.is_empty() {
                         Val::Array(Some(fold_into_array(pairs)))
@@ -80,7 +71,6 @@ pub(self) mod dict_array_set {
                     }
                 }))(input)
             } else {
-                println!("parsing a dict");
                 cut(map(dict, |pairs| {
                     if !pairs.is_empty() {
                         Val::Dict(Some(fold_into_hashmap(pairs)))
@@ -91,9 +81,8 @@ pub(self) mod dict_array_set {
             };
         } else {
             println!("AFTER: {}", input);
-
             println!("{}", next_token);
-            panic!()
+            panic!("Token = or }} not found, possibly missing a closing brace somewhere?")
         };
     }
     pub fn dict_array_set<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
@@ -404,7 +393,35 @@ mod tests {
         use crate::parser::save_file::{dict_array_set::array, Val};
 
         #[test]
-        fn array__array_of_arrays__returns_map_of_key_array() {}
+        fn array__array_of_arrays__returns_map_of_key_array() {
+            let keys = super::helper::get_vec_indexes();
+            let dates = super::helper::get_vec_arrays();
+            let val_arrays = super::helper::get_vec_val_arrays();
+
+            let input: String = keys
+                .iter()
+                .zip(dates.iter())
+                .map(|(a, b)| {
+                    let mut s = String::new();
+                    s.push_str(format!("{}", a).as_str());
+                    s.push('=');
+                    s.push_str(b);
+                    s
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            let expected: Vec<(usize, Val)> = keys
+                .iter()
+                .zip(val_arrays.iter())
+                .map(|(a, b)| (*a, b.clone()))
+                .collect();
+
+            let (remainder, actual) = array(input.as_str()).unwrap();
+
+            assert_eq!(actual, expected);
+            assert!(remainder.is_empty());
+        }
         #[test]
         fn array__array_of_dates__returns_map_of_key_date() {
             let keys = super::helper::get_vec_indexes();
@@ -466,7 +483,35 @@ mod tests {
             assert!(remainder.is_empty());
         }
         #[test]
-        fn array__array_of_dicts__returns_map_of_key_dict() {}
+        fn array__array_of_dicts__returns_map_of_key_dict() {
+            let keys = super::helper::get_vec_indexes();
+            let dates = super::helper::get_vec_dicts();
+            let val_dicts = super::helper::get_vec_val_dicts();
+
+            let input: String = keys
+                .iter()
+                .zip(dates.iter())
+                .map(|(a, b)| {
+                    let mut s = String::new();
+                    s.push_str(format!("{}", a).as_str());
+                    s.push('=');
+                    s.push_str(b);
+                    s
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            let expected: Vec<(usize, Val)> = keys
+                .iter()
+                .zip(val_dicts.iter())
+                .map(|(a, b)| (*a, b.clone()))
+                .collect();
+
+            let (remainder, actual) = array(input.as_str()).unwrap();
+
+            assert_eq!(actual, expected);
+            assert!(remainder.is_empty());
+        }
         #[test]
         fn array__array_of_identifiers__returns_map_of_key_identifier() {
             let keys = super::helper::get_vec_indexes();
@@ -528,7 +573,35 @@ mod tests {
             assert!(remainder.is_empty());
         }
         #[test]
-        fn array__array_of_sets__returns_map_of_key_set() {}
+        fn array__array_of_sets__returns_map_of_key_set() {
+            let keys = super::helper::get_vec_indexes();
+            let dates = super::helper::get_vec_sets();
+            let val_sets = super::helper::get_vec_val_sets();
+
+            let input: String = keys
+                .iter()
+                .zip(dates.iter())
+                .map(|(a, b)| {
+                    let mut s = String::new();
+                    s.push_str(format!("{}", a).as_str());
+                    s.push('=');
+                    s.push_str(b);
+                    s
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            let expected: Vec<(usize, Val)> = keys
+                .iter()
+                .zip(val_sets.iter())
+                .map(|(a, b)| (*a, b.clone()))
+                .collect();
+
+            let (remainder, actual) = array(input.as_str()).unwrap();
+
+            assert_eq!(actual, expected);
+            assert!(remainder.is_empty());
+        }
         #[test]
         fn array__array_of_strings__returns_map_of_key_string() {
             let keys = super::helper::get_vec_indexes();
@@ -570,6 +643,8 @@ mod tests {
 
     #[cfg(test)]
     mod helper {
+        use std::{collections::HashMap, hash::Hash, vec};
+
         use time::{Date, Month};
 
         use crate::parser::save_file::Val;
@@ -609,6 +684,7 @@ mod tests {
                 .map(|s| s.to_string())
                 .collect()
         }
+
         pub fn get_vec_dates() -> Vec<String> {
             vec![
                 "\"2200.01.01\"",
@@ -622,6 +698,44 @@ mod tests {
             .collect()
         }
 
+        pub fn get_vec_arrays() -> Vec<String> {
+            vec![
+                "{0=\"2200.01.01\"}",
+                "{1=\"Some Date\"}",
+                "{2=0}",
+                "{3=0.7}",
+                "{4=identi_fire}",
+            ]
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect()
+        }
+
+        pub fn get_vec_sets() -> Vec<String> {
+            vec![
+                "{\"2200.01.01\"}",
+                "{\"Some Date\"}",
+                "{0}",
+                "{0.7}",
+                "{identi_fire}",
+            ]
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect()
+        }
+
+        pub fn get_vec_dicts() -> Vec<String> {
+            vec![
+                "{date=\"2200.01.01\"}",
+                "{date=\"Some Date\"}",
+                "{date=0}",
+                "{date=0.7}",
+                "{date=identi_fire}",
+            ]
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect()
+        }
         pub fn get_vec_val_integers() -> Vec<Val<'static>> {
             vec![
                 Val::Integer(0),
@@ -667,6 +781,52 @@ mod tests {
                 Val::Date(Date::from_calendar_date(2200, Month::January, 5).unwrap()),
             ]
         }
+
+        pub fn get_vec_val_arrays() -> Vec<Val<'static>> {
+            vec![
+                Val::Array(Some(vec![Val::Date(
+                    Date::from_calendar_date(2200, Month::January, 1).unwrap(),
+                )])),
+                Val::Array(Some(vec![Val::String("Some Date")])),
+                Val::Array(Some(vec![Val::Integer(0)])),
+                Val::Array(Some(vec![Val::Decimal(0.7)])),
+                Val::Array(Some(vec![Val::Identifier("identi_fire")])),
+            ]
+        }
+
+        pub fn get_vec_val_sets() -> Vec<Val<'static>> {
+            vec![
+                Val::Set(Some(vec![Val::Date(
+                    Date::from_calendar_date(2200, Month::January, 1).unwrap(),
+                )])),
+                Val::Set(Some(vec![Val::String("Some Date")])),
+                Val::Set(Some(vec![Val::Integer(0)])),
+                Val::Set(Some(vec![Val::Decimal(0.7)])),
+                Val::Set(Some(vec![Val::Identifier("identi_fire")])),
+            ]
+        }
+
+        pub fn get_vec_val_dicts() -> Vec<Val<'static>> {
+            let vec_pairs = vec![
+                (
+                    "date",
+                    Val::Date(Date::from_calendar_date(2200, Month::January, 1).unwrap()),
+                ),
+                ("date", Val::String("Some Date")),
+                ("date", Val::Integer(0)),
+                ("date", Val::Decimal(0.7)),
+                ("date", Val::Identifier("identi_fire")),
+            ];
+
+            vec_pairs
+                .into_iter()
+                .map(|(key, val)| {
+                    let map: HashMap<_, _> = HashMap::from_iter(vec![(key, vec![val])]);
+                    let value = Val::Dict(Some(map));
+                    value
+                })
+                .collect()
+        }
     }
 
     #[cfg(test)]
@@ -674,11 +834,32 @@ mod tests {
         use crate::parser::save_file::dict_array_set::set;
 
         #[test]
-        fn set__set_of_arrays__returns_vec_of_arrays() {}
+        fn set__set_of_arrays__returns_vec_of_arrays() {
+            let vec_text = super::helper::get_vec_arrays();
+            let text = vec_text.join("\n");
+            let (remainder, actual) = set(text.as_str()).unwrap();
+
+            assert_eq!(actual, super::helper::get_vec_val_arrays());
+            assert!(remainder.is_empty())
+        }
         #[test]
-        fn set__set_of_dicts__returns_vec_of_dicts() {}
+        fn set__set_of_dicts__returns_vec_of_dicts() {
+            let vec_text = super::helper::get_vec_dicts();
+            let text = vec_text.join("\n");
+            let (remainder, actual) = set(text.as_str()).unwrap();
+
+            assert_eq!(actual, super::helper::get_vec_val_dicts());
+            assert!(remainder.is_empty())
+        }
         #[test]
-        fn set__set_of_sets__returns_vec_of_sets() {}
+        fn set__set_of_sets__returns_vec_of_sets() {
+            let vec_text = super::helper::get_vec_sets();
+            let text = vec_text.join("\n");
+            let (remainder, actual) = set(text.as_str()).unwrap();
+
+            assert_eq!(actual, super::helper::get_vec_val_sets());
+            assert!(remainder.is_empty())
+        }
         #[test]
         fn set__set_of_dates__returns_vec_of_dates() {
             let vec_text = super::helper::get_vec_dates();
@@ -729,7 +910,35 @@ mod tests {
         use crate::parser::save_file::{dict_array_set::dict, Val};
 
         #[test]
-        fn dict__dict_of_arrays__returns_map_of_key_array() {}
+        fn dict__dict_of_arrays__returns_map_of_key_array() {
+            let keys = super::helper::get_vec_keys();
+            let identifiers = super::helper::get_vec_arrays();
+            let val_identifiers = super::helper::get_vec_val_arrays();
+
+            let input: String = keys
+                .iter()
+                .zip(identifiers.iter())
+                .map(|(a, b)| {
+                    let mut s = String::new();
+                    s.push_str(a);
+                    s.push('=');
+                    s.push_str(b);
+                    s
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            let expected: Vec<(&str, Val)> = keys
+                .iter()
+                .zip(val_identifiers.iter())
+                .map(|(a, b)| (a.as_str(), b.clone()))
+                .collect();
+
+            let (remainder, actual) = dict(input.as_str()).unwrap();
+
+            assert_eq!(actual, expected);
+            assert!(remainder.is_empty());
+        }
         #[test]
         fn dict__dict_of_dates__returns_map_of_key_date() {
             let keys = super::helper::get_vec_keys();
@@ -791,7 +1000,35 @@ mod tests {
             assert!(remainder.is_empty());
         }
         #[test]
-        fn dict__dict_of_dicts__returns_map_of_key_dict() {}
+        fn dict__dict_of_dicts__returns_map_of_key_dict() {
+            let keys = super::helper::get_vec_keys();
+            let identifiers = super::helper::get_vec_dicts();
+            let val_identifiers = super::helper::get_vec_val_dicts();
+
+            let input: String = keys
+                .iter()
+                .zip(identifiers.iter())
+                .map(|(a, b)| {
+                    let mut s = String::new();
+                    s.push_str(a);
+                    s.push('=');
+                    s.push_str(b);
+                    s
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            let expected: Vec<(&str, Val)> = keys
+                .iter()
+                .zip(val_identifiers.iter())
+                .map(|(a, b)| (a.as_str(), b.clone()))
+                .collect();
+
+            let (remainder, actual) = dict(input.as_str()).unwrap();
+
+            assert_eq!(actual, expected);
+            assert!(remainder.is_empty());
+        }
         #[test]
         fn dict__dict_of_identifiers__returns_map_of_key_identifier() {
             let keys = super::helper::get_vec_keys();
@@ -853,7 +1090,35 @@ mod tests {
             assert!(remainder.is_empty());
         }
         #[test]
-        fn dict__dict_of_sets__returns_map_of_key_set() {}
+        fn dict__dict_of_sets__returns_map_of_key_set() {
+            let keys = super::helper::get_vec_keys();
+            let identifiers = super::helper::get_vec_sets();
+            let val_identifiers = super::helper::get_vec_val_sets();
+
+            let input: String = keys
+                .iter()
+                .zip(identifiers.iter())
+                .map(|(a, b)| {
+                    let mut s = String::new();
+                    s.push_str(a);
+                    s.push('=');
+                    s.push_str(b);
+                    s
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
+
+            let expected: Vec<(&str, Val)> = keys
+                .iter()
+                .zip(val_identifiers.iter())
+                .map(|(a, b)| (a.as_str(), b.clone()))
+                .collect();
+
+            let (remainder, actual) = dict(input.as_str()).unwrap();
+
+            assert_eq!(actual, expected);
+            assert!(remainder.is_empty());
+        }
         #[test]
         fn dict__dict_of_strings__returns_map_of_key_string() {
             let keys = super::helper::get_vec_keys();
