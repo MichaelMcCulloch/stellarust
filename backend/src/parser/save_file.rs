@@ -208,10 +208,10 @@ pub(self) mod decimal_integer_identifier {
     use super::{Res, Val};
     use nom::{
         branch::alt,
-        bytes::complete::take_while,
+        bytes::complete::{escaped, take_while},
         character::complete::{char, digit1},
         combinator::{map, map_res, opt, recognize, verify},
-        sequence::tuple,
+        sequence::{delimited, tuple},
     };
 
     pub fn decimal_integer_identifier<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
@@ -230,11 +230,27 @@ pub(self) mod decimal_integer_identifier {
     pub fn integer<'a>(input: &'a str) -> Res<&'a str, i64> {
         map_res(recognize(tuple((opt(char('-')), digit1))), str::parse)(input)
     }
+
     pub fn identifier<'a>(input: &'a str) -> Res<&'a str, &'a str> {
+        alt((unquoted_identifier, quoted_identifier))(input)
+    }
+    pub fn unquoted_identifier<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         let numbers = "0123456789";
         verify(
             take_while(move |c: char| c.is_alphanumeric() || c == '_'),
             |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
+        )(input)
+    }
+
+    pub fn quoted_identifier<'a>(input: &'a str) -> Res<&'a str, &'a str> {
+        let numbers = "0123456789";
+        delimited(
+            char('\"'),
+            verify(
+                take_while(move |c: char| c.is_alphanumeric() || c == '_' || c == ' '),
+                |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
+            ),
+            char('\"'),
         )(input)
     }
 }
@@ -1274,26 +1290,35 @@ mod tests {
     }
 
     mod identifiers {
-        use crate::parser::save_file::decimal_integer_identifier::identifier;
+        use crate::parser::save_file::decimal_integer_identifier::{
+            quoted_identifier, unquoted_identifier,
+        };
 
         #[test]
         fn identifier__string_with_underscores__returns_str() {
             let text = "raw_string";
-            let (remainder, actual) = identifier(text).unwrap();
+            let (remainder, actual) = unquoted_identifier(text).unwrap();
             assert_eq!(actual, "raw_string");
             assert!(remainder.is_empty());
         }
         #[test]
         fn identifier__begins_with_number__rejected() {
             let text = "0raw_s0tring";
-            let result = identifier(text);
+            let result = unquoted_identifier(text);
             assert!(result.is_err());
         }
         #[test]
-        fn identifier__begins_with_quote__rejected() {
-            let text = "\"0raw_s0tring\"";
-            let result = identifier(text);
+        fn identifier__quoted_identifier__rejected() {
+            let text = "\"Cortez\"";
+            let result = unquoted_identifier(text);
             assert!(result.is_err());
+        }
+
+        #[test]
+        fn quoted_identifier__quoted_identifier__accepted() {
+            let text = "\"Cortez\"";
+            let result = quoted_identifier(text);
+            assert!(result.is_ok());
         }
     }
 
@@ -1568,6 +1593,16 @@ mod tests {
         }
 
         #[test]
+        fn root__meta_gamestate_copy_file__parses_dict() {
+            let text = fs::read_to_string("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate copy").unwrap();
+
+            let (remainder, actual) = root(text.as_str()).unwrap();
+
+            // println!("{:#?}", actual);
+            println!("{}", remainder.take(1000));
+            assert!(remainder.is_empty());
+        }
+        #[test]
         fn root__meta_gamestate_file__parses_dict() {
             let text = fs::read_to_string("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate").unwrap();
 
@@ -1579,7 +1614,7 @@ mod tests {
         }
 
         #[test]
-        fn root__meta_gamestate_file___parses_dict() {
+        fn root__set_of_dicts__parses_dict() {
             let text = r###"hyperlane={
                 {
                     to=204
