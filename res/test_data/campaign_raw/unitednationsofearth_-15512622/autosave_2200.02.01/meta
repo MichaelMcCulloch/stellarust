@@ -1,26 +1,34 @@
-version="Herbert v3.2.2"
+vers_ion0="Herbert v3.2.2"
 version_control_revision=83287
-name="United Nations of Earth"
-date="2200.02.01"
-required_dlcs={
+date="2200.05.01"
+date="0.05.01"
+float=-0.123939887
+dict={
+	alpha=a
+	beta=b
+	cthulhu=ilhjok
+}
+identifire=identi_fire
+array_of_arrays={
+	0={
+		0="a"
+	}
+	1={
+		0="one"
+	}
+	2={
+		0="two"
+	}
+}
+
+set_of_strings={
 	"Ancient Relics Story Pack"
 	"Anniversary Portraits"
 	"Apocalypse"
-	"Distant Stars Story Pack"
-	"Federations"
-	"Horizon Signal"
-	"Humanoids Species Pack"
-	"Leviathans Story Pack"
-	"Lithoids Species Pack"
-	"Megacorp"
-	"Necroids Species Pack"
-	"Nemesis"
-	"Plantoids Species Pack"
-	"Synthetic Dawn Story Pack"
-	"Utopia"
 }
-player_portrait="human"
-flag={
+empty_set={}
+"The name Of A Ship"=0
+dict_of_dicts={
 	icon={
 		category="human"
 		file="flag_human_9.dds"
@@ -36,5 +44,45 @@ flag={
 		"null"
 	}
 }
+
+set_of_numbered_dicts={
+	intel={
+		{
+			14 {
+				intel=0
+				stale_intel={
+				}
+			}
+		}
+		{
+			19 {
+				intel=0
+				stale_intel={
+				}
+			}
+		}
+	}
+}
 meta_fleets=3
 meta_planets=1
+set_of_sets={
+	{
+		to=204
+		length=29
+	}
+	{
+		to=575
+		length=18
+	}
+	{
+		to=422
+		length=16
+	}
+
+}
+set_of_numbers={
+	40 41
+}
+modules={
+	0=shipyard				1=trading_hub			}
+	
