@@ -998,7 +998,13 @@ mod tests {
 
     #[cfg(test)]
     mod files {
-        use std::{fs, time::Instant};
+        use std::{
+            fs::{self, File},
+            io::Read,
+            time::Instant,
+        };
+
+        use memmap::Mmap;
 
         use crate::parser::clausewitz::value::root;
 
@@ -1016,7 +1022,28 @@ mod tests {
             let text = fs::read_to_string("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate").unwrap();
 
             let start = Instant::now();
+
             let result = root(text.as_str());
+
+            let duration = start.elapsed();
+            println!("Time elapsed is: {:?}", duration);
+
+            assert_result_ok(result);
+        }
+
+        #[test]
+        fn gamestate_memmap__for_epic_files() {
+            let filename = "/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate";
+            let file = File::open(filename).expect("File not found");
+
+            let mmap =
+                unsafe { Mmap::map(&file).expect(&format!("Error mapping file {:?}", file)) };
+
+            let str = std::str::from_utf8(&mmap[..]).unwrap();
+
+            let start = Instant::now();
+
+            let result = root(str);
 
             let duration = start.elapsed();
             println!("Time elapsed is: {:?}", duration);
