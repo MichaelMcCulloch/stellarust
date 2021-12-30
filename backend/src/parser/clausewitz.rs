@@ -6,8 +6,8 @@ type Res<T, S> = IResult<T, S, VerboseError<T>>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Val<'a> {
-    Dict(HashMap<&'a str, Vec<Val<'a>>>),
-    NumberedDict(i64, HashMap<&'a str, Vec<Val<'a>>>),
+    Dict(Vec<(&'a str, Val<'a>)>),
+    NumberedDict(i64, Vec<(&'a str, Val<'a>)>),
     Array(Vec<Val<'a>>),
     Set(Vec<Val<'a>>),
     StringLiteral(&'a str),
@@ -255,26 +255,12 @@ pub(self) mod dict {
         )(input)
     }
 
-    pub fn hash_map<'a>(input: &'a str) -> Res<&'a str, HashMap<&'a str, Vec<Val<'a>>>> {
-        map(separated_list0(req_space, key_value), fold_into_hashmap)(input)
+    pub fn hash_map<'a>(input: &'a str) -> Res<&'a str, Vec<(&'a str, Val<'a>)>> {
+        separated_list0(req_space, key_value)(input)
     }
 
     pub fn dict<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         map(hash_map, Val::Dict)(input)
-    }
-
-    pub fn fold_into_hashmap<'a>(
-        tuple_vec: Vec<(&'a str, Val<'a>)>,
-    ) -> HashMap<&'a str, Vec<Val<'a>>> {
-        tuple_vec
-            .into_iter()
-            .fold(HashMap::new(), |mut acc, (key, value)| {
-                {
-                    let entry = acc.entry(key).or_insert(vec![]);
-                    entry.push(value)
-                }
-                acc
-            })
     }
 }
 pub(self) mod array {
@@ -312,13 +298,9 @@ pub(self) mod array {
         )(input)
     }
 
-    pub fn fold_into_array<'a>(tuple_vec: Vec<(usize, Val<'a>)>) -> Vec<Val<'a>> {
-        tuple_vec
-            .into_iter()
-            .fold(Vec::new(), |mut acc, (_index, value)| {
-                acc.push(value);
-                acc
-            })
+    pub fn fold_into_array<'a>(mut tuple_vec: Vec<(usize, Val<'a>)>) -> Vec<Val<'a>> {
+        tuple_vec.sort_by(|(a_index, _), (b_index, _)| a_index.partial_cmp(b_index).unwrap());
+        tuple_vec.into_iter().map(|(_, val)| val).collect()
     }
 }
 pub(self) mod set {
@@ -424,9 +406,7 @@ pub(self) mod numbered_dict {
                     char('}'),
                 ),
             )),
-            |(number, _, map): (i64, &str, HashMap<&'a str, Vec<Val<'a>>>)| {
-                Val::NumberedDict(number, map)
-            },
+            |(number, _, map): (i64, &str, Vec<(&'a str, Val<'a>)>)| Val::NumberedDict(number, map),
         )(input)
     }
 }
