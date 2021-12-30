@@ -62,7 +62,7 @@ pub(self) mod decimal {
 pub(self) mod integer {
     use nom::{
         character::complete::{char, digit1},
-        combinator::{map, map_res, opt, recognize},
+        combinator::{map, map_res, opt, recognize, verify},
         error::context,
         sequence::tuple,
     };
@@ -72,7 +72,12 @@ pub(self) mod integer {
     pub fn int<'a>(input: &'a str) -> Res<&'a str, i64> {
         context(
             "i64",
-            map_res(recognize(tuple((opt(char('-')), digit1))), str::parse),
+            map_res(
+                verify(recognize(tuple((opt(char('-')), digit1))), |s: &str| {
+                    !s.is_empty()
+                }),
+                str::parse,
+            ),
         )(input)
     }
 
@@ -394,8 +399,8 @@ pub(self) mod set {
 pub(self) mod bracketed {
     use nom::{
         bytes::complete::{take, take_while},
-        character::complete::char,
-        combinator::{cut, map},
+        character::complete::{char, digit1},
+        combinator::{cut, map, map_res, recognize, verify},
         error::context,
         multi::separated_list0,
         sequence::delimited,
@@ -405,6 +410,7 @@ pub(self) mod bracketed {
         array::array,
         dict::dict,
         integer::{int, integer},
+        numbered_dict::numbered_dict,
         set::set,
         space::{opt_space, req_space},
         Res, Val,
@@ -431,7 +437,11 @@ pub(self) mod bracketed {
                 cut(dict)(input)
             };
         } else if next_token == "{" {
-            return cut(set_of_collections)(input);
+            return if integer(maybe_key_number_idenentifier).is_ok() {
+                cut(numbered_dict)(input)
+            } else {
+                cut(set_of_collections)(input)
+            };
         } else {
             println!("AFTER: {}", input);
             println!("{}", next_token);
@@ -455,17 +465,16 @@ pub(self) mod numbered_dict {
     use std::collections::HashMap;
 
     use nom::{
-        character::complete::char,
-        combinator::map,
+        character::complete::{char, digit1},
+        combinator::{map, map_res, recognize, verify},
         error::context,
         multi::separated_list0,
         sequence::{delimited, tuple},
     };
 
     use super::{
-        dict::{fold_into_hashmap, hash_map, key_value},
-        integer::int,
-        space::req_space,
+        dict::hash_map,
+        space::{opt_space, req_space},
         Res, Val,
     };
 
@@ -473,8 +482,19 @@ pub(self) mod numbered_dict {
         context(
             "Numbered Dict",
             map(
-                tuple((int, delimited(char('{'), hash_map, char('{')))),
-                |(number, map): (i64, HashMap<&'a str, Vec<Val<'a>>>)| {
+                tuple((
+                    map_res(
+                        verify(recognize(digit1), |s: &str| !s.is_empty()),
+                        str::parse,
+                    ),
+                    req_space,
+                    delimited(
+                        char('{'),
+                        delimited(opt_space, hash_map, opt_space),
+                        char('}'),
+                    ),
+                )),
+                |(number, _, map): (i64, &str, HashMap<&'a str, Vec<Val<'a>>>)| {
                     Val::NumberedDict(number, map)
                 },
             ),
@@ -495,7 +515,7 @@ pub(self) mod value {
     };
 
     pub fn value<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context("Value", alt((numbered_dict, bracketed, quoted, unquoted)))(input)
+        context("Value", alt((bracketed, quoted, unquoted)))(input)
     }
 
     pub fn root<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
@@ -943,23 +963,24 @@ mod tests {
         #[test]
         fn intel_numbered_dicts() {
             let text = r###"intel={
-                    {
-                        14 {
-                            intel=0
-                            stale_intel={
-                            }
-                        }
-                    }
-                    {
-                        19 {
-                            intel=0
-                            stale_intel={
-                            }
-                        }
-                    }
-                }
-                "###;
+                                    {
+                                        14 {
+                                            intel=0
+                                            stale_intel={
+                                            }
+                                        }
+                                    }
+                                    {
+                                        19 {
+                                            intel=0
+                                            stale_intel={
+                                            }
+                                        }
+                                    }
+                                }
+"###;
             let result = root(text);
+
             assert_result_ok(result);
         }
 
@@ -1063,6 +1084,7 @@ mod tests {
         fn meta() {
             let text = fs::read_to_string("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/meta").unwrap();
             let result = root(text.as_str());
+
             assert_result_ok(result);
         }
 
