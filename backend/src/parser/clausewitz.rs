@@ -17,6 +17,87 @@ pub enum Val<'a> {
     Identifier(&'a str),
 }
 
+pub(self) mod unrolled {
+    use std::slice::SliceIndex;
+
+    use nom::{
+        error::{ContextError, ParseError, VerboseError},
+        AsChar, IResult, InputTakeAtPosition,
+    };
+
+    use super::Res;
+
+    pub fn take_while_unrolled<'a, F>(str: &'a str, condition: F) -> (&'a str, &'a str)
+    where
+        F: Fn(char) -> bool,
+    {
+        if str.is_empty() {
+            return ("", "");
+        }
+        let mut i = 0usize;
+        let len = str.len();
+
+        loop {
+            if len - i < 8 {
+                break;
+            };
+
+            let byte = (*str.as_bytes().get(i).unwrap()) as char;
+            if !condition(byte) {
+                break;
+            }
+            i += 1;
+
+            let byte = (*str.as_bytes().get(i).unwrap()) as char;
+            if !condition(byte) {
+                break;
+            }
+            i += 1;
+            let byte = (*str.as_bytes().get(i).unwrap()) as char;
+            if !condition(byte) {
+                break;
+            }
+            i += 1;
+            let byte = (*str.as_bytes().get(i).unwrap()) as char;
+            if !condition(byte) {
+                break;
+            }
+            i += 1;
+            let byte = (*str.as_bytes().get(i).unwrap()) as char;
+            if !condition(byte) {
+                break;
+            }
+            i += 1;
+            let byte = (*str.as_bytes().get(i).unwrap()) as char;
+            if !condition(byte) {
+                break;
+            }
+            i += 1;
+            let byte = (*str.as_bytes().get(i).unwrap()) as char;
+            if !condition(byte) {
+                break;
+            }
+            i += 1;
+        }
+        if len - i < 8 {
+            loop {
+                let byte = (*str.as_bytes().get(i).unwrap()) as char;
+                if !condition(byte) {
+                    break;
+                }
+                i += 1;
+
+                if i == len {
+                    break;
+                }
+            }
+        }
+
+        let (before, after) = str.split_at(i);
+        (after, before)
+    }
+}
+
 pub(self) mod tables {
 
     const fn punctuation_table() -> [bool; 256] {
@@ -360,11 +441,13 @@ pub(self) mod tables {
 }
 
 pub(self) mod space {
-    use super::{tables::is_space, Res};
-    use nom::{bytes::complete::take_while, combinator::verify};
+    use super::{tables::is_space, unrolled::take_while_unrolled, Res};
+    use nom::{bytes::complete::take_while, combinator::verify, error::VerboseError};
 
     pub fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        take_while(move |character| is_space(character))(input)
+        let x = take_while_unrolled(input, move |character| is_space(character));
+
+        Ok(x)
     }
 
     pub fn req_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
