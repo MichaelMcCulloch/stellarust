@@ -21,8 +21,18 @@ pub(self) mod space {
     use super::Res;
     use nom::{bytes::complete::take_while, combinator::verify};
 
+    fn is_space(c: char) -> bool {
+        match c as u8 {
+            b' ' => true,
+            b'\n' => true,
+            b'\t' => true,
+            b'\r' => true,
+            _ => false,
+        }
+    }
+
     pub fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        take_while(move |character| " \t\r\n".contains(character))(input)
+        take_while(move |character| is_space(character))(input)
     }
 
     pub fn req_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
@@ -183,11 +193,19 @@ pub(self) mod string_literal {
 
     use super::{Res, Val};
 
-    pub fn string_literal_contents<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        let reserved = "\"={}";
+    fn is_reserved(char: char) -> bool {
+        match char as u8 {
+            b'\"' => true,
+            b'=' => true,
+            b'}' => true,
+            b'{' => true,
+            _ => false,
+        }
+    }
 
+    pub fn string_literal_contents<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         take_while(move |character: char| {
-            !reserved.contains(character)
+            !is_reserved(character)
                 && (character.is_alphanumeric()
                     || character.is_whitespace()
                     || character.is_ascii_punctuation())
@@ -228,12 +246,26 @@ pub(self) mod dict {
         Res, Val,
     };
 
-    pub fn unquoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        let numbers = "0123456789";
+    fn is_digit(char: char) -> bool {
+        match char as u8 {
+            b'0' => true,
+            b'1' => true,
+            b'2' => true,
+            b'3' => true,
+            b'4' => true,
+            b'5' => true,
+            b'6' => true,
+            b'7' => true,
+            b'8' => true,
+            b'9' => true,
+            _ => false,
+        }
+    }
 
+    pub fn unquoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         verify(
             take_while(move |c: char| c.is_alphanumeric() || c == '_'),
-            |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
+            |s: &str| !s.is_empty() && !(is_digit(s.chars().next().unwrap())),
         )(input)
     }
 
@@ -242,8 +274,6 @@ pub(self) mod dict {
     }
 
     pub fn key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        let _numbers = "0123456789";
-
         alt((unquoted_key, quoted_key))(input)
     }
 
@@ -338,12 +368,21 @@ pub(self) mod bracketed {
         Res, Val,
     };
 
+    fn is_token(char: char) -> bool {
+        match char as u8 {
+            b'=' => true,
+            b'{' => true,
+            b'}' => true,
+            _ => false,
+        }
+    }
+
     pub fn set_of_collections<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         map(separated_list0(req_space, bracketed), |vals| Val::Set(vals))(input)
     }
     pub fn contents<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         let (remainder, maybe_key_number_idenentifier): (&'a str, &'a str) =
-            take_while(move |character| !"={}".contains(character))(input)?;
+            take_while(move |character| !is_token(character))(input)?;
 
         let (_remainder, next_token) = take(1 as usize)(remainder)?;
 
