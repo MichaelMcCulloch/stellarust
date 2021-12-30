@@ -17,19 +17,351 @@ pub enum Val<'a> {
     Identifier(&'a str),
 }
 
-pub(self) mod space {
-    use super::Res;
-    use nom::{bytes::complete::take_while, combinator::verify};
+pub(self) mod tables {
 
-    fn is_space(c: char) -> bool {
-        match c as u8 {
-            b' ' => true,
-            b'\n' => true,
-            b'\t' => true,
-            b'\r' => true,
-            _ => false,
-        }
+    const fn punctuation_table() -> [bool; 256] {
+        let mut table = [false; 256];
+
+        table[b'!' as usize] = true;
+        table[b'"' as usize] = true;
+        table[b'#' as usize] = true;
+        table[b'$' as usize] = true;
+        table[b'%' as usize] = true;
+        table[b'&' as usize] = true;
+        table[b'\'' as usize] = true;
+        table[b'(' as usize] = true;
+        table[b')' as usize] = true;
+        table[b'*' as usize] = true;
+        table[b'+' as usize] = true;
+        table[b',' as usize] = true;
+        table[b'-' as usize] = true;
+        table[b'.' as usize] = true;
+        table[b'/' as usize] = true;
+        table[b':' as usize] = true;
+        table[b';' as usize] = true;
+        table[b'<' as usize] = true;
+        table[b'=' as usize] = true;
+        table[b'>' as usize] = true;
+        table[b'?' as usize] = true;
+        table[b'@' as usize] = true;
+        table[b'[' as usize] = true;
+        table[b'\\' as usize] = true;
+        table[b']' as usize] = true;
+        table[b'^' as usize] = true;
+        table[b'_' as usize] = true;
+        table[b'`' as usize] = true;
+        table[b'{' as usize] = true;
+        table[b'|' as usize] = true;
+        table[b'}' as usize] = true;
+        table[b'~' as usize] = true;
+        table
     }
+    const fn string_litteral_content_table() -> [bool; 256] {
+        let mut table = [false; 256];
+        table[b'a' as usize] = true;
+        table[b'b' as usize] = true;
+        table[b'c' as usize] = true;
+        table[b'd' as usize] = true;
+        table[b'e' as usize] = true;
+        table[b'f' as usize] = true;
+        table[b'g' as usize] = true;
+        table[b'h' as usize] = true;
+        table[b'i' as usize] = true;
+        table[b'j' as usize] = true;
+        table[b'k' as usize] = true;
+        table[b'l' as usize] = true;
+        table[b'm' as usize] = true;
+        table[b'n' as usize] = true;
+        table[b'o' as usize] = true;
+        table[b'p' as usize] = true;
+        table[b'q' as usize] = true;
+        table[b'r' as usize] = true;
+        table[b's' as usize] = true;
+        table[b't' as usize] = true;
+        table[b'u' as usize] = true;
+        table[b'v' as usize] = true;
+        table[b'w' as usize] = true;
+        table[b'x' as usize] = true;
+        table[b'y' as usize] = true;
+        table[b'z' as usize] = true;
+
+        table[b'A' as usize] = true;
+        table[b'B' as usize] = true;
+        table[b'C' as usize] = true;
+        table[b'D' as usize] = true;
+        table[b'E' as usize] = true;
+        table[b'F' as usize] = true;
+        table[b'G' as usize] = true;
+        table[b'H' as usize] = true;
+        table[b'I' as usize] = true;
+        table[b'J' as usize] = true;
+        table[b'K' as usize] = true;
+        table[b'L' as usize] = true;
+        table[b'M' as usize] = true;
+        table[b'N' as usize] = true;
+        table[b'O' as usize] = true;
+        table[b'P' as usize] = true;
+        table[b'Q' as usize] = true;
+        table[b'R' as usize] = true;
+        table[b'S' as usize] = true;
+        table[b'T' as usize] = true;
+        table[b'U' as usize] = true;
+        table[b'V' as usize] = true;
+        table[b'W' as usize] = true;
+        table[b'X' as usize] = true;
+        table[b'Y' as usize] = true;
+        table[b'Z' as usize] = true;
+
+        table[b'0' as usize] = true;
+        table[b'1' as usize] = true;
+        table[b'2' as usize] = true;
+        table[b'3' as usize] = true;
+        table[b'4' as usize] = true;
+        table[b'5' as usize] = true;
+        table[b'6' as usize] = true;
+        table[b'7' as usize] = true;
+        table[b'8' as usize] = true;
+        table[b'9' as usize] = true;
+
+        table[b' ' as usize] = true;
+        table[b'\n' as usize] = true;
+        table[b'\t' as usize] = true;
+        table[b'\r' as usize] = true;
+
+        table[b'!' as usize] = true;
+        table[b'"' as usize] = true;
+        table[b'#' as usize] = true;
+        table[b'$' as usize] = true;
+        table[b'%' as usize] = true;
+        table[b'&' as usize] = true;
+        table[b'\'' as usize] = true;
+        table[b'(' as usize] = true;
+        table[b')' as usize] = true;
+        table[b'*' as usize] = true;
+        table[b'+' as usize] = true;
+        table[b',' as usize] = true;
+        table[b'-' as usize] = true;
+        table[b'.' as usize] = true;
+        table[b'/' as usize] = true;
+        table[b':' as usize] = true;
+        table[b';' as usize] = true;
+        table[b'<' as usize] = true;
+        table[b'>' as usize] = true;
+        table[b'?' as usize] = true;
+        table[b'@' as usize] = true;
+        table[b'[' as usize] = true;
+        table[b'\\' as usize] = true;
+        table[b']' as usize] = true;
+        table[b'^' as usize] = true;
+        table[b'_' as usize] = true;
+        table[b'`' as usize] = true;
+        table[b'{' as usize] = true;
+        table[b'|' as usize] = true;
+        table[b'}' as usize] = true;
+        table[b'~' as usize] = true;
+
+        table[b'"' as usize] = false;
+        table[b'=' as usize] = false;
+        table[b'}' as usize] = false;
+        table[b'{' as usize] = false;
+
+        table
+    }
+    const fn identifier_table() -> [bool; 256] {
+        let mut table = [false; 256];
+        table[b'a' as usize] = true;
+        table[b'b' as usize] = true;
+        table[b'c' as usize] = true;
+        table[b'd' as usize] = true;
+        table[b'e' as usize] = true;
+        table[b'f' as usize] = true;
+        table[b'g' as usize] = true;
+        table[b'h' as usize] = true;
+        table[b'i' as usize] = true;
+        table[b'j' as usize] = true;
+        table[b'k' as usize] = true;
+        table[b'l' as usize] = true;
+        table[b'm' as usize] = true;
+        table[b'n' as usize] = true;
+        table[b'o' as usize] = true;
+        table[b'p' as usize] = true;
+        table[b'q' as usize] = true;
+        table[b'r' as usize] = true;
+        table[b's' as usize] = true;
+        table[b't' as usize] = true;
+        table[b'u' as usize] = true;
+        table[b'v' as usize] = true;
+        table[b'w' as usize] = true;
+        table[b'x' as usize] = true;
+        table[b'y' as usize] = true;
+        table[b'z' as usize] = true;
+        table[b'A' as usize] = true;
+        table[b'B' as usize] = true;
+        table[b'C' as usize] = true;
+        table[b'D' as usize] = true;
+        table[b'E' as usize] = true;
+        table[b'F' as usize] = true;
+        table[b'G' as usize] = true;
+        table[b'H' as usize] = true;
+        table[b'I' as usize] = true;
+        table[b'J' as usize] = true;
+        table[b'K' as usize] = true;
+        table[b'L' as usize] = true;
+        table[b'M' as usize] = true;
+        table[b'N' as usize] = true;
+        table[b'O' as usize] = true;
+        table[b'P' as usize] = true;
+        table[b'Q' as usize] = true;
+        table[b'R' as usize] = true;
+        table[b'S' as usize] = true;
+        table[b'T' as usize] = true;
+        table[b'U' as usize] = true;
+        table[b'V' as usize] = true;
+        table[b'W' as usize] = true;
+        table[b'X' as usize] = true;
+        table[b'Y' as usize] = true;
+        table[b'Z' as usize] = true;
+        table[b'_' as usize] = true;
+        table[b'0' as usize] = true;
+        table[b'1' as usize] = true;
+        table[b'2' as usize] = true;
+        table[b'3' as usize] = true;
+        table[b'4' as usize] = true;
+        table[b'5' as usize] = true;
+        table[b'6' as usize] = true;
+        table[b'7' as usize] = true;
+        table[b'8' as usize] = true;
+        table[b'9' as usize] = true;
+        table
+    }
+    const fn alphabet_table() -> [bool; 256] {
+        let mut table = [false; 256];
+        table[b'a' as usize] = true;
+        table[b'b' as usize] = true;
+        table[b'c' as usize] = true;
+        table[b'd' as usize] = true;
+        table[b'e' as usize] = true;
+        table[b'f' as usize] = true;
+        table[b'g' as usize] = true;
+        table[b'h' as usize] = true;
+        table[b'i' as usize] = true;
+        table[b'j' as usize] = true;
+        table[b'k' as usize] = true;
+        table[b'l' as usize] = true;
+        table[b'm' as usize] = true;
+        table[b'n' as usize] = true;
+        table[b'o' as usize] = true;
+        table[b'p' as usize] = true;
+        table[b'q' as usize] = true;
+        table[b'r' as usize] = true;
+        table[b's' as usize] = true;
+        table[b't' as usize] = true;
+        table[b'u' as usize] = true;
+        table[b'v' as usize] = true;
+        table[b'w' as usize] = true;
+        table[b'x' as usize] = true;
+        table[b'y' as usize] = true;
+        table[b'z' as usize] = true;
+        table[b'A' as usize] = true;
+        table[b'B' as usize] = true;
+        table[b'C' as usize] = true;
+        table[b'D' as usize] = true;
+        table[b'E' as usize] = true;
+        table[b'F' as usize] = true;
+        table[b'G' as usize] = true;
+        table[b'H' as usize] = true;
+        table[b'I' as usize] = true;
+        table[b'J' as usize] = true;
+        table[b'K' as usize] = true;
+        table[b'L' as usize] = true;
+        table[b'M' as usize] = true;
+        table[b'N' as usize] = true;
+        table[b'O' as usize] = true;
+        table[b'P' as usize] = true;
+        table[b'Q' as usize] = true;
+        table[b'R' as usize] = true;
+        table[b'S' as usize] = true;
+        table[b'T' as usize] = true;
+        table[b'U' as usize] = true;
+        table[b'V' as usize] = true;
+        table[b'W' as usize] = true;
+        table[b'X' as usize] = true;
+        table[b'Y' as usize] = true;
+        table[b'Z' as usize] = true;
+        table
+    }
+    const fn reserved_table() -> [bool; 256] {
+        let mut table = [false; 256];
+        table[b'\"' as usize] = true;
+        table[b'=' as usize] = true;
+        table[b'}' as usize] = true;
+        table[b'{' as usize] = true;
+        table
+    }
+    const fn number_table() -> [bool; 256] {
+        let mut table = [false; 256];
+
+        table[b'0' as usize] = true;
+        table[b'1' as usize] = true;
+        table[b'2' as usize] = true;
+        table[b'3' as usize] = true;
+        table[b'4' as usize] = true;
+        table[b'5' as usize] = true;
+        table[b'6' as usize] = true;
+        table[b'7' as usize] = true;
+        table[b'8' as usize] = true;
+        table[b'9' as usize] = true;
+
+        table
+    }
+    const fn token_table() -> [bool; 256] {
+        let mut table = [false; 256];
+        table[b'=' as usize] = true;
+        table[b'{' as usize] = true;
+        table[b'}' as usize] = true;
+        table
+    }
+
+    pub fn is_string_litteral_contents(char: char) -> bool {
+        string_litteral_content_table()[char as usize]
+    }
+    pub fn is_identifier_char(char: char) -> bool {
+        identifier_table()[char as usize]
+    }
+
+    pub fn is_alphabetic(char: char) -> bool {
+        alphabet_table()[char as usize]
+    }
+
+    const fn space_table() -> [bool; 256] {
+        let mut table = [false; 256];
+        table[b' ' as usize] = true;
+        table[b'\n' as usize] = true;
+        table[b'\t' as usize] = true;
+        table[b'\r' as usize] = true;
+        table
+    }
+
+    pub fn is_space(c: char) -> bool {
+        space_table()[c as usize]
+    }
+
+    pub fn is_digit(char: char) -> bool {
+        char.is_digit(10)
+    }
+
+    pub fn is_token(char: char) -> bool {
+        token_table()[char as usize]
+    }
+
+    pub fn is_reserved(char: char) -> bool {
+        reserved_table()[char as usize]
+    }
+}
+
+pub(self) mod space {
+    use super::{tables::is_space, Res};
+    use nom::{bytes::complete::take_while, combinator::verify};
 
     pub fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         take_while(move |character| is_space(character))(input)
@@ -88,16 +420,16 @@ pub(self) mod identifier {
         combinator::{map, verify},
     };
 
-    use super::{Res, Val};
+    use super::{
+        tables::{is_digit, is_identifier_char},
+        Res, Val,
+    };
 
     pub fn identifier<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        let numbers = "0123456789";
-
         map(
-            verify(
-                take_while(move |c: char| c.is_alphanumeric() || c == '_'),
-                |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
-            ),
+            verify(take_while(is_identifier_char), |s: &str| {
+                !s.is_empty() && !(is_digit(s.chars().next().unwrap()))
+            }),
             |s: &str| Val::Identifier(s),
         )(input)
     }
@@ -191,25 +523,13 @@ pub(self) mod date {
 pub(self) mod string_literal {
     use nom::{bytes::complete::take_while, combinator::map};
 
-    use super::{Res, Val};
-
-    fn is_reserved(char: char) -> bool {
-        match char as u8 {
-            b'\"' => true,
-            b'=' => true,
-            b'}' => true,
-            b'{' => true,
-            _ => false,
-        }
-    }
+    use super::{
+        tables::{is_reserved, is_string_litteral_contents},
+        Res, Val,
+    };
 
     pub fn string_literal_contents<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        take_while(move |character: char| {
-            !is_reserved(character)
-                && (character.is_alphanumeric()
-                    || character.is_whitespace()
-                    || character.is_ascii_punctuation())
-        })(input)
+        take_while(is_string_litteral_contents)(input)
     }
 
     pub fn string_literal<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
@@ -242,31 +562,15 @@ pub(self) mod dict {
     use super::{
         space::{opt_space, req_space},
         string_literal::string_literal_contents,
+        tables::{is_digit, is_identifier_char},
         value::value,
         Res, Val,
     };
 
-    fn is_digit(char: char) -> bool {
-        match char as u8 {
-            b'0' => true,
-            b'1' => true,
-            b'2' => true,
-            b'3' => true,
-            b'4' => true,
-            b'5' => true,
-            b'6' => true,
-            b'7' => true,
-            b'8' => true,
-            b'9' => true,
-            _ => false,
-        }
-    }
-
     pub fn unquoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        verify(
-            take_while(move |c: char| c.is_alphanumeric() || c == '_'),
-            |s: &str| !s.is_empty() && !(is_digit(s.chars().next().unwrap())),
-        )(input)
+        verify(take_while(is_identifier_char), |s: &str| {
+            !s.is_empty() && !(is_digit(s.chars().next().unwrap()))
+        })(input)
     }
 
     pub fn quoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
@@ -365,17 +669,9 @@ pub(self) mod bracketed {
         numbered_dict::numbered_dict,
         set::set,
         space::{opt_space, req_space},
+        tables::is_token,
         Res, Val,
     };
-
-    fn is_token(char: char) -> bool {
-        match char as u8 {
-            b'=' => true,
-            b'{' => true,
-            b'}' => true,
-            _ => false,
-        }
-    }
 
     pub fn set_of_collections<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         map(separated_list0(req_space, bracketed), |vals| Val::Set(vals))(input)
