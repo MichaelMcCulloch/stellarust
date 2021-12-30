@@ -14,11 +14,11 @@ impl Parser {
 
         ModelDataPoint { data: 0 }
     }
-    pub fn from_meta(string: &str) -> ModelDataPoint {
+    pub fn from_meta(_string: &str) -> ModelDataPoint {
         // let i: usize = string.parse().unwrap();
         ModelDataPoint { data: 0 }
     }
-    pub fn from_gamestate(string: &str) -> ModelDataPoint {
+    pub fn from_gamestate(_string: &str) -> ModelDataPoint {
         // let i: usize = string.parse().unwrap();
         ModelDataPoint { data: 0 }
     }
@@ -26,7 +26,6 @@ impl Parser {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn from_string() {}

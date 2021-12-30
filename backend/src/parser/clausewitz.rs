@@ -19,20 +19,14 @@ pub enum Val<'a> {
 
 pub(self) mod space {
     use super::Res;
-    use nom::{bytes::complete::take_while, combinator::verify, error::context};
+    use nom::{bytes::complete::take_while, combinator::verify};
 
     pub fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        context(
-            "Space",
-            take_while(move |character| " \t\r\n".contains(character)),
-        )(input)
+        take_while(move |character| " \t\r\n".contains(character))(input)
     }
 
     pub fn req_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        context(
-            "Required Space",
-            verify(opt_space, |spaces: &str| !spaces.is_empty()),
-        )(input)
+        verify(opt_space, |spaces: &str| !spaces.is_empty())(input)
     }
 }
 
@@ -40,22 +34,18 @@ pub(self) mod decimal {
     use nom::{
         character::complete::{char, digit1},
         combinator::{map, map_res, opt, recognize},
-        error::context,
         sequence::tuple,
     };
 
     use super::{Res, Val};
 
     pub fn decimal<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "Decimal",
-            map(
-                map_res(
-                    recognize(tuple((opt(char('-')), digit1, char('.'), digit1))),
-                    str::parse,
-                ),
-                |float: f64| Val::Decimal(float),
+        map(
+            map_res(
+                recognize(tuple((opt(char('-')), digit1, char('.'), digit1))),
+                str::parse,
             ),
+            |float: f64| Val::Decimal(float),
         )(input)
     }
 }
@@ -63,26 +53,22 @@ pub(self) mod integer {
     use nom::{
         character::complete::{char, digit1},
         combinator::{map, map_res, opt, recognize, verify},
-        error::context,
         sequence::tuple,
     };
 
     use super::{Res, Val};
 
     pub fn int<'a>(input: &'a str) -> Res<&'a str, i64> {
-        context(
-            "i64",
-            map_res(
-                verify(recognize(tuple((opt(char('-')), digit1))), |s: &str| {
-                    !s.is_empty()
-                }),
-                str::parse,
-            ),
+        map_res(
+            verify(recognize(tuple((opt(char('-')), digit1))), |s: &str| {
+                !s.is_empty()
+            }),
+            str::parse,
         )(input)
     }
 
     pub fn integer<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context("Integer", map(int, |integer: i64| Val::Integer(integer)))(input)
+        map(int, |integer: i64| Val::Integer(integer))(input)
     }
 }
 
@@ -90,33 +76,30 @@ pub(self) mod identifier {
     use nom::{
         bytes::complete::take_while,
         combinator::{map, verify},
-        error::context,
     };
 
     use super::{Res, Val};
 
     pub fn identifier<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         let numbers = "0123456789";
-        context(
-            "Identifier",
-            map(
-                verify(
-                    take_while(move |c: char| c.is_alphanumeric() || c == '_'),
-                    |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
-                ),
-                |s: &str| Val::Identifier(s),
+
+        map(
+            verify(
+                take_while(move |c: char| c.is_alphanumeric() || c == '_'),
+                |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
             ),
+            |s: &str| Val::Identifier(s),
         )(input)
     }
 }
 
 pub(self) mod unquoted {
-    use nom::{branch::alt, error::context};
+    use nom::branch::alt;
 
     use super::{decimal::decimal, identifier::identifier, integer::integer, Res, Val};
 
     pub fn unquoted<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context("Unquoted", alt((decimal, integer, identifier)))(input)
+        alt((decimal, integer, identifier))(input)
     }
 }
 
@@ -129,7 +112,6 @@ pub(self) mod date {
     use nom::{
         character::complete::{char, digit1},
         combinator::{map, map_res, recognize},
-        error::context,
         sequence::tuple,
     };
 
@@ -149,15 +131,12 @@ pub(self) mod date {
     use super::{Res, Val};
 
     pub fn date<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "Date",
-            map(
-                map_res(
-                    recognize(tuple((digit1, char('.'), digit1, char('.'), digit1))),
-                    map_to_date,
-                ),
-                |date: Date| Val::Date(date),
+        map(
+            map_res(
+                recognize(tuple((digit1, char('.'), digit1, char('.'), digit1))),
+                map_to_date,
             ),
+            |date: Date| Val::Date(date),
         )(input)
     }
 
@@ -200,48 +179,33 @@ pub(self) mod date {
 }
 
 pub(self) mod string_literal {
-    use nom::{bytes::complete::take_while, combinator::map, error::context};
+    use nom::{bytes::complete::take_while, combinator::map};
 
     use super::{Res, Val};
 
     pub fn string_literal_contents<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         let reserved = "\"={}";
-        context(
-            "String Literal Contents",
-            take_while(move |character: char| {
-                !reserved.contains(character)
-                    && (character.is_alphanumeric()
-                        || character.is_whitespace()
-                        || character.is_ascii_punctuation())
-            }),
-        )(input)
+
+        take_while(move |character: char| {
+            !reserved.contains(character)
+                && (character.is_alphanumeric()
+                    || character.is_whitespace()
+                    || character.is_ascii_punctuation())
+        })(input)
     }
 
     pub fn string_literal<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "String Literal",
-            map(string_literal_contents, |s: &str| Val::StringLiteral(s)),
-        )(input)
+        map(string_literal_contents, |s: &str| Val::StringLiteral(s))(input)
     }
 }
 
 pub(self) mod quoted {
-    use nom::{
-        branch::alt, character::complete::char, combinator::cut, error::context,
-        sequence::delimited,
-    };
+    use nom::{branch::alt, character::complete::char, combinator::cut, sequence::delimited};
 
-    use super::{
-        date::{self, date},
-        string_literal::string_literal,
-        Res, Val,
-    };
+    use super::{date::date, string_literal::string_literal, Res, Val};
 
     pub fn quoted<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "Quoted",
-            delimited(char('\"'), cut(alt((date, string_literal))), char('\"')),
-        )(input)
+        delimited(char('\"'), cut(alt((date, string_literal))), char('\"'))(input)
     }
 }
 
@@ -253,63 +217,50 @@ pub(self) mod dict {
         bytes::complete::take_while,
         character::complete::char,
         combinator::{cut, map, verify},
-        error::context,
         multi::separated_list0,
         sequence::{delimited, preceded, separated_pair},
     };
 
     use super::{
-        quoted,
         space::{opt_space, req_space},
         string_literal::string_literal_contents,
-        unquoted,
         value::value,
         Res, Val,
     };
 
     pub fn unquoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         let numbers = "0123456789";
-        context(
-            "Unquoted Key",
-            verify(
-                take_while(move |c: char| c.is_alphanumeric() || c == '_'),
-                |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
-            ),
+
+        verify(
+            take_while(move |c: char| c.is_alphanumeric() || c == '_'),
+            |s: &str| !s.is_empty() && !(numbers.contains(s.chars().next().unwrap())),
         )(input)
     }
 
     pub fn quoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        context(
-            "Quoted Key",
-            delimited(char('\"'), string_literal_contents, char('\"')),
-        )(input)
+        delimited(char('\"'), string_literal_contents, char('\"'))(input)
     }
 
     pub fn key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        let numbers = "0123456789";
-        context("Key", alt((unquoted_key, quoted_key)))(input)
+        let _numbers = "0123456789";
+
+        alt((unquoted_key, quoted_key))(input)
     }
 
     pub fn key_value<'a>(input: &'a str) -> Res<&'a str, (&'a str, Val<'a>)> {
-        context(
-            "Key Value",
-            separated_pair(
-                preceded(opt_space, key),
-                cut(preceded(opt_space, char('='))),
-                preceded(opt_space, value),
-            ),
+        separated_pair(
+            preceded(opt_space, key),
+            cut(preceded(opt_space, char('='))),
+            preceded(opt_space, value),
         )(input)
     }
 
     pub fn hash_map<'a>(input: &'a str) -> Res<&'a str, HashMap<&'a str, Vec<Val<'a>>>> {
-        context(
-            "Hash_Map",
-            map(separated_list0(req_space, key_value), fold_into_hashmap),
-        )(input)
+        map(separated_list0(req_space, key_value), fold_into_hashmap)(input)
     }
 
     pub fn dict<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context("Dict", map(hash_map, Val::Dict))(input)
+        map(hash_map, Val::Dict)(input)
     }
 
     pub fn fold_into_hashmap<'a>(
@@ -330,7 +281,6 @@ pub(self) mod array {
     use nom::{
         character::complete::{char, digit1},
         combinator::{cut, map, map_res, recognize, verify},
-        error::context,
         multi::separated_list0,
         sequence::{preceded, separated_pair},
     };
@@ -342,43 +292,37 @@ pub(self) mod array {
     };
 
     pub fn number_value<'a>(input: &'a str) -> Res<&'a str, (usize, Val<'a>)> {
-        context(
-            "Number Value",
-            separated_pair(
-                preceded(
-                    opt_space,
-                    map_res(
-                        verify(recognize(digit1), |s: &str| !s.is_empty()),
-                        str::parse,
-                    ),
+        separated_pair(
+            preceded(
+                opt_space,
+                map_res(
+                    verify(recognize(digit1), |s: &str| !s.is_empty()),
+                    str::parse,
                 ),
-                cut(preceded(opt_space, char('='))),
-                preceded(opt_space, value),
             ),
+            cut(preceded(opt_space, char('='))),
+            preceded(opt_space, value),
         )(input)
     }
 
     pub fn array<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "Array",
-            map(
-                separated_list0(req_space, number_value),
-                |number_value_pairs| Val::Array(fold_into_array(number_value_pairs)),
-            ),
+        map(
+            separated_list0(req_space, number_value),
+            |number_value_pairs| Val::Array(fold_into_array(number_value_pairs)),
         )(input)
     }
 
     pub fn fold_into_array<'a>(tuple_vec: Vec<(usize, Val<'a>)>) -> Vec<Val<'a>> {
         tuple_vec
             .into_iter()
-            .fold(Vec::new(), |mut acc, (index, value)| {
+            .fold(Vec::new(), |mut acc, (_index, value)| {
                 acc.push(value);
                 acc
             })
     }
 }
 pub(self) mod set {
-    use nom::{branch::alt, combinator::map, error::context, multi::separated_list0};
+    use nom::{branch::alt, combinator::map, multi::separated_list0};
 
     use super::{
         space::{opt_space, req_space},
@@ -387,21 +331,17 @@ pub(self) mod set {
     };
 
     pub fn set<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "Set",
-            alt((
-                map(separated_list0(req_space, value), |s: Vec<Val>| Val::Set(s)),
-                map(opt_space, |s: &str| Val::Set(vec![])),
-            )),
-        )(input)
+        alt((
+            map(separated_list0(req_space, value), |s: Vec<Val>| Val::Set(s)),
+            map(opt_space, |_s: &str| Val::Set(vec![])),
+        ))(input)
     }
 }
 pub(self) mod bracketed {
     use nom::{
         bytes::complete::{take, take_while},
-        character::complete::{char, digit1},
-        combinator::{cut, map, map_res, recognize, verify},
-        error::context,
+        character::complete::char,
+        combinator::{cut, map},
         multi::separated_list0,
         sequence::delimited,
     };
@@ -409,7 +349,7 @@ pub(self) mod bracketed {
     use super::{
         array::array,
         dict::dict,
-        integer::{int, integer},
+        integer::integer,
         numbered_dict::numbered_dict,
         set::set,
         space::{opt_space, req_space},
@@ -417,10 +357,7 @@ pub(self) mod bracketed {
     };
 
     pub fn set_of_collections<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "Set Of Bracketed",
-            map(separated_list0(req_space, bracketed), |vals| Val::Set(vals)),
-        )(input)
+        map(separated_list0(req_space, bracketed), |vals| Val::Set(vals))(input)
     }
     pub fn contents<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         let (remainder, maybe_key_number_idenentifier): (&'a str, &'a str) =
@@ -450,13 +387,10 @@ pub(self) mod bracketed {
     }
 
     pub fn bracketed<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "Bracketed",
-            delimited(
-                char('{'),
-                cut(delimited(opt_space, contents, opt_space)),
-                char('}'),
-            ),
+        delimited(
+            char('{'),
+            cut(delimited(opt_space, contents, opt_space)),
+            char('}'),
         )(input)
     }
 }
@@ -467,8 +401,6 @@ pub(self) mod numbered_dict {
     use nom::{
         character::complete::{char, digit1},
         combinator::{map, map_res, recognize, verify},
-        error::context,
-        multi::separated_list0,
         sequence::{delimited, tuple},
     };
 
@@ -479,47 +411,38 @@ pub(self) mod numbered_dict {
     };
 
     pub fn numbered_dict<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context(
-            "Numbered Dict",
-            map(
-                tuple((
-                    map_res(
-                        verify(recognize(digit1), |s: &str| !s.is_empty()),
-                        str::parse,
-                    ),
-                    req_space,
-                    delimited(
-                        char('{'),
-                        delimited(opt_space, hash_map, opt_space),
-                        char('}'),
-                    ),
-                )),
-                |(number, _, map): (i64, &str, HashMap<&'a str, Vec<Val<'a>>>)| {
-                    Val::NumberedDict(number, map)
-                },
-            ),
+        map(
+            tuple((
+                map_res(
+                    verify(recognize(digit1), |s: &str| !s.is_empty()),
+                    str::parse,
+                ),
+                req_space,
+                delimited(
+                    char('{'),
+                    delimited(opt_space, hash_map, opt_space),
+                    char('}'),
+                ),
+            )),
+            |(number, _, map): (i64, &str, HashMap<&'a str, Vec<Val<'a>>>)| {
+                Val::NumberedDict(number, map)
+            },
         )(input)
     }
 }
 pub(self) mod value {
-    use nom::{branch::alt, combinator::map, error::context, sequence::delimited};
+    use nom::{branch::alt, combinator::map};
 
     use super::{
-        bracketed::bracketed,
-        dict::hash_map,
-        numbered_dict::numbered_dict,
-        quoted::quoted,
-        space::{opt_space, req_space},
-        unquoted::unquoted,
-        Res, Val,
+        bracketed::bracketed, dict::hash_map, quoted::quoted, unquoted::unquoted, Res, Val,
     };
 
     pub fn value<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context("Value", alt((bracketed, quoted, unquoted)))(input)
+        alt((bracketed, quoted, unquoted))(input)
     }
 
     pub fn root<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
-        context("Root", map(hash_map, Val::Dict))(input)
+        map(hash_map, Val::Dict)(input)
     }
 }
 
@@ -600,19 +523,19 @@ mod tests {
         #[test]
         fn unquoted__integer__integer() {
             let text = "0";
-            let (remainder, parse_output) = unquoted(text).unwrap();
+            let (_remainder, parse_output) = unquoted(text).unwrap();
             assert_eq!(parse_output, Val::Integer(0));
         }
         #[test]
         fn unquoted__decimal__decimal() {
             let text = "0.0";
-            let (remainder, parse_output) = unquoted(text).unwrap();
+            let (_remainder, parse_output) = unquoted(text).unwrap();
             assert_eq!(parse_output, Val::Decimal(0.0));
         }
         #[test]
         fn unquoted__identifier__identifier() {
             let text = "zer0";
-            let (remainder, parse_output) = unquoted(text).unwrap();
+            let (_remainder, parse_output) = unquoted(text).unwrap();
             assert_eq!(parse_output, Val::Identifier("zer0"));
         }
 
@@ -751,7 +674,7 @@ mod tests {
         #[test]
         fn quoted__date__date() {
             let text = "\"2200.01.01\"";
-            let (remainder, parse_output) = quoted(text).unwrap();
+            let (_remainder, parse_output) = quoted(text).unwrap();
             assert_eq!(
                 parse_output,
                 Val::Date(Date::from_calendar_date(2200, Month::January, 01).unwrap())
@@ -761,7 +684,7 @@ mod tests {
         #[test]
         fn quoted__not_date__string() {
             let text = "\"2200.011\"";
-            let (remainder, parse_output) = quoted(text).unwrap();
+            let (_remainder, parse_output) = quoted(text).unwrap();
             assert_eq!(parse_output, Val::StringLiteral("2200.011"));
         }
 
@@ -775,7 +698,7 @@ mod tests {
             #[test]
             fn date__decimal_separated_yyyy_mm_date__accepted() {
                 let text = "2200.01.01";
-                let (remainder, parse_output) = date(text).unwrap();
+                let (_remainder, parse_output) = date(text).unwrap();
                 assert_eq!(
                     parse_output,
                     Val::Date(Date::from_calendar_date(2200, Month::January, 01).unwrap())
@@ -785,7 +708,7 @@ mod tests {
             #[test]
             fn date__4digit_year__accepted() {
                 let text = "2200.01.01";
-                let (remainder, parse_output) = date(text).unwrap();
+                let (_remainder, parse_output) = date(text).unwrap();
                 assert_eq!(
                     parse_output,
                     Val::Date(Date::from_calendar_date(2200, Month::January, 01).unwrap())
@@ -795,7 +718,7 @@ mod tests {
             #[test]
             fn date__3digit_year__accepted() {
                 let text = "200.01.01";
-                let (remainder, parse_output) = date(text).unwrap();
+                let (_remainder, parse_output) = date(text).unwrap();
                 assert_eq!(
                     parse_output,
                     Val::Date(Date::from_calendar_date(200, Month::January, 01).unwrap())
@@ -805,7 +728,7 @@ mod tests {
             #[test]
             fn date__2digit_year__accepted() {
                 let text = "20.01.01";
-                let (remainder, parse_output) = date(text).unwrap();
+                let (_remainder, parse_output) = date(text).unwrap();
                 assert_eq!(
                     parse_output,
                     Val::Date(Date::from_calendar_date(20, Month::January, 01).unwrap())
@@ -815,7 +738,7 @@ mod tests {
             #[test]
             fn date__1digit_year__accepted() {
                 let text = "2.01.01";
-                let (remainder, parse_output) = date(text).unwrap();
+                let (_remainder, parse_output) = date(text).unwrap();
                 assert_eq!(
                     parse_output,
                     Val::Date(Date::from_calendar_date(2, Month::January, 01).unwrap())
@@ -832,7 +755,7 @@ mod tests {
             fn string_literal__string__accepted() {
                 let text =
                     "this is a string with a bun1234567890ch of special characters!@#$%^&*(_()";
-                let (remainder, parse_output) = string_literal(text).unwrap();
+                let (_remainder, parse_output) = string_literal(text).unwrap();
                 assert_eq!(parse_output, Val::StringLiteral(text));
             }
 
@@ -925,7 +848,7 @@ mod tests {
 
     #[cfg(test)]
     mod edge_cases {
-        use crate::parser::clausewitz::{dict::key_value, value::root, Res, Val};
+        use crate::parser::clausewitz::value::root;
 
         use super::helper::assert_result_ok;
 
@@ -1075,7 +998,7 @@ mod tests {
 
     #[cfg(test)]
     mod files {
-        use std::fs;
+        use std::{fs, time::Instant};
 
         use crate::parser::clausewitz::value::root;
 
@@ -1091,7 +1014,13 @@ mod tests {
         #[test]
         fn gamestate() {
             let text = fs::read_to_string("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate").unwrap();
+
+            let start = Instant::now();
             let result = root(text.as_str());
+
+            let duration = start.elapsed();
+            println!("Time elapsed is: {:?}", duration);
+
             assert_result_ok(result);
         }
     }
