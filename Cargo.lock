@@ -383,8 +383,6 @@ dependencies = [
  "env_logger",
  "listenfd",
  "log",
- "memmap",
- "nom",
  "notify",
  "serde",
  "serde_json",

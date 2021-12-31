@@ -3,6 +3,8 @@ use std::path::PathBuf;
 use crate::model::ModelDataPoint;
 use crate::unzipper::Unzipper;
 
+use clausewitz_parser::clausewitz::root;
+
 pub struct Parser {}
 
 impl Parser {
