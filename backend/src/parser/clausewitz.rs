@@ -18,7 +18,6 @@ pub enum Val<'a> {
 }
 
 pub(self) mod simd {
-    use crate::parser::clausewitz::unrolled::take_while_unrolled;
     use nom::error::VerboseError;
 
     use std::arch::x86_64::{
@@ -66,6 +65,8 @@ pub(self) mod simd {
     {
         use std::cmp::min;
 
+        use nom::bytes::complete::take_while;
+
         if str.len() >= 16 {
             // println!("simd");
             let start = str.as_ptr() as usize;
@@ -99,124 +100,8 @@ pub(self) mod simd {
             return Ok((after, before));
         } else {
             // println!("unrolled");
-            return take_while_unrolled::<'a, _, VerboseError<&'a str>>(condition)(str);
+            return take_while(condition)(str);
         }
-    }
-}
-
-pub(self) mod unrolled {
-
-    use nom::error::ParseError;
-
-    use super::Res;
-
-    pub fn take_while_unrolled<'a, Condition, Error: ParseError<&'a str>>(
-        cond: Condition,
-    ) -> impl Fn(&'a str) -> Res<&'a str, &'a str>
-    where
-        Condition: Fn(char) -> bool,
-    {
-        // move |i: &'a str| i.split_at_position_complete(|c| !cond(c))
-        move |i: &'a str| take_while_unrolled_prime(i, |c| cond(c))
-    }
-
-    pub fn take_while_unrolled_prime<'a, F>(str: &'a str, condition: F) -> Res<&'a str, &'a str>
-    where
-        F: Fn(char) -> bool,
-    {
-        if str.is_empty() {
-            return Ok(("", ""));
-        }
-
-        let mut i = 0usize;
-        let len = str.len();
-        let chunk_size = 16;
-
-        loop {
-            if len - i < chunk_size {
-                break;
-            };
-
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-        }
-        if len - i < chunk_size {
-            loop {
-                if !condition((*str.as_bytes().get(i).unwrap()) as char) {
-                    break;
-                }
-                i += 1;
-
-                if i == len {
-                    break;
-                }
-            }
-        }
-
-        let (before, after) = str.split_at(i);
-
-        Ok((after, before))
     }
 }
 
