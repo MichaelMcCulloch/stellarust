@@ -33,6 +33,8 @@ mod test {
 
         let result = root(str);
 
+        println!("{:#?}", result);
+
         assert!(result.is_ok());
     }
 }

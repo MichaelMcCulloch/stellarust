@@ -18,10 +18,11 @@
 				"filter": {
 					"name": "frontend",
 					"kind": "lib"
-				}
+				},
+				"cwd": "${workspaceFolder}/frontend"
 			},
 			"args": [],
-			"cwd": "${workspaceFolder}"
+			"cwd": "${workspaceFolder}/frontend"
 		},
 		{
 			"type": "lldb",
@@ -75,10 +76,11 @@
 				"filter": {
 					"name": "backend",
 					"kind": "lib"
-				}
+				},
+				"cwd": "${workspaceFolder}/backend"
 			},
 			"args": [],
-			"cwd": "${workspaceFolder}"
+			"cwd": "${workspaceFolder}/backend"
 		},
 		{
 			"type": "lldb",
@@ -93,10 +95,11 @@
 				"filter": {
 					"name": "backend",
 					"kind": "bin"
-				}
+				},
+				"cwd": "${workspaceFolder}/backend"
 			},
 			"args": [],
-			"cwd": "${workspaceFolder}"
+			"cwd": "${workspaceFolder}/backend"
 		},
 		{
 			"type": "lldb",
@@ -112,10 +115,11 @@
 				"filter": {
 					"name": "backend",
 					"kind": "bin"
-				}
+				},
+				"cwd": "${workspaceFolder}/backend"
 			},
 			"args": [],
-			"cwd": "${workspaceFolder}"
+			"cwd": "${workspaceFolder}/backend"
 		},
 		{
 			"type": "lldb",
@@ -131,10 +135,11 @@
 				"filter": {
 					"name": "model",
 					"kind": "test"
-				}
+				},
+				"cwd": "${workspaceFolder}/backend"
 			},
 			"args": [],
-			"cwd": "${workspaceFolder}"
+			"cwd": "${workspaceFolder}/backend"
 		},
 		{
 			"type": "lldb",
@@ -150,10 +155,11 @@
 				"filter": {
 					"name": "dirwatcher",
 					"kind": "test"
-				}
+				},
+				"cwd": "${workspaceFolder}/backend"
 			},
 			"args": [],
-			"cwd": "${workspaceFolder}"
+			"cwd": "${workspaceFolder}/backend"
 		},
 		{
 			"type": "lldb",
@@ -169,10 +175,51 @@
 				"filter": {
 					"name": "unzipper",
 					"kind": "test"
-				}
+				},
+				"cwd": "${workspaceFolder}/backend"
 			},
 			"args": [],
-			"cwd": "${workspaceFolder}"
+			"cwd": "${workspaceFolder}/backend"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug unit tests in library 'clausewitz-parser'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--lib",
+					"--package=clausewitz-parser"
+				],
+				"filter": {
+					"name": "clausewitz-parser",
+					"kind": "lib"
+				},
+				"cwd": "${workspaceFolder}/clausewitz-parser"
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}/clausewitz-parser"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "Debug integration test 'test'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--test=test",
+					"--package=clausewitz-parser"
+				],
+				"filter": {
+					"name": "test",
+					"kind": "test"
+				},
+				"cwd": "${workspaceFolder}/clausewitz-parser"
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}/clausewitz-parser"
 		}
 	]
 }

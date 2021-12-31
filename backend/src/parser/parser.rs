@@ -3,32 +3,42 @@ use std::path::PathBuf;
 use crate::model::ModelDataPoint;
 use crate::unzipper::Unzipper;
 
-use clausewitz_parser::clausewitz::root;
+use clausewitz_parser::clausewitz::root::root;
+use clausewitz_parser::clausewitz::Val;
 
 pub struct Parser {}
+
+pub struct ParseResult<'a> {
+    meta: Val<'a>,
+    gamestate: Val<'a>,
+}
 
 impl Parser {
     pub fn from_file(path: &PathBuf) -> ModelDataPoint {
         let (meta, gamestate) = Unzipper::get_zipped_content(&path).unwrap();
 
-        Parser::from_meta(meta.as_str());
-        Parser::from_gamestate(gamestate.as_str());
+        let meta = Parser::from_meta(meta.as_str());
+        let gamestate = Parser::from_gamestate(gamestate.as_str());
 
-        ModelDataPoint { data: 0 }
+        let result = ParseResult { meta, gamestate };
+        ModelDataPoint::from(result)
     }
-    pub fn from_meta(_string: &str) -> ModelDataPoint {
+    pub fn from_meta<'a>(_string: &'a str) -> Val<'a> {
         // let i: usize = string.parse().unwrap();
-        ModelDataPoint { data: 0 }
+        let (_, val) = root(_string).unwrap();
+
+        val
     }
-    pub fn from_gamestate(_string: &str) -> ModelDataPoint {
+    pub fn from_gamestate<'a>(_string: &'a str) -> Val<'a> {
         // let i: usize = string.parse().unwrap();
-        ModelDataPoint { data: 0 }
+        let (_, val) = root(_string).unwrap();
+
+        val
     }
 }
 
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn from_string() {}
+impl From<ParseResult<'_>> for ModelDataPoint {
+    fn from(_: ParseResult<'_>) -> Self {
+        todo!()
+    }
 }
