@@ -20,28 +20,26 @@ pub enum Val<'a> {
 pub(self) mod unrolled {
     use std::slice::SliceIndex;
 
-    use nom::{
-        error::{ContextError, ParseError, VerboseError},
-        AsChar, IResult, InputTakeAtPosition,
-    };
+    use nom::{error::ParseError, InputTakeAtPosition};
 
     use super::Res;
 
-    pub fn take_while_unrolled<'a, condition, Error: ParseError<&'a str>>(
-        cond: condition,
+    pub fn take_while_unrolled<'a, Condition, Error: ParseError<&'a str>>(
+        cond: Condition,
     ) -> impl Fn(&'a str) -> Res<&'a str, &'a str>
     where
-        condition: Fn(char) -> bool,
+        Condition: Fn(char) -> bool,
     {
-        move |i: &'a str| i.split_at_position_complete(|c| !cond(c))
+        // move |i: &'a str| i.split_at_position_complete(|c| !cond(c))
+        move |i: &'a str| take_while_unrolled_prime(i, |c| !cond(c))
     }
 
-    pub fn take_while_unrolled_prime<'a, F>(str: &'a str, condition: F) -> (&'a str, &'a str)
+    pub fn take_while_unrolled_prime<'a, F>(str: &'a str, condition: F) -> Res<&'a str, &'a str>
     where
         F: Fn(char) -> bool,
     {
         if str.is_empty() {
-            return ("", "");
+            return Ok(("", ""));
         }
         let mut i = 0usize;
         let len = str.len();
@@ -52,39 +50,40 @@ pub(self) mod unrolled {
                 break;
             };
 
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
 
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
         }
         if len - i < chunk_size {
             loop {
                 let byte = (*str.as_bytes().get(i).unwrap()) as char;
-                if !condition(byte) {
+
+                if condition(byte) {
                     break;
                 }
                 i += 1;
@@ -96,7 +95,8 @@ pub(self) mod unrolled {
         }
 
         let (before, after) = str.split_at(i);
-        (after, before)
+
+        Ok((after, before))
     }
 }
 
@@ -501,7 +501,6 @@ pub(self) mod integer {
 
 pub(self) mod identifier {
     use nom::{
-        bytes::complete::take_while,
         combinator::{map, verify},
         error::VerboseError,
     };
@@ -609,7 +608,7 @@ pub(self) mod date {
 }
 
 pub(self) mod string_literal {
-    use nom::{bytes::complete::take_while, combinator::map, error::VerboseError};
+    use nom::{combinator::map, error::VerboseError};
 
     use super::{
         tables::{is_reserved, is_string_litteral_contents},
@@ -641,7 +640,6 @@ pub(self) mod dict {
 
     use nom::{
         branch::alt,
-        bytes::complete::take_while,
         character::complete::char,
         combinator::{cut, map, verify},
         error::VerboseError,
@@ -747,7 +745,7 @@ pub(self) mod set {
 }
 pub(self) mod bracketed {
     use nom::{
-        bytes::complete::{take, take_while},
+        bytes::complete::take,
         character::complete::char,
         combinator::{cut, map},
         error::VerboseError,
