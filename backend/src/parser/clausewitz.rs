@@ -1,5 +1,5 @@
 use nom::{error::VerboseError, IResult};
-use std::collections::HashMap;
+
 use time::Date;
 
 type Res<T, S> = IResult<T, S, VerboseError<T>>;
@@ -37,9 +37,9 @@ pub(self) mod simd {
         b"\x00\x08\x0e\x1f\x22\x22\x3d\x3d\x7b\x7b\x7d\x7d\x7f\xff";
     pub const IDENTIFIER_RANGES: &[u8] = b"\x00\x2f\x3a\x40\x5b\x5e\x60\x60\x7b\xff";
 
-    use nom::{error::ParseError, InputTakeAtPosition};
+    use nom::error::ParseError;
 
-    use super::{unrolled::take_while_unrolled_prime, Res};
+    use super::Res;
 
     pub fn take_while_simd<'a, Condition, Error: ParseError<&'a str>>(
         cond: Condition,
@@ -64,7 +64,7 @@ pub(self) mod simd {
     where
         F: Fn(char) -> bool,
     {
-        use std::cmp::{max, min};
+        use std::cmp::min;
 
         if str.len() >= 16 {
             // println!("simd");
@@ -521,7 +521,7 @@ pub(self) mod space {
         tables::is_space,
         Res,
     };
-    use nom::{bytes::complete::take_while, combinator::verify, error::VerboseError};
+    use nom::{combinator::verify, error::VerboseError};
 
     pub fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         take_while_simd::<'a, _, VerboseError<&'a str>>(
@@ -720,7 +720,6 @@ pub(self) mod quoted {
 }
 
 pub(self) mod dict {
-    use std::collections::HashMap;
 
     use nom::{
         branch::alt,
@@ -736,7 +735,6 @@ pub(self) mod dict {
         space::{opt_space, req_space},
         string_literal::string_literal_contents,
         tables::{is_digit, is_identifier_char},
-        unrolled::take_while_unrolled,
         value::value,
         Res, Val,
     };
@@ -893,7 +891,6 @@ pub(self) mod bracketed {
 }
 
 pub(self) mod numbered_dict {
-    use std::collections::HashMap;
 
     use nom::{
         character::complete::{char, digit1},
@@ -1543,9 +1540,7 @@ mod tests {
     #[cfg(test)]
     mod files {
         use std::{
-            arch::x86_64::_mm_loadu_si128,
             fs::{self, File},
-            io::Read,
             time::Instant,
         };
 
