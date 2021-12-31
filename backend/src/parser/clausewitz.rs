@@ -17,27 +17,40 @@ pub enum Val<'a> {
     Identifier(&'a str),
 }
 
-pub(self) mod unrolled {
-    use std::{
-        arch::x86_64::{
-            _mm_cmpestri, _mm_loadu_si128, _SIDD_CMP_RANGES, _SIDD_LEAST_SIGNIFICANT,
-            _SIDD_UBYTE_OPS,
-        },
-        slice::SliceIndex,
+pub(self) mod simd {
+    use crate::parser::clausewitz::unrolled::take_while_unrolled;
+    use nom::error::VerboseError;
+
+    use std::arch::x86_64::{
+        _mm_cmpestri, _mm_loadu_si128, _SIDD_CMP_RANGES, _SIDD_LEAST_SIGNIFICANT, _SIDD_UBYTE_OPS,
     };
 
     //the range of all the characters which should be REJECTED
-    const SPACE_RANGES: &[u8] = b"\x00\x08\x0e\x1f\x21\xff";
-    const TOKEN_RANGES: &[u8] = b"\x00\x3c\x3e\x7a\x7c\x7c\x7e\xff";
-    const NUMBER_RANGES: &[u8] = b"\x00\x2f\x3a\xff";
-    const ALPHABET_RANGES: &[u8] = b"\x00\x40\x5b\x60\x7b\xff";
-    const STRING_LITTERAL_CONTENT_RANGES: &[u8] =
-        b" \x00\x08\x0e\x1f\x3d\x3d\x7b\x7b\x7d\x7d\x7f\xff";
-    const IDENTIFIER_RANGES: &[u8] = b"\x00\x2f\x3a\x40\x5b\x5e\x60\x60\x7b\xff";
+    pub const SPACE_RANGES: &[u8] = b"\x00\x08\x0e\x1f\x21\xff";
+
+    pub const TOKEN_RANGES: &[u8] = b"\x00\x3c\x3e\x7a\x7c\x7c\x7e\xff";
+    pub const NOT_TOKEN_RANGES: &[u8] = b"\x3d\x3d\x7b\x7b\x7d\x7d";
+
+    pub const NUMBER_RANGES: &[u8] = b"\x00\x2f\x3a\xff";
+    pub const ALPHABET_RANGES: &[u8] = b"\x00\x40\x5b\x60\x7b\xff";
+    pub const STRING_LITTERAL_CONTENT_RANGES: &[u8] =
+        b"\x00\x08\x0e\x1f\x22\x22\x3d\x3d\x7b\x7b\x7d\x7d\x7f\xff";
+    pub const IDENTIFIER_RANGES: &[u8] = b"\x00\x2f\x3a\x40\x5b\x5e\x60\x60\x7b\xff";
 
     use nom::{error::ParseError, InputTakeAtPosition};
 
-    use super::Res;
+    use super::{unrolled::take_while_unrolled_prime, Res};
+
+    pub fn take_while_simd<'a, Condition, Error: ParseError<&'a str>>(
+        cond: Condition,
+        ranges: &'static [u8],
+    ) -> impl Fn(&'a str) -> Res<&'a str, &'a str>
+    where
+        Condition: Fn(char) -> bool,
+    {
+        // move |i: &'a str| take_while_unrolled_prime(i, |c| !cond(c))
+        move |i: &'a str| take_while_simd_prime(i, |c| cond(c), ranges)
+    }
 
     #[cfg(all(
         any(target_arch = "x86", target_arch = "x86_64"),
@@ -51,14 +64,14 @@ pub(self) mod unrolled {
     where
         F: Fn(char) -> bool,
     {
-        use nom::error::VerboseError;
+        use std::cmp::{max, min};
 
-        let mut start = str.as_ptr() as usize;
-        let mut i = str.as_ptr() as usize;
-        let mut left = str.len();
-
-        if left >= 16 {
-            // ranges = b"\0\x08\x0A\x1F\x7E\xFF";
+        if str.len() >= 16 {
+            // println!("simd");
+            let start = str.as_ptr() as usize;
+            let mut i = str.as_ptr() as usize;
+            // ranges is a byte array of pair-wise ranges. 0-3;4-9;etc
+            // ie ranges : &[u8] = b"\x00\xff"
             let ranges16 = unsafe { _mm_loadu_si128(ranges.as_ptr() as *const _) };
             let ranges_len = ranges.len() as i32;
             loop {
@@ -82,12 +95,20 @@ pub(self) mod unrolled {
             }
 
             let index = i - start;
-            let (before, after) = str.split_at(index);
+            let (before, after) = str.split_at(min(index, str.len()));
             return Ok((after, before));
         } else {
+            // println!("unrolled");
             return take_while_unrolled::<'a, _, VerboseError<&'a str>>(condition)(str);
         }
     }
+}
+
+pub(self) mod unrolled {
+
+    use nom::error::ParseError;
+
+    use super::Res;
 
     pub fn take_while_unrolled<'a, Condition, Error: ParseError<&'a str>>(
         cond: Condition,
@@ -96,7 +117,7 @@ pub(self) mod unrolled {
         Condition: Fn(char) -> bool,
     {
         // move |i: &'a str| i.split_at_position_complete(|c| !cond(c))
-        move |i: &'a str| take_while_unrolled_prime(i, |c| !cond(c))
+        move |i: &'a str| take_while_unrolled_prime(i, |c| cond(c))
     }
 
     pub fn take_while_unrolled_prime<'a, F>(str: &'a str, condition: F) -> Res<&'a str, &'a str>
@@ -106,6 +127,7 @@ pub(self) mod unrolled {
         if str.is_empty() {
             return Ok(("", ""));
         }
+
         let mut i = 0usize;
         let len = str.len();
         let chunk_size = 16;
@@ -115,75 +137,73 @@ pub(self) mod unrolled {
                 break;
             };
 
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
-                break;
-            }
-            i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
 
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
 
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
         }
         if len - i < chunk_size {
             loop {
-                let byte = (*str.as_bytes().get(i).unwrap()) as char;
-
-                if condition(byte) {
+                if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                     break;
                 }
                 i += 1;
@@ -496,13 +516,18 @@ pub(self) mod tables {
 }
 
 pub(self) mod space {
-    use super::{tables::is_space, unrolled::take_while_unrolled, Res};
+    use super::{
+        simd::{take_while_simd, SPACE_RANGES},
+        tables::is_space,
+        Res,
+    };
     use nom::{bytes::complete::take_while, combinator::verify, error::VerboseError};
 
     pub fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        take_while_unrolled::<'a, _, VerboseError<&'a str>>(move |character| is_space(character))(
-            input,
-        )
+        take_while_simd::<'a, _, VerboseError<&'a str>>(
+            move |character| is_space(character),
+            SPACE_RANGES,
+        )(input)
     }
 
     pub fn req_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
@@ -559,15 +584,18 @@ pub(self) mod identifier {
     };
 
     use super::{
+        simd::{take_while_simd, IDENTIFIER_RANGES},
         tables::{is_digit, is_identifier_char},
-        unrolled::take_while_unrolled,
         Res, Val,
     };
 
     pub fn identifier<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         map(
             verify(
-                take_while_unrolled::<'a, _, VerboseError<&'a str>>(is_identifier_char),
+                take_while_simd::<'a, _, VerboseError<&'a str>>(
+                    is_identifier_char,
+                    IDENTIFIER_RANGES,
+                ),
                 |s: &str| !s.is_empty() && !(is_digit(s.chars().next().unwrap())),
             ),
             |s: &str| Val::Identifier(s),
@@ -663,10 +691,17 @@ pub(self) mod date {
 pub(self) mod string_literal {
     use nom::{combinator::map, error::VerboseError};
 
-    use super::{tables::is_string_litteral_contents, unrolled::take_while_unrolled, Res, Val};
+    use super::{
+        simd::{take_while_simd, STRING_LITTERAL_CONTENT_RANGES},
+        tables::is_string_litteral_contents,
+        Res, Val,
+    };
 
     pub fn string_literal_contents<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        take_while_unrolled::<'a, _, VerboseError<&'a str>>(is_string_litteral_contents)(input)
+        take_while_simd::<'a, _, VerboseError<&'a str>>(
+            is_string_litteral_contents,
+            STRING_LITTERAL_CONTENT_RANGES,
+        )(input)
     }
 
     pub fn string_literal<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
@@ -697,6 +732,7 @@ pub(self) mod dict {
     };
 
     use super::{
+        simd::{take_while_simd, IDENTIFIER_RANGES},
         space::{opt_space, req_space},
         string_literal::string_literal_contents,
         tables::{is_digit, is_identifier_char},
@@ -707,7 +743,7 @@ pub(self) mod dict {
 
     pub fn unquoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         verify(
-            take_while_unrolled::<'a, _, VerboseError<&'a str>>(is_identifier_char),
+            take_while_simd::<'a, _, VerboseError<&'a str>>(is_identifier_char, IDENTIFIER_RANGES),
             |s: &str| !s.is_empty() && !(is_digit(s.chars().next().unwrap())),
         )(input)
     }
@@ -808,9 +844,9 @@ pub(self) mod bracketed {
         integer::integer,
         numbered_dict::numbered_dict,
         set::set,
+        simd::{take_while_simd, NOT_TOKEN_RANGES},
         space::{opt_space, req_space},
         tables::is_token,
-        unrolled::take_while_unrolled,
         Res, Val,
     };
 
@@ -819,9 +855,10 @@ pub(self) mod bracketed {
     }
     pub fn contents<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         let (remainder, maybe_key_number_idenentifier): (&'a str, &'a str) =
-            take_while_unrolled::<'a, _, VerboseError<&'a str>>(move |character| {
-                !is_token(character)
-            })(input)?;
+            take_while_simd::<'a, _, VerboseError<&'a str>>(
+                move |character| !is_token(character),
+                NOT_TOKEN_RANGES,
+            )(input)?;
 
         let (_remainder, next_token) = take(1 as usize)(remainder)?;
 
@@ -1459,13 +1496,16 @@ mod tests {
         target_feature = "sse2"
     ))]
     mod simd {
-        use crate::parser::clausewitz::{tables::is_space, unrolled::take_while_simd_prime};
+        use crate::parser::clausewitz::{
+            simd::{take_while_simd_prime, SPACE_RANGES},
+            tables::is_space,
+        };
 
         #[test]
         fn take_while_simd_prime__string_with_leading_whitespace__whitespace_collected_remainder_returned(
         ) {
             let text = " \t\n\r|Stop this is a big long string";
-            let ranges = b"\x00\x08\x0E\x1f\x21\xff";
+            let ranges = SPACE_RANGES;
             let (remainder, parsed) = take_while_simd_prime(text, is_space, ranges).unwrap();
             assert_eq!(remainder, "|Stop this is a big long string");
             assert_eq!(parsed, " \t\n\r");
@@ -1475,10 +1515,28 @@ mod tests {
         fn take_while_simd_prime__string_with_many_leading_whitespace__whitespace_collected_remainder_returned(
         ) {
             let text = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t|Stop this is a big long string";
-            let ranges = b"\x00\x08\x0E\x1f\x21\xff";
+            let ranges = SPACE_RANGES;
             let (remainder, parsed) = take_while_simd_prime(text, is_space, ranges).unwrap();
             assert_eq!(remainder, "|Stop this is a big long string");
             assert_eq!(parsed, "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+        }
+
+        #[test]
+        fn take_while_simd_prime__short_string__whitespace_collected_remainder_returned() {
+            let text = "\t\t\ts";
+            let ranges = SPACE_RANGES;
+            let (remainder, parsed) = take_while_simd_prime(text, is_space, ranges).unwrap();
+            assert_eq!(remainder, "s");
+            assert_eq!(parsed, "\t\t\t");
+        }
+
+        #[test]
+        fn take_while_simd_prime__all_white_space__whitespace_collected_remainder_returned() {
+            let text = " \t\n\r";
+            let ranges = SPACE_RANGES;
+            let (remainder, parsed) = take_while_simd_prime(text, is_space, ranges).unwrap();
+            assert_eq!(remainder, "");
+            assert_eq!(parsed, " \t\n\r");
         }
     }
 
