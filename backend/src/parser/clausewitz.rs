@@ -67,7 +67,10 @@ pub(self) mod simd {
 
         use nom::bytes::complete::take_while;
 
-        if str.len() >= 16 {
+        let len = str.len();
+        if len == 0 {
+            return Ok(("", ""));
+        } else if len >= 16 {
             // println!("simd");
             let start = str.as_ptr() as usize;
             let mut i = str.as_ptr() as usize;
@@ -96,10 +99,65 @@ pub(self) mod simd {
             }
 
             let index = i - start;
-            let (before, after) = str.split_at(min(index, str.len()));
+            let (before, after) = str.split_at(min(index, len));
             return Ok((after, before));
         } else {
-            return take_while(condition)(str);
+            let mut index = 0usize;
+
+            loop {
+                if len - index < 8 {
+                    break;
+                }
+                if !condition((*str.as_bytes().get(index).unwrap()) as char) {
+                    break;
+                }
+                index += 1;
+
+                if !condition((*str.as_bytes().get(index).unwrap()) as char) {
+                    break;
+                }
+                index += 1;
+
+                if !condition((*str.as_bytes().get(index).unwrap()) as char) {
+                    break;
+                }
+                index += 1;
+
+                if !condition((*str.as_bytes().get(index).unwrap()) as char) {
+                    break;
+                }
+                index += 1;
+
+                if !condition((*str.as_bytes().get(index).unwrap()) as char) {
+                    break;
+                }
+                index += 1;
+
+                if !condition((*str.as_bytes().get(index).unwrap()) as char) {
+                    break;
+                }
+                index += 1;
+
+                if !condition((*str.as_bytes().get(index).unwrap()) as char) {
+                    break;
+                }
+                index += 1;
+            }
+            if len - index < 8 {
+                loop {
+                    if !condition((*str.as_bytes().get(index).unwrap()) as char) {
+                        break;
+                    }
+                    index += 1;
+
+                    if index == len {
+                        break;
+                    }
+                }
+            }
+
+            let (before, after) = str.split_at(index);
+            return Ok((after, before));
         }
     }
 }
