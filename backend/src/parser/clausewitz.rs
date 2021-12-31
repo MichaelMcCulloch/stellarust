@@ -43,7 +43,7 @@ pub(self) mod unrolled {
         }
         let mut i = 0usize;
         let len = str.len();
-        let chunk_size = 8;
+        let chunk_size = 16;
 
         loop {
             if len - i < chunk_size {
@@ -78,6 +78,41 @@ pub(self) mod unrolled {
             if condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
+            i += 1;
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
         }
         if len - i < chunk_size {
             loop {
