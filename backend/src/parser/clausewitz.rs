@@ -18,11 +18,76 @@ pub enum Val<'a> {
 }
 
 pub(self) mod unrolled {
-    use std::slice::SliceIndex;
+    use std::{
+        arch::x86_64::{
+            _mm_cmpestri, _mm_loadu_si128, _SIDD_CMP_RANGES, _SIDD_LEAST_SIGNIFICANT,
+            _SIDD_UBYTE_OPS,
+        },
+        slice::SliceIndex,
+    };
+
+    //the range of all the characters which should be REJECTED
+    const SPACE_RANGES: &[u8] = b"\x00\x08\x0e\x1f\x21\xff";
+    const TOKEN_RANGES: &[u8] = b"\x00\x3c\x3e\x7a\x7c\x7c\x7e\xff";
+    const NUMBER_RANGES: &[u8] = b"\x00\x2f\x3a\xff";
+    const ALPHABET_RANGES: &[u8] = b"\x00\x40\x5b\x60\x7b\xff";
+    const STRING_LITTERAL_CONTENT_RANGES: &[u8] =
+        b" \x00\x08\x0e\x1f\x3d\x3d\x7b\x7b\x7d\x7d\x7f\xff";
+    const IDENTIFIER_RANGES: &[u8] = b"\x00\x2f\x3a\x40\x5b\x5e\x60\x60\x7b\xff";
 
     use nom::{error::ParseError, InputTakeAtPosition};
 
     use super::Res;
+
+    #[cfg(all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        target_feature = "sse2"
+    ))]
+    pub fn take_while_simd_prime<'a, F>(
+        str: &'a str,
+        condition: F,
+        ranges: &[u8],
+    ) -> Res<&'a str, &'a str>
+    where
+        F: Fn(char) -> bool,
+    {
+        use nom::error::VerboseError;
+
+        let mut start = str.as_ptr() as usize;
+        let mut i = str.as_ptr() as usize;
+        let mut left = str.len();
+
+        if left >= 16 {
+            // ranges = b"\0\x08\x0A\x1F\x7E\xFF";
+            let ranges16 = unsafe { _mm_loadu_si128(ranges.as_ptr() as *const _) };
+            let ranges_len = ranges.len() as i32;
+            loop {
+                let s1 = unsafe { _mm_loadu_si128(i as *const _) };
+
+                let idx = unsafe {
+                    _mm_cmpestri(
+                        ranges16,
+                        ranges_len,
+                        s1,
+                        16,
+                        _SIDD_LEAST_SIGNIFICANT | _SIDD_CMP_RANGES | _SIDD_UBYTE_OPS,
+                    )
+                };
+
+                if idx != 16 {
+                    i += idx as usize;
+                    break;
+                }
+                i += 16;
+            }
+
+            let index = i - start;
+            let (before, after) = str.split_at(index);
+            return Ok((after, before));
+        } else {
+            return take_while_unrolled::<'a, _, VerboseError<&'a str>>(condition)(str);
+        }
+    }
 
     pub fn take_while_unrolled<'a, Condition, Error: ParseError<&'a str>>(
         cond: Condition,
@@ -137,43 +202,6 @@ pub(self) mod unrolled {
 
 pub(self) mod tables {
 
-    const fn punctuation_table() -> [bool; 256] {
-        let mut table = [false; 256];
-
-        table[b'!' as usize] = true;
-        table[b'"' as usize] = true;
-        table[b'#' as usize] = true;
-        table[b'$' as usize] = true;
-        table[b'%' as usize] = true;
-        table[b'&' as usize] = true;
-        table[b'\'' as usize] = true;
-        table[b'(' as usize] = true;
-        table[b')' as usize] = true;
-        table[b'*' as usize] = true;
-        table[b'+' as usize] = true;
-        table[b',' as usize] = true;
-        table[b'-' as usize] = true;
-        table[b'.' as usize] = true;
-        table[b'/' as usize] = true;
-        table[b':' as usize] = true;
-        table[b';' as usize] = true;
-        table[b'<' as usize] = true;
-        table[b'=' as usize] = true;
-        table[b'>' as usize] = true;
-        table[b'?' as usize] = true;
-        table[b'@' as usize] = true;
-        table[b'[' as usize] = true;
-        table[b'\\' as usize] = true;
-        table[b']' as usize] = true;
-        table[b'^' as usize] = true;
-        table[b'_' as usize] = true;
-        table[b'`' as usize] = true;
-        table[b'{' as usize] = true;
-        table[b'|' as usize] = true;
-        table[b'}' as usize] = true;
-        table[b'~' as usize] = true;
-        table
-    }
     const fn string_litteral_content_table() -> [bool; 256] {
         let mut table = [false; 256];
         table[b'a' as usize] = true;
@@ -253,6 +281,7 @@ pub(self) mod tables {
         table[b'%' as usize] = true;
         table[b'&' as usize] = true;
         table[b'\'' as usize] = true;
+        table[b'\"' as usize] = true;
         table[b'(' as usize] = true;
         table[b')' as usize] = true;
         table[b'*' as usize] = true;
@@ -408,14 +437,7 @@ pub(self) mod tables {
         table[b'Z' as usize] = true;
         table
     }
-    const fn reserved_table() -> [bool; 256] {
-        let mut table = [false; 256];
-        table[b'\"' as usize] = true;
-        table[b'=' as usize] = true;
-        table[b'}' as usize] = true;
-        table[b'{' as usize] = true;
-        table
-    }
+
     const fn number_table() -> [bool; 256] {
         let mut table = [false; 256];
 
@@ -470,10 +492,6 @@ pub(self) mod tables {
 
     pub fn is_token(char: char) -> bool {
         token_table()[char as usize]
-    }
-
-    pub fn is_reserved(char: char) -> bool {
-        reserved_table()[char as usize]
     }
 }
 
@@ -645,11 +663,7 @@ pub(self) mod date {
 pub(self) mod string_literal {
     use nom::{combinator::map, error::VerboseError};
 
-    use super::{
-        tables::{is_reserved, is_string_litteral_contents},
-        unrolled::take_while_unrolled,
-        Res, Val,
-    };
+    use super::{tables::is_string_litteral_contents, unrolled::take_while_unrolled, Res, Val};
 
     pub fn string_literal_contents<'a>(input: &'a str) -> Res<&'a str, &'a str> {
         take_while_unrolled::<'a, _, VerboseError<&'a str>>(is_string_litteral_contents)(input)
@@ -1439,10 +1453,39 @@ mod tests {
             assert_result_ok(result);
         }
     }
+    #[cfg(all(
+        test,
+        any(target_arch = "x86", target_arch = "x86_64"),
+        target_feature = "sse2"
+    ))]
+    mod simd {
+        use crate::parser::clausewitz::{tables::is_space, unrolled::take_while_simd_prime};
+
+        #[test]
+        fn take_while_simd_prime__string_with_leading_whitespace__whitespace_collected_remainder_returned(
+        ) {
+            let text = " \t\n\r|Stop this is a big long string";
+            let ranges = b"\x00\x08\x0E\x1f\x21\xff";
+            let (remainder, parsed) = take_while_simd_prime(text, is_space, ranges).unwrap();
+            assert_eq!(remainder, "|Stop this is a big long string");
+            assert_eq!(parsed, " \t\n\r");
+        }
+
+        #[test]
+        fn take_while_simd_prime__string_with_many_leading_whitespace__whitespace_collected_remainder_returned(
+        ) {
+            let text = "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t|Stop this is a big long string";
+            let ranges = b"\x00\x08\x0E\x1f\x21\xff";
+            let (remainder, parsed) = take_while_simd_prime(text, is_space, ranges).unwrap();
+            assert_eq!(remainder, "|Stop this is a big long string");
+            assert_eq!(parsed, "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+        }
+    }
 
     #[cfg(test)]
     mod files {
         use std::{
+            arch::x86_64::_mm_loadu_si128,
             fs::{self, File},
             io::Read,
             time::Instant,
