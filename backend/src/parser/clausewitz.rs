@@ -18,11 +18,12 @@ pub enum Val<'a> {
 }
 
 pub(self) mod simd {
+    use nom::bytes::complete::take_while;
     use nom::error::VerboseError;
-
     use std::arch::x86_64::{
         _mm_cmpestri, _mm_loadu_si128, _SIDD_CMP_RANGES, _SIDD_LEAST_SIGNIFICANT, _SIDD_UBYTE_OPS,
     };
+    use std::cmp::min;
 
     //the range of all the characters which should be REJECTED
     pub const SPACE_RANGES: &[u8] = b"\x00\x08\x0e\x1f\x21\xff";
@@ -63,10 +64,6 @@ pub(self) mod simd {
     where
         F: Fn(char) -> bool,
     {
-        use std::cmp::min;
-
-        use nom::bytes::complete::take_while;
-
         let len = str.len();
         if len == 0 {
             return Ok(("", ""));
@@ -1481,10 +1478,7 @@ mod tests {
 
     #[cfg(test)]
     mod files {
-        use std::{
-            fs::{self, File},
-            time::Instant,
-        };
+        use std::fs::{self, File};
 
         use memmap::Mmap;
 
@@ -1503,12 +1497,7 @@ mod tests {
         fn gamestate() {
             let text = fs::read_to_string("/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate").unwrap();
 
-            let start = Instant::now();
-
             let result = root(text.as_str());
-
-            let duration = start.elapsed();
-            println!("no mmap: Time elapsed is: {:?}", duration);
 
             assert_result_ok(result);
         }
@@ -1523,12 +1512,7 @@ mod tests {
 
             let str = std::str::from_utf8(&mmap[..]).unwrap();
 
-            let start = Instant::now();
-
             let result = root(str);
-
-            let duration = start.elapsed();
-            println!("mmap: Time elapsed is: {:?}", duration);
 
             assert_result_ok(result);
         }

@@ -26,5 +26,6 @@ zip= "0.5.13"
 text_io="0.1.9"
 notify="4.0.17"
 nom="7.1.0"
-memmap = "0.7.0"
+memmap="0.7.0"
+clausewitz-parser= {version = "0.1.0", path="../clausewitz-parser"}
 [dev-dependencies]
