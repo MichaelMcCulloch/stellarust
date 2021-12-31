@@ -27,7 +27,16 @@ pub(self) mod unrolled {
 
     use super::Res;
 
-    pub fn take_while_unrolled<'a, F>(str: &'a str, condition: F) -> (&'a str, &'a str)
+    pub fn take_while_unrolled<'a, condition, Error: ParseError<&'a str>>(
+        cond: condition,
+    ) -> impl Fn(&'a str) -> Res<&'a str, &'a str>
+    where
+        condition: Fn(char) -> bool,
+    {
+        move |i: &'a str| i.split_at_position_complete(|c| !cond(c))
+    }
+
+    pub fn take_while_unrolled_prime<'a, F>(str: &'a str, condition: F) -> (&'a str, &'a str)
     where
         F: Fn(char) -> bool,
     {
@@ -445,9 +454,9 @@ pub(self) mod space {
     use nom::{bytes::complete::take_while, combinator::verify, error::VerboseError};
 
     pub fn opt_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        let x = take_while_unrolled(input, move |character| is_space(character));
-
-        Ok(x)
+        take_while_unrolled::<'a, _, VerboseError<&'a str>>(move |character| is_space(character))(
+            input,
+        )
     }
 
     pub fn req_space<'a>(input: &'a str) -> Res<&'a str, &'a str> {
@@ -1424,7 +1433,7 @@ mod tests {
             let result = root(text.as_str());
 
             let duration = start.elapsed();
-            println!("Time elapsed is: {:?}", duration);
+            println!("no mmap: Time elapsed is: {:?}", duration);
 
             assert_result_ok(result);
         }
@@ -1444,7 +1453,7 @@ mod tests {
             let result = root(str);
 
             let duration = start.elapsed();
-            println!("Time elapsed is: {:?}", duration);
+            println!("mmap: Time elapsed is: {:?}", duration);
 
             assert_result_ok(result);
         }
