@@ -48,7 +48,7 @@ pub(self) mod simd {
         Condition: Fn(char) -> bool,
     {
         // move |i: &'a str| take_while_unrolled_prime(i, |c| !cond(c))
-        move |i: &'a str| take_while_simd_prime(i, |c| cond(c), ranges)
+        move |input: &'a str| take_while_simd_prime(input, |c| cond(c), ranges)
     }
 
     #[cfg(all(
@@ -99,7 +99,6 @@ pub(self) mod simd {
             let (before, after) = str.split_at(min(index, str.len()));
             return Ok((after, before));
         } else {
-            // println!("unrolled");
             return take_while(condition)(str);
         }
     }
@@ -511,7 +510,7 @@ pub(self) mod date {
     };
 
     use time::{Date, Month};
-    #[derive(Debug, Clone, PartialEq)]
+    #[derive(Debug, PartialEq)]
     pub struct DateParseError {
         err: String,
     }
