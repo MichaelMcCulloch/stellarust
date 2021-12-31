@@ -45,50 +45,43 @@ pub(self) mod unrolled {
         }
         let mut i = 0usize;
         let len = str.len();
+        let chunk_size = 8;
 
         loop {
-            if len - i < 8 {
+            if len - i < chunk_size {
                 break;
             };
 
-            let byte = (*str.as_bytes().get(i).unwrap()) as char;
-            if !condition(byte) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
+                break;
+            }
+            i += 1;
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
 
-            let byte = (*str.as_bytes().get(i).unwrap()) as char;
-            if !condition(byte) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            let byte = (*str.as_bytes().get(i).unwrap()) as char;
-            if !condition(byte) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
             i += 1;
-            let byte = (*str.as_bytes().get(i).unwrap()) as char;
-            if !condition(byte) {
+            if !condition((*str.as_bytes().get(i).unwrap()) as char) {
                 break;
             }
-            i += 1;
-            let byte = (*str.as_bytes().get(i).unwrap()) as char;
-            if !condition(byte) {
-                break;
-            }
-            i += 1;
-            let byte = (*str.as_bytes().get(i).unwrap()) as char;
-            if !condition(byte) {
-                break;
-            }
-            i += 1;
-            let byte = (*str.as_bytes().get(i).unwrap()) as char;
-            if !condition(byte) {
-                break;
-            }
-            i += 1;
         }
-        if len - i < 8 {
+        if len - i < chunk_size {
             loop {
                 let byte = (*str.as_bytes().get(i).unwrap()) as char;
                 if !condition(byte) {
@@ -510,18 +503,21 @@ pub(self) mod identifier {
     use nom::{
         bytes::complete::take_while,
         combinator::{map, verify},
+        error::VerboseError,
     };
 
     use super::{
         tables::{is_digit, is_identifier_char},
+        unrolled::take_while_unrolled,
         Res, Val,
     };
 
     pub fn identifier<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         map(
-            verify(take_while(is_identifier_char), |s: &str| {
-                !s.is_empty() && !(is_digit(s.chars().next().unwrap()))
-            }),
+            verify(
+                take_while_unrolled::<'a, _, VerboseError<&'a str>>(is_identifier_char),
+                |s: &str| !s.is_empty() && !(is_digit(s.chars().next().unwrap())),
+            ),
             |s: &str| Val::Identifier(s),
         )(input)
     }
@@ -613,15 +609,16 @@ pub(self) mod date {
 }
 
 pub(self) mod string_literal {
-    use nom::{bytes::complete::take_while, combinator::map};
+    use nom::{bytes::complete::take_while, combinator::map, error::VerboseError};
 
     use super::{
         tables::{is_reserved, is_string_litteral_contents},
+        unrolled::take_while_unrolled,
         Res, Val,
     };
 
     pub fn string_literal_contents<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        take_while(is_string_litteral_contents)(input)
+        take_while_unrolled::<'a, _, VerboseError<&'a str>>(is_string_litteral_contents)(input)
     }
 
     pub fn string_literal<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
@@ -647,6 +644,7 @@ pub(self) mod dict {
         bytes::complete::take_while,
         character::complete::char,
         combinator::{cut, map, verify},
+        error::VerboseError,
         multi::separated_list0,
         sequence::{delimited, preceded, separated_pair},
     };
@@ -655,14 +653,16 @@ pub(self) mod dict {
         space::{opt_space, req_space},
         string_literal::string_literal_contents,
         tables::{is_digit, is_identifier_char},
+        unrolled::take_while_unrolled,
         value::value,
         Res, Val,
     };
 
     pub fn unquoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-        verify(take_while(is_identifier_char), |s: &str| {
-            !s.is_empty() && !(is_digit(s.chars().next().unwrap()))
-        })(input)
+        verify(
+            take_while_unrolled::<'a, _, VerboseError<&'a str>>(is_identifier_char),
+            |s: &str| !s.is_empty() && !(is_digit(s.chars().next().unwrap())),
+        )(input)
     }
 
     pub fn quoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
@@ -750,6 +750,7 @@ pub(self) mod bracketed {
         bytes::complete::{take, take_while},
         character::complete::char,
         combinator::{cut, map},
+        error::VerboseError,
         multi::separated_list0,
         sequence::delimited,
     };
@@ -762,6 +763,7 @@ pub(self) mod bracketed {
         set::set,
         space::{opt_space, req_space},
         tables::is_token,
+        unrolled::take_while_unrolled,
         Res, Val,
     };
 
@@ -770,7 +772,9 @@ pub(self) mod bracketed {
     }
     pub fn contents<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
         let (remainder, maybe_key_number_idenentifier): (&'a str, &'a str) =
-            take_while(move |character| !is_token(character))(input)?;
+            take_while_unrolled::<'a, _, VerboseError<&'a str>>(move |character| {
+                !is_token(character)
+            })(input)?;
 
         let (_remainder, next_token) = take(1 as usize)(remainder)?;
 
