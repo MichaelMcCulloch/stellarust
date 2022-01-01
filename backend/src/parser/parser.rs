@@ -20,6 +20,8 @@ impl Parser {
         let meta = Parser::from_meta(meta.as_str());
         let gamestate = Parser::from_gamestate(gamestate.as_str());
 
+        println!("{:#?}", meta);
+        log::info!("{:#?}", meta);
         let result = ParseResult { meta, gamestate };
         ModelDataPoint::from(result)
     }
@@ -39,6 +41,6 @@ impl Parser {
 
 impl From<ParseResult<'_>> for ModelDataPoint {
     fn from(_: ParseResult<'_>) -> Self {
-        todo!()
+        ModelDataPoint { data: 0 }
     }
 }

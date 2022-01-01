@@ -21,14 +21,14 @@ mod tests {
 
         let (msg_receiver, _watcher) = DirectoryEventHandler::create(&get_test_dir());
 
-        msg_receiver.recv_timeout(Duration::from_secs(2)).unwrap();
-        msg_receiver.recv_timeout(Duration::from_secs(2)).unwrap();
+        msg_receiver.recv_timeout(Duration::from_secs(10)).unwrap();
+        msg_receiver.recv_timeout(Duration::from_secs(10)).unwrap();
 
         for i in 2..4 {
             fs::copy(&source_files[i], &test_files[i]).unwrap();
         }
 
-        let result = msg_receiver.recv_timeout(Duration::from_secs(2));
+        let result = msg_receiver.recv_timeout(Duration::from_secs(10));
         for path in test_files {
             fs::remove_file(path).unwrap();
         }
