@@ -4,7 +4,7 @@ use crate::unzipper::Unzipper;
 
 use clausewitz_parser::clausewitz::root::root;
 use clausewitz_parser::clausewitz::Val;
-use model::ModelDataPoint;
+use data_model::ModelDataPoint;
 
 pub struct Parser {}
 

@@ -16,7 +16,7 @@ fn get_resource_dir() -> PathBuf {
 #[cfg(test)]
 mod tests {
 
-    use model::{CustodianMsg, ModelCustodian, ModelDataPoint};
+    use data_model::{CustodianMsg, ModelCustodian, ModelDataPoint};
     use std::{sync::mpsc::channel, thread, time::Duration};
 
     #[test]

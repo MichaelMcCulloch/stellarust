@@ -1,5 +1,5 @@
 use crate::dirwatcher::DirWatcher;
-use model::CustodianMsg;
+use data_model::CustodianMsg;
 use notify::{Op, RawEvent};
 use std::{
     fs,

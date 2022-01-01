@@ -5,7 +5,7 @@ mod tests {
 
     use super::*;
     use backend::dirwatcher::DirectoryEventHandler;
-    use model::{CustodianMsg, ModelDataPoint};
+    use data_model::{CustodianMsg, ModelDataPoint};
     use std::{fs, time::Duration};
 
     #[test]

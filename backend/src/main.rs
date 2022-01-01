@@ -1,8 +1,8 @@
 use actix_cors::Cors;
 use actix_web::{get, middleware, web::Data, App, HttpResponse, HttpServer, Responder};
 use backend::{campaign_select::selector::CampaignSelector, dirwatcher::DirectoryEventHandler};
+use data_model::ModelCustodian;
 use listenfd::ListenFd;
-use model::ModelCustodian;
 use std::{panic, path::PathBuf, process::exit};
 
 #[get("/empires")]

@@ -9,7 +9,7 @@ edition = "2021"
 members = [
     "frontend",
     "backend",
-    "model",
+    "data-model",
     "clausewitz-parser"
 ]
 
