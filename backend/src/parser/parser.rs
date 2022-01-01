@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
-use crate::model::ModelDataPoint;
 use crate::unzipper::Unzipper;
 
 use clausewitz_parser::clausewitz::root::root;
 use clausewitz_parser::clausewitz::Val;
+use model::ModelDataPoint;
 
 pub struct Parser {}
 

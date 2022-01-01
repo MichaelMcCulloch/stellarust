@@ -4,10 +4,8 @@ use std::path::PathBuf;
 mod tests {
 
     use super::*;
-    use backend::{
-        dirwatcher::DirectoryEventHandler,
-        model::{CustodianMsg, ModelDataPoint},
-    };
+    use backend::dirwatcher::DirectoryEventHandler;
+    use model::{CustodianMsg, ModelDataPoint};
     use std::{fs, time::Duration};
 
     #[test]
