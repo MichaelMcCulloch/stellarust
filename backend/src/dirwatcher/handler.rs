@@ -27,9 +27,13 @@ impl DirectoryEventHandler {
         let existant_files = get_existing_files(directory);
 
         for path in existant_files {
-            custodian_message_sender
-                .send(CustodianMsg::Data(Parser::from_file(&path)))
-                .unwrap();
+            let parse_result = Parser::from_file(&path);
+            match parse_result {
+                Ok(data_point) => custodian_message_sender
+                    .send(CustodianMsg::Data(data_point))
+                    .unwrap(),
+                Err(e) => log::error!("{}", e),
+            };
         }
 
         me.start_directory_event_handler(raw_event_receiver, custodian_message_sender);
@@ -72,7 +76,7 @@ fn forward_event_to_path(
             op: Ok(Op::CLOSE_WRITE),
             path: Some(path),
             cookie: _cookie,
-        } => sender.send(CustodianMsg::Data(Parser::from_file(&path))),
+        } => sender.send(CustodianMsg::Data(Parser::from_file(&path)?)),
         _ => Ok(()),
     })?;
 
