@@ -1,4 +1,9 @@
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
+pub struct EmpireData {
+    pub name: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct ModelDataPoint {
-    pub data: usize,
+    pub empires: Vec<EmpireData>,
 }

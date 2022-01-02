@@ -1,4 +1,5 @@
 use crate::dirwatcher::DirWatcher;
+use anyhow::Result;
 use data_model::CustodianMsg;
 use notify::{Op, RawEvent};
 use std::{
@@ -68,7 +69,7 @@ fn get_existing_files(path: &PathBuf) -> Vec<PathBuf> {
 fn forward_event_to_path(
     receiver: &Receiver<RawEvent>,
     sender: &Sender<CustodianMsg>,
-) -> Result<(), anyhow::Error> {
+) -> Result<()> {
     let event = receiver.recv()?;
 
     (match event {

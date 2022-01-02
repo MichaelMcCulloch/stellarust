@@ -16,7 +16,7 @@ fn get_resource_dir() -> PathBuf {
 #[cfg(test)]
 mod tests {
 
-    use data_model::{CustodianMsg, ModelCustodian, ModelDataPoint};
+    use data_model::{CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint};
     use std::{sync::mpsc::channel, thread, time::Duration};
 
     #[test]
@@ -27,14 +27,30 @@ mod tests {
 
         let s = sender.clone();
         thread::spawn(move || {
-            s.send(CustodianMsg::Data(ModelDataPoint { data: 0 }))
-                .unwrap();
-            s.send(CustodianMsg::Data(ModelDataPoint { data: 2 }))
-                .unwrap();
-            s.send(CustodianMsg::Data(ModelDataPoint { data: 3 }))
-                .unwrap();
-            s.send(CustodianMsg::Data(ModelDataPoint { data: 6 }))
-                .unwrap();
+            s.send(CustodianMsg::Data(ModelDataPoint {
+                empires: vec![EmpireData {
+                    name: String::from("0"),
+                }],
+            }))
+            .unwrap();
+            s.send(CustodianMsg::Data(ModelDataPoint {
+                empires: vec![EmpireData {
+                    name: String::from("2"),
+                }],
+            }))
+            .unwrap();
+            s.send(CustodianMsg::Data(ModelDataPoint {
+                empires: vec![EmpireData {
+                    name: String::from("3"),
+                }],
+            }))
+            .unwrap();
+            s.send(CustodianMsg::Data(ModelDataPoint {
+                empires: vec![EmpireData {
+                    name: String::from("6"),
+                }],
+            }))
+            .unwrap();
             s.send(CustodianMsg::Exit).unwrap();
         });
 
@@ -45,10 +61,26 @@ mod tests {
         assert_eq!(
             actual,
             vec![
-                ModelDataPoint { data: 0 },
-                ModelDataPoint { data: 2 },
-                ModelDataPoint { data: 3 },
-                ModelDataPoint { data: 6 }
+                ModelDataPoint {
+                    empires: vec![EmpireData {
+                        name: String::from("0")
+                    }]
+                },
+                ModelDataPoint {
+                    empires: vec![EmpireData {
+                        name: String::from("2")
+                    }]
+                },
+                ModelDataPoint {
+                    empires: vec![EmpireData {
+                        name: String::from("3")
+                    }]
+                },
+                ModelDataPoint {
+                    empires: vec![EmpireData {
+                        name: String::from("6")
+                    }]
+                }
             ]
         );
     }

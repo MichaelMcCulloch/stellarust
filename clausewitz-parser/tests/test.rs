@@ -2,8 +2,9 @@
 mod test {
     use std::fs::{self, File};
 
-    use clausewitz_parser::clausewitz::root::root;
+    use clausewitz_parser::clausewitz::{root::root, Val};
     use memmap::Mmap;
+    use time::{Date, Month};
 
     #[test]
     fn meta() {
@@ -33,8 +34,85 @@ mod test {
 
         let result = root(str);
 
-        println!("{:#?}", result);
+        // println!("{:#?}", result);
+        println!("{}", result.unwrap().1);
 
-        assert!(result.is_ok());
+        // assert!(result.is_ok());
+    }
+    #[test]
+    fn format_integer() {
+        println!("{}", Val::Integer(0));
+    }
+
+    #[test]
+    fn format_decimal() {
+        println!("{}", Val::Decimal(0.0));
+    }
+
+    #[test]
+    fn format_identifier() {
+        println!("{}", Val::Identifier("identifier"));
+    }
+
+    #[test]
+    fn format_string_literal() {
+        println!("{}", Val::StringLiteral("String Litteral"));
+    }
+
+    #[test]
+    fn format_date() {
+        println!(
+            "{}",
+            Val::Date(Date::from_calendar_date(2021, Month::January, 1).unwrap())
+        );
+    }
+
+    #[test]
+    fn format_set() {
+        println!(
+            "{}",
+            Val::Set(vec![Val::Integer(0), Val::Set(vec![Val::Integer(0)])])
+        );
+    }
+
+    #[test]
+    fn format_dict() {
+        println!(
+            "{}",
+            Val::Dict(vec![
+                ("key", Val::Integer(0)),
+                ("dict", Val::Dict(vec![("key", Val::Integer(0))]))
+            ])
+        );
+    }
+
+    #[test]
+    fn format_dict2() {
+        println!("{}", Val::Dict(vec![("key", Val::Integer(0)),]));
+    }
+
+    #[test]
+    fn format_NumberedDict() {
+        println!(
+            "{}",
+            Val::NumberedDict(
+                0,
+                vec![
+                    ("key", Val::Integer(0)),
+                    (
+                        "NumberedDict",
+                        Val::NumberedDict(1, vec![("key", Val::Integer(0))])
+                    )
+                ]
+            )
+        );
+    }
+
+    #[test]
+    fn format_NumberedDict2() {
+        println!(
+            "{}",
+            Val::NumberedDict(-234, vec![("key", Val::Integer(0)),])
+        );
     }
 }

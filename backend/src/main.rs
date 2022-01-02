@@ -45,8 +45,8 @@ async fn main() -> std::io::Result<()> {
         String::from("!@##$$()(*&())"),
     ]);
 
-    let (receiver, dir_watcher) = DirectoryEventHandler::create(&_campaign_path);
-    let custodian = ModelCustodian::create(receiver);
+    let (receiver, _dir_watcher) = DirectoryEventHandler::create(&_campaign_path);
+    let _custodian = ModelCustodian::create(receiver);
 
     //empire list:= fileReader.get()
 

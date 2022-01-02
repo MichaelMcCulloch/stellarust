@@ -38,35 +38,29 @@ impl Parser {
         let (meta, gamestate) = Unzipper::get_zipped_content(&path)?;
 
         log::info!("unzipped");
-        let meta = Parser::from_meta(path, meta.as_str())?;
-        let gamestate = Parser::from_gamestate(path, gamestate.as_str())?;
+        let meta = Parser::from_meta(meta.as_str())?;
+        let gamestate = Parser::from_gamestate(gamestate.as_str())?;
 
         let result = ParseResult { meta, gamestate };
 
         log::info!("parsed");
         Ok(ModelDataPoint::from(result))
     }
-    pub fn from_meta<'a>(pathbuf: &PathBuf, string: &'a str) -> Result<Val<'a>> {
+    pub fn from_meta<'a>(string: &'a str) -> Result<Val<'a>> {
         let result = root(string);
         match result {
             Ok((_, val)) => Ok(val),
-            Err(_) => Err(anyhow::Error::from(ParseError {
-                err: format!(
-                    "ERROR parsing meta at {}",
-                    pathbuf.as_os_str().to_str().unwrap()
-                ),
+            Err(e) => Err(anyhow::Error::from(ParseError {
+                err: format!("Error parsing meta \n{}", e),
             })),
         }
     }
-    pub fn from_gamestate<'a>(pathbuf: &PathBuf, string: &'a str) -> Result<Val<'a>> {
+    pub fn from_gamestate<'a>(string: &'a str) -> Result<Val<'a>> {
         let result = root(string);
         match result {
             Ok((_, val)) => Ok(val),
-            Err(_) => Err(anyhow::Error::from(ParseError {
-                err: format!(
-                    "ERROR parsing gamestate at {}",
-                    pathbuf.as_os_str().to_str().unwrap()
-                ),
+            Err(e) => Err(anyhow::Error::from(ParseError {
+                err: format!("Error parsing gamestate:\n{}", e),
             })),
         }
     }
@@ -74,6 +68,13 @@ impl Parser {
 
 impl From<ParseResult<'_>> for ModelDataPoint {
     fn from(_: ParseResult<'_>) -> Self {
-        ModelDataPoint { data: 0 }
+        todo!()
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn from_() {}
 }

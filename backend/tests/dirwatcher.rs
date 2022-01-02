@@ -31,7 +31,7 @@ mod tests {
             fs::remove_file(path).unwrap();
         }
         match result {
-            Ok(msg) => assert_eq!(CustodianMsg::Data(ModelDataPoint { data: 0 }), msg),
+            Ok(msg) => assert_eq!(CustodianMsg::Data(ModelDataPoint { empires: vec![] }), msg),
             Err(error) => panic!("{}", error),
         }
     }
