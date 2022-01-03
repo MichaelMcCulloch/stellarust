@@ -15,7 +15,7 @@ members = [
 
 [dependencies]
 time = {version = "0.3.5", features = ["serde"]}
-serde = "1.0.132"
+serde = {version = "1.0.132", features=["derive"]}
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.28"

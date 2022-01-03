@@ -34,10 +34,3 @@ clausewitz-parser= {version = "0.1.0", path="../clausewitz-parser"}
 
 
 
-[profile.dev.package.clausewitz-parser]
-opt-level = 3
-debug = false
-
-[profile.test.package.clausewitz-parser]
-opt-level = 3
-debug = false
