@@ -1,10 +1,30 @@
 use nom::combinator::map;
+use rayon::{iter::ParallelIterator, str::ParallelString};
 
 use super::{bracketed::hash_map, Res, Val};
 
 pub fn root<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
     map(hash_map, Val::Dict)(input)
 }
+
+pub fn par_root<'a>(prepared_input: &'a str) -> Res<&'a str, Val<'a>> {
+    // input.replace("\n}\n", "\n}\n#")
+    let vec: Vec<(&str, Val)> = prepared_input
+        .par_split('#')
+        .filter_map(|s| {
+            if let Ok((rem, val)) = hash_map(s) {
+                Some(val)
+            } else {
+                println!("FAIL");
+                None
+            }
+        })
+        .flatten()
+        .collect();
+
+    Ok(("", Val::Dict(vec)))
+}
+
 #[cfg(test)]
 mod tests {
     use crate::clausewitz::tests::helper::assert_result_ok;
@@ -19,17 +39,18 @@ mod tests {
             float=-0.123939887
             "###;
 
-        let result = root(text);
+        let result = par_root(text);
         assert_result_ok(result);
     }
 
     #[test]
     fn set_numbers_same_line() {
         let text = r###"set_of_numbers={
-                40 41
-            }
-            "###;
-        let result = root(text);
+    40 41
+}
+"###;
+        let prepared_input = text.replace("\n}\n", "\n}\n#");
+        let result = par_root(prepared_input.as_str());
         assert_result_ok(result);
     }
     #[test]
@@ -37,7 +58,8 @@ mod tests {
         let text = r###"modules={
                 0=shipyard				1=trading_hub			}
                 "###;
-        let result = root(text);
+
+        let result = par_root(text);
         assert_result_ok(result);
     }
 
@@ -60,7 +82,7 @@ mod tests {
                                     }
                                 }
 "###;
-        let result = root(text);
+        let result = par_root(text);
 
         assert_result_ok(result);
     }
@@ -83,7 +105,8 @@ mod tests {
                     "null"
                 }
             }"###;
-        let result = root(text);
+
+        let result = par_root(text);
         assert_result_ok(result);
     }
 
@@ -91,7 +114,8 @@ mod tests {
     fn quoted__key__ok() {
         let text = r###""The name Of A Ship"=0
             "###;
-        let result = root(text);
+
+        let result = par_root(text);
         assert_result_ok(result);
     }
 
@@ -99,7 +123,8 @@ mod tests {
     fn empty__set__set() {
         let text = r###"empty_set={}
             "###;
-        let result = root(text);
+
+        let result = par_root(text);
         assert_result_ok(result);
     }
 
@@ -111,7 +136,8 @@ mod tests {
                 "Apocalypse"
             }
             "###;
-        let result = root(text);
+
+        let result = par_root(text);
         assert_result_ok(result);
     }
 
@@ -129,7 +155,8 @@ mod tests {
                 }
             }
             "###;
-        let result = root(text);
+
+        let result = par_root(text);
         assert_result_ok(result);
     }
 
@@ -137,7 +164,8 @@ mod tests {
     fn identifier__with__underscore() {
         let text = r###"identifier=identi_fire
             "###;
-        let result = root(text);
+
+        let result = par_root(text);
         assert_result_ok(result);
     }
 
@@ -149,7 +177,29 @@ mod tests {
                 cthulhu=ilhjok
             }
             "###;
-        let result = root(text);
+
+        let result = par_root(text);
+        assert_result_ok(result);
+    }
+
+    #[test]
+    fn par_root__key_identifier_pairs__ok() {
+        let text = r###"dict={
+    alpha=a
+    beta=b
+    cthulhu=ilhjok
+}
+dict2={
+    charlie=a
+    delta=b
+    zoo=ilhjok
+}
+            "###;
+        let prepared_input = text.replace("\n}\n", "\n}\n#");
+
+        let result = par_root(prepared_input.as_str());
+
+        println!("{}", result.clone().unwrap().1);
         assert_result_ok(result);
     }
 }

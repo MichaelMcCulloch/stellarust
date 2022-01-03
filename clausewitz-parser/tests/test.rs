@@ -2,7 +2,10 @@
 mod test {
     use std::fs::{self, File};
 
-    use clausewitz_parser::clausewitz::{root::root, Val};
+    use clausewitz_parser::clausewitz::{
+        root::{par_root, root},
+        Val,
+    };
     use memmap::Mmap;
     use time::{Date, Month};
 
@@ -31,8 +34,9 @@ mod test {
         let mmap = unsafe { Mmap::map(&file).expect(&format!("Error mapping file {:?}", file)) };
 
         let str = std::str::from_utf8(&mmap[..]).unwrap();
+        let prepared_input = str.replace("\n}\n", "\n}\n#");
 
-        let result = root(str);
+        let result = par_root(prepared_input.as_str());
 
         // println!("{:#?}", result);
         println!("{}", result.unwrap().1);
