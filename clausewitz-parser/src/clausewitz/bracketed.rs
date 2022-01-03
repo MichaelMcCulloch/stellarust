@@ -10,7 +10,7 @@ use nom::{
 
 use super::{
     quoted::string_literal_contents,
-    simd::{take_while, IDENTIFIER_RANGES, NOT_TOKEN_RANGES},
+    simd::{take_while_simd, IDENTIFIER_RANGES, NOT_TOKEN_RANGES},
     space::{opt_space, req_space},
     tables::{is_digit, is_identifier_char, is_token},
     unquoted::integer,
@@ -20,7 +20,7 @@ use super::{
 
 pub fn unquoted_key<'a>(input: &'a str) -> Res<&'a str, &'a str> {
     verify(
-        take_while::<'a, _, VerboseError<&'a str>>(is_identifier_char, IDENTIFIER_RANGES),
+        take_while_simd::<'a, _, VerboseError<&'a str>>(is_identifier_char, IDENTIFIER_RANGES),
         |s: &str| !s.is_empty() && !(is_digit(s.chars().next().unwrap())),
     )(input)
 }
@@ -87,7 +87,7 @@ pub fn set_of_collections<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
 }
 pub fn contents<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
     let (remainder, maybe_key_number_idenentifier): (&'a str, &'a str) =
-        take_while::<'a, _, VerboseError<&'a str>>(
+        take_while_simd::<'a, _, VerboseError<&'a str>>(
             move |character| !is_token(character),
             NOT_TOKEN_RANGES,
         )(input)?;

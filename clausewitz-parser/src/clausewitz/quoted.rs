@@ -1,5 +1,5 @@
 use super::{
-    simd::{take_while, STRING_LITTERAL_CONTENT_RANGES},
+    simd::{take_while_simd, STRING_LITTERAL_CONTENT_RANGES},
     tables::is_string_litteral_contents,
     Res, Val,
 };
@@ -77,7 +77,7 @@ pub fn map_to_date<'a>(s: &'a str) -> anyhow::Result<Date> {
 }
 
 pub fn string_literal_contents<'a>(input: &'a str) -> Res<&'a str, &'a str> {
-    take_while::<'a, _, VerboseError<&'a str>>(
+    take_while_simd::<'a, _, VerboseError<&'a str>>(
         is_string_litteral_contents,
         STRING_LITTERAL_CONTENT_RANGES,
     )(input)

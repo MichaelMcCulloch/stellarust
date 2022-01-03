@@ -6,7 +6,7 @@ use nom::{
 };
 
 use super::{
-    simd::{take_while, IDENTIFIER_RANGES},
+    simd::{take_while_simd, IDENTIFIER_RANGES},
     tables::{is_digit, is_identifier_char},
     Res, Val,
 };
@@ -36,7 +36,7 @@ pub fn integer<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
 pub fn identifier<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
     map(
         verify(
-            take_while::<'a, _, VerboseError<&'a str>>(is_identifier_char, IDENTIFIER_RANGES),
+            take_while_simd::<'a, _, VerboseError<&'a str>>(is_identifier_char, IDENTIFIER_RANGES),
             |s: &str| !s.is_empty() && !(is_digit(s.chars().next().unwrap())),
         ),
         |s: &str| Val::Identifier(s),
