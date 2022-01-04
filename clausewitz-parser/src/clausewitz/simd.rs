@@ -75,6 +75,8 @@ fn simd_loop16<'a>(str: &'a str, ranges: &[u8], len: usize) -> Res<&'a str, &'a 
 
 #[cfg(test)]
 mod tests {
+    use nom::error::VerboseError;
+
     use crate::clausewitz::tables::is_space;
 
     use super::*;
