@@ -7,6 +7,7 @@ mod test {
         Val,
     };
     use memmap::Mmap;
+
     use time::{Date, Month};
 
     #[test]

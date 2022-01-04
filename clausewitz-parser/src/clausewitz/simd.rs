@@ -1,5 +1,5 @@
 use nom::bytes::complete::take_while;
-use nom::error::VerboseError;
+
 use std::arch::x86_64::{
     _mm_cmpestri, _mm_loadu_si128, _SIDD_CMP_RANGES, _SIDD_LEAST_SIGNIFICANT, _SIDD_UBYTE_OPS,
 };

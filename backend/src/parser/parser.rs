@@ -4,9 +4,9 @@ use clausewitz_parser::clausewitz::root::root;
 use clausewitz_parser::clausewitz::Val;
 use data_model::ModelDataPoint;
 use std::error::Error;
+use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
 use std::path::PathBuf;
-use std::{any, fmt};
 
 pub struct Parser {}
 
@@ -74,7 +74,7 @@ impl From<ParseResult<'_>> for ModelDataPoint {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+
     #[test]
     fn from_() {}
 }

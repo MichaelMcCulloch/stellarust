@@ -12,7 +12,7 @@ pub fn par_root<'a>(prepared_input: &'a str) -> Res<&'a str, Val<'a>> {
     let vec: Vec<(&str, Val)> = prepared_input
         .par_split('#')
         .filter_map(|s| {
-            if let Ok((rem, val)) = hash_map(s) {
+            if let Ok((_rem, val)) = hash_map(s) {
                 Some(val)
             } else {
                 println!("FAIL");

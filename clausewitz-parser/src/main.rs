@@ -1,6 +1,6 @@
 use std::{fs::File, os::unix::prelude::MetadataExt, time::Instant};
 
-use clausewitz_parser::clausewitz::root::{par_root, root};
+use clausewitz_parser::clausewitz::root::par_root;
 use memmap::Mmap;
 
 fn main() {

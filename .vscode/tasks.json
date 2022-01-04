@@ -90,6 +90,8 @@
                 "Cargo Fix Frontend",
                 "Cargo Fix Backend",
                 "Cargo Fix Stellarust",
+                "Cargo Fix Clausewitz Parser",
+                "Cargo Fix Data Model",
             ]
         },
         {
@@ -114,6 +116,22 @@
             "command": "cargo fix --allow-dirty --allow-staged",
             "options": {
                 "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "Cargo Fix Clausewitz Parser",
+            "type": "shell",
+            "command": "cargo fix --allow-dirty --allow-staged",
+            "options": {
+                "cwd": "${workspaceFolder}/clausewitz-parser"
+            }
+        },
+        {
+            "label": "Cargo Fix Data Model",
+            "type": "shell",
+            "command": "cargo fix --allow-dirty --allow-staged",
+            "options": {
+                "cwd": "${workspaceFolder}/data-model"
             }
         }
     ]

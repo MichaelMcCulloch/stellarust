@@ -38,15 +38,15 @@ pub enum Val<'a> {
 impl Display for Val<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let result = match self {
-            Val::Dict(dict_entries) => format_dict(self, ""),
-            Val::NumberedDict(number, dict_entries) => format_numbered_dict(self, ""),
-            Val::Array(array_elements) => format_array(self, ""),
-            Val::Set(set_elements) => format_set(self, ""),
-            Val::StringLiteral(string) => format_string_literal(self, ""),
-            Val::Date(date) => format_date(self, ""),
-            Val::Decimal(decimal) => format_decimal(self, ""),
-            Val::Integer(integer) => format_integer(self, ""),
-            Val::Identifier(identifire) => format_identifier(self, ""),
+            Val::Dict(_dict_entries) => format_dict(self, ""),
+            Val::NumberedDict(_number, _dict_entries) => format_numbered_dict(self, ""),
+            Val::Array(_array_elements) => format_array(self, ""),
+            Val::Set(_set_elements) => format_set(self, ""),
+            Val::StringLiteral(_string) => format_string_literal(self, ""),
+            Val::Date(_date) => format_date(self, ""),
+            Val::Decimal(_decimal) => format_decimal(self, ""),
+            Val::Integer(_integer) => format_integer(self, ""),
+            Val::Identifier(_identifire) => format_identifier(self, ""),
         };
 
         write!(f, "{}", result)
@@ -157,12 +157,7 @@ fn format_array(val: &Val, tabs: &str) -> String {
             for element in array_elements {
                 elements_strings.push(format_val(element, format!("{}{}", tabs, "    ").as_str()));
             }
-            format!(
-                "{}[\n{}\n{}]",
-                tabs,
-                elements_strings.join("\n"),
-                tabs
-            )
+            format!("{}[\n{}\n{}]", tabs, elements_strings.join("\n"), tabs)
         }
         _ => panic!("whoops"),
     }
@@ -175,12 +170,7 @@ fn format_set(val: &Val, tabs: &str) -> String {
             for element in set_elements {
                 elements_strings.push(format_val(element, format!("{}{}", tabs, "    ").as_str()));
             }
-            format!(
-                "{}{{\n{}\n{}}}",
-                tabs,
-                elements_strings.join("\n"),
-                tabs
-            )
+            format!("{}{{\n{}\n{}}}", tabs, elements_strings.join("\n"), tabs)
         }
         _ => panic!("whoops"),
     }
