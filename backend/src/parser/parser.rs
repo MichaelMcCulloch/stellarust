@@ -3,6 +3,8 @@ use anyhow::Result;
 use clausewitz_parser::clausewitz::root::root;
 use clausewitz_parser::clausewitz::Val;
 use data_model::{EmpireData, ModelDataPoint};
+use futures::executor::block_on;
+use futures::join;
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
@@ -68,18 +70,22 @@ impl Parser {
 
 impl From<ParseResult<'_>> for ModelDataPoint {
     fn from(result: ParseResult<'_>) -> Self {
-        let meta = result.meta;
-        let gamestate = result.gamestate;
-
-        let required_dlcs = get_required_dlcs_from_meta(&meta);
-
-        let empire_list = get_empires_from_gamestate(gamestate);
-
-        todo!()
+        block_on(data_point_from_parse_result(&result))
     }
 }
 
-fn get_required_dlcs_from_meta(meta: &Val) -> Vec<String> {
+async fn data_point_from_parse_result(result: &ParseResult<'_>) -> ModelDataPoint {
+    let meta = &result.meta;
+    let gamestate = &result.gamestate;
+
+    let required_dlcs = get_required_dlcs_from_meta(meta);
+
+    // let empire_list = get_empires_from_gamestate(gamestate);
+
+    ModelDataPoint { empires: vec![] }
+}
+
+async fn get_required_dlcs_from_meta(meta: &Val<'_>) -> Vec<String> {
     if let Val::Dict(pairs) = meta {
         let required_dlcs = pairs
             .into_iter()
@@ -98,10 +104,10 @@ fn get_required_dlcs_from_meta(meta: &Val) -> Vec<String> {
                 })
                 .collect();
         } else {
-            unimplemented!("This should be an array")
+            unimplemented!("This should be a set")
         }
     } else {
-        unimplemented!("This should be an array")
+        unimplemented!("This should be a dict")
     }
 }
 
@@ -114,6 +120,7 @@ mod tests {
     use std::{fs, path::PathBuf};
 
     use clausewitz_parser::clausewitz::root::root;
+    use futures::executor::block_on;
 
     use super::get_required_dlcs_from_meta;
 
@@ -126,7 +133,7 @@ mod tests {
 
         let (_, parse) = root(&meta_string.as_str()).unwrap();
 
-        let dlcs = get_required_dlcs_from_meta(&parse);
+        let dlcs = block_on(get_required_dlcs_from_meta(&parse));
 
         assert_eq!(
             dlcs,
