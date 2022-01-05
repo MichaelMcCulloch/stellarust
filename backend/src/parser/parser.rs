@@ -34,20 +34,13 @@ impl Display for ParseError {
 
 impl Parser {
     pub fn from_file(path: &PathBuf) -> Result<ModelDataPoint> {
-        log::info!(
-            "file received: {}",
-            path.file_name().unwrap().to_str().unwrap()
-        );
-
         let (meta, gamestate) = Unzipper::get_zipped_content(&path)?;
 
-        log::info!("unzipped");
         let meta = Parser::from_meta(meta.as_str())?;
         let gamestate = Parser::from_gamestate(gamestate.as_str())?;
 
         let result = ParseResult { meta, gamestate };
 
-        log::info!("parsed");
         Ok(ModelDataPoint::from(result))
     }
     pub fn from_meta<'a>(string: &'a str) -> Result<Val<'a>> {

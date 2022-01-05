@@ -29,9 +29,12 @@ impl ModelCustodian {
     fn start(&self, receiver: Receiver<CustodianMsg>) {
         let history = self.history.clone();
         thread::spawn(move || loop {
-            match receiver.recv().unwrap() {
-                CustodianMsg::Data(i) => history.lock().unwrap().push(i),
-                CustodianMsg::Exit => break,
+            match receiver.recv() {
+                Ok(data) => match data {
+                    CustodianMsg::Data(i) => history.lock().unwrap().push(i),
+                    CustodianMsg::Exit => break,
+                },
+                _err => break,
             };
         });
     }
