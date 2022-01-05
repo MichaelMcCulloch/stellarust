@@ -4174,47 +4174,47 @@ flag={
 				policy="diplomatic_stance"
 				selected="diplo_stance_expansionist"
 			}
- {
+			{
 				policy="war_philosophy"
 				selected="unrestricted_wars"
 			}
- {
+			{
 				policy="orbital_bombardment"
 				selected="orbital_bombardment_indiscriminate"
 			}
- {
+			{
 				policy="resettlement"
 				selected="resettlement_not_allowed"
 			}
- {
+			{
 				policy="first_contact_protocol"
 				selected="first_contact_proactive"
 			}
- {
+			{
 				policy="border_policy"
 				selected="border_policy_open"
 			}
- {
+			{
 				policy="economic_policy"
 				selected="economic_policy_balanced"
 			}
- {
+			{
 				policy="trade_policy"
 				selected="trade_policy_default"
 			}
- {
+			{
 				policy="robot_pop_policy"
 				selected="robot_pops_allowed"
 			}
- {
+			{
 				policy="population_controls"
 				selected="population_controls_not_allowed"
 			}
- {
+			{
 				policy="slavery"
 				selected="slavery_not_allowed"
 			}
- {
+			{
 				policy="purge"
 				selected="purge_not_allowed"
 			}
