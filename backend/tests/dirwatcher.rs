@@ -5,7 +5,7 @@ mod tests {
 
     use super::*;
     use backend::dirwatcher::DirectoryEventHandler;
-    use data_model::{CustodianMsg, ModelDataPoint};
+    use data_model::{CustodianMsg, EmpireData, ModelDataPoint, Resources};
     use std::{fs, time::Duration};
 
     #[test]
@@ -19,20 +19,22 @@ mod tests {
 
         let (msg_receiver, _watcher) = DirectoryEventHandler::create(&get_test_dir());
 
-        msg_receiver.recv_timeout(Duration::from_secs(10)).unwrap();
-        msg_receiver.recv_timeout(Duration::from_secs(10)).unwrap();
+        msg_receiver
+            .recv_timeout(Duration::from_secs(10))
+            .expect("Expected first file");
+        msg_receiver
+            .recv_timeout(Duration::from_secs(10))
+            .expect("Expected second file");
 
         for i in 2..4 {
             fs::copy(&source_files[i], &test_files[i]).unwrap();
         }
 
-        let result = msg_receiver.recv_timeout(Duration::from_secs(10));
+        msg_receiver
+            .recv_timeout(Duration::from_secs(10))
+            .expect("Expected last two files");
         for path in test_files {
             fs::remove_file(path).unwrap();
-        }
-        match result {
-            Ok(msg) => assert_eq!(CustodianMsg::Data(ModelDataPoint { empires: vec![] }), msg),
-            Err(error) => panic!("{}", error),
         }
     }
 
