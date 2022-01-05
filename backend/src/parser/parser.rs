@@ -6,6 +6,7 @@ use data_model::{EmpireData, ModelDataPoint, Resources};
 use futures::executor::block_on;
 use futures::future::join_all;
 use futures::join;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
@@ -136,41 +137,54 @@ fn get_empire_data(val: &Val<'_>) -> Option<EmpireData> {
         let economy_module = get_dict_contents(val);
         let resources = get_dict_contents(dict_get(economy_module, "resources").unwrap());
 
-        let energy = get_number_contents(dict_get(resources, "energy").unwrap_or(&Val::Integer(0)));
-        let minerals =
-            get_number_contents(dict_get(resources, "minerals").unwrap_or(&Val::Integer(0)));
-        let food = get_number_contents(dict_get(resources, "food").unwrap_or(&Val::Integer(0)));
-        let physics_research = get_number_contents(
-            dict_get(resources, "physics_research").unwrap_or(&Val::Integer(0)),
-        );
-        let society_research = get_number_contents(
-            dict_get(resources, "society_research").unwrap_or(&Val::Integer(0)),
-        );
-        let engineering_research = get_number_contents(
-            dict_get(resources, "engineering_research").unwrap_or(&Val::Integer(0)),
-        );
-        let influence =
-            get_number_contents(dict_get(resources, "influence").unwrap_or(&Val::Integer(0)));
-        let unity = get_number_contents(dict_get(resources, "unity").unwrap_or(&Val::Integer(0)));
-        let consumer_goods =
-            get_number_contents(dict_get(resources, "consumer_goods").unwrap_or(&Val::Integer(0)));
-        let alloys = get_number_contents(dict_get(resources, "alloys").unwrap_or(&Val::Integer(0)));
+        let resource_values = vec![
+            "energy",
+            "minerals",
+            "food",
+            "physics_research",
+            "society_research",
+            "engineering_research",
+            "influence",
+            "unity",
+            "consumer_goods",
+            "alloys",
+            "volatile_motes",
+            "exotic_gases",
+            "rare_crystals",
+            "sr_living_metal",
+            "sr_zro",
+            "sr_dark_matter",
+        ]
+        .into_iter()
+        .fold(HashMap::new(), |mut acc, key| {
+            acc.insert(
+                key,
+                get_number_contents(dict_get(resources, key).unwrap_or(&Val::Decimal(0.0))),
+            );
+            acc
+        });
 
         let name = get_string_contents(dict_get(country_detail, "name").unwrap());
 
         Some(EmpireData {
             name: String::from(name),
             resources: Resources {
-                energy,
-                minerals,
-                food,
-                physics_research,
-                society_research,
-                engineering_research,
-                influence,
-                unity,
-                consumer_goods,
-                alloys,
+                energy: *resource_values.get("energy").unwrap(),
+                minerals: *resource_values.get("minerals").unwrap(),
+                food: *resource_values.get("food").unwrap(),
+                physics_research: *resource_values.get("physics_research").unwrap(),
+                society_research: *resource_values.get("society_research").unwrap(),
+                engineering_research: *resource_values.get("engineering_research").unwrap(),
+                influence: *resource_values.get("influence").unwrap(),
+                unity: *resource_values.get("unity").unwrap(),
+                consumer_goods: *resource_values.get("consumer_goods").unwrap(),
+                alloys: *resource_values.get("alloys").unwrap(),
+                volatile_motes: *resource_values.get("volatile_motes").unwrap(),
+                exotic_gases: *resource_values.get("exotic_gases").unwrap(),
+                rare_crystals: *resource_values.get("rare_crystals").unwrap(),
+                sr_living_metal: *resource_values.get("sr_living_metal").unwrap(),
+                sr_zro: *resource_values.get("sr_zro").unwrap(),
+                sr_dark_matter: *resource_values.get("sr_dark_matter").unwrap(),
             },
         })
     } else {
@@ -299,7 +313,13 @@ mod tests {
                     influence: 103.0,
                     unity: 16.594,
                     consumer_goods: 105.659,
-                    alloys: 112.8195
+                    alloys: 112.8195,
+                    volatile_motes: 0.0,
+                    exotic_gases: 0.0,
+                    rare_crystals: 0.0,
+                    sr_living_metal: 0.0,
+                    sr_zro: 0.0,
+                    sr_dark_matter: 0.0
                 }
             })
         );
@@ -372,6 +392,12 @@ mod tests {
                 unity: 0.0f64,
                 consumer_goods: 0.0f64,
                 alloys: 0.0f64,
+                volatile_motes: 0.0,
+                exotic_gases: 0.0,
+                rare_crystals: 0.0,
+                sr_living_metal: 0.0,
+                sr_zro: 0.0,
+                sr_dark_matter: 0.0,
             },
         })
         .collect();
@@ -380,7 +406,7 @@ mod tests {
 
         let country_list = get_empires_from_gamestate(&parse);
 
-        println!("{:#?}", country_list);
+        // println!("{:#?}", country_list);
 
         // assert_eq!(country_list, expected_empire_list);
     }

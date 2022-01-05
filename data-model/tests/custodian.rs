@@ -41,6 +41,12 @@ mod tests {
                         unity: 0f64,
                         consumer_goods: 0f64,
                         alloys: 0f64,
+                        volatile_motes: 0f64,
+                        exotic_gases: 0f64,
+                        rare_crystals: 0f64,
+                        sr_living_metal: 0f64,
+                        sr_zro: 0f64,
+                        sr_dark_matter: 0f64,
                     },
                 }],
             }))
@@ -59,6 +65,12 @@ mod tests {
                         unity: 0f64,
                         consumer_goods: 0f64,
                         alloys: 0f64,
+                        volatile_motes: 0f64,
+                        exotic_gases: 0f64,
+                        rare_crystals: 0f64,
+                        sr_living_metal: 0f64,
+                        sr_zro: 0f64,
+                        sr_dark_matter: 0f64,
                     },
                 }],
             }))
@@ -77,6 +89,12 @@ mod tests {
                         unity: 0f64,
                         consumer_goods: 0f64,
                         alloys: 0f64,
+                        volatile_motes: 0f64,
+                        exotic_gases: 0f64,
+                        rare_crystals: 0f64,
+                        sr_living_metal: 0f64,
+                        sr_zro: 0f64,
+                        sr_dark_matter: 0f64,
                     },
                 }],
             }))
@@ -95,6 +113,12 @@ mod tests {
                         unity: 0f64,
                         consumer_goods: 0f64,
                         alloys: 0f64,
+                        volatile_motes: 0f64,
+                        exotic_gases: 0f64,
+                        rare_crystals: 0f64,
+                        sr_living_metal: 0f64,
+                        sr_zro: 0f64,
+                        sr_dark_matter: 0f64,
                     },
                 }],
             }))
@@ -123,6 +147,12 @@ mod tests {
                             unity: 0f64,
                             consumer_goods: 0f64,
                             alloys: 0f64,
+                            volatile_motes: 0f64,
+                            exotic_gases: 0f64,
+                            rare_crystals: 0f64,
+                            sr_living_metal: 0f64,
+                            sr_zro: 0f64,
+                            sr_dark_matter: 0f64
                         },
                     }]
                 },
@@ -140,6 +170,12 @@ mod tests {
                             unity: 0f64,
                             consumer_goods: 0f64,
                             alloys: 0f64,
+                            volatile_motes: 0f64,
+                            exotic_gases: 0f64,
+                            rare_crystals: 0f64,
+                            sr_living_metal: 0f64,
+                            sr_zro: 0f64,
+                            sr_dark_matter: 0f64
                         },
                     }]
                 },
@@ -157,6 +193,12 @@ mod tests {
                             unity: 0f64,
                             consumer_goods: 0f64,
                             alloys: 0f64,
+                            volatile_motes: 0f64,
+                            exotic_gases: 0f64,
+                            rare_crystals: 0f64,
+                            sr_living_metal: 0f64,
+                            sr_zro: 0f64,
+                            sr_dark_matter: 0f64
                         },
                     }]
                 },
@@ -174,6 +216,12 @@ mod tests {
                             unity: 0f64,
                             consumer_goods: 0f64,
                             alloys: 0f64,
+                            volatile_motes: 0f64,
+                            exotic_gases: 0f64,
+                            rare_crystals: 0f64,
+                            sr_living_metal: 0f64,
+                            sr_zro: 0f64,
+                            sr_dark_matter: 0f64
                         },
                     }]
                 }

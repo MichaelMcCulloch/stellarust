@@ -10,6 +10,12 @@ pub struct Resources {
     pub unity: f64,
     pub consumer_goods: f64,
     pub alloys: f64,
+    pub volatile_motes: f64,
+    pub exotic_gases: f64,
+    pub rare_crystals: f64,
+    pub sr_living_metal: f64,
+    pub sr_zro: f64,
+    pub sr_dark_matter: f64,
 }
 
 #[derive(Debug, PartialEq, Clone)]
