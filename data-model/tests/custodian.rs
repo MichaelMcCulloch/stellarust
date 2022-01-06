@@ -16,8 +16,8 @@ fn get_resource_dir() -> PathBuf {
 #[cfg(test)]
 mod tests {
 
-    use data_model::{CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint};
-    use std::{sync::mpsc::channel, thread, time::Duration};
+    use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint};
+    use std::{collections::HashMap, sync::mpsc::channel, thread, time::Duration};
 
     #[test]
     fn test_custodian() {
@@ -74,6 +74,14 @@ mod tests {
                     sr_living_metal: 0f64,
                     sr_zro: 0f64,
                     sr_dark_matter: 0f64,
+                },
+                budget: Budget {
+                    income: todo!(),
+                    expense: todo!(),
+                    balance: todo!(),
+                    income_last_month: todo!(),
+                    expense_last_month: todo!(),
+                    balance_last_month: todo!(),
                 },
             }],
         }

@@ -8,14 +8,12 @@ pub fn root<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
 }
 
 pub fn par_root<'a>(prepared_input: &'a str) -> Res<&'a str, Val<'a>> {
-    // input.replace("\n}\n", "\n}\n#")
     let vec: Vec<(&str, Val)> = prepared_input
         .par_split('#')
         .filter_map(|s| {
             if let Ok((_rem, val)) = hash_map(s) {
                 Some(val)
             } else {
-                println!("FAIL");
                 None
             }
         })

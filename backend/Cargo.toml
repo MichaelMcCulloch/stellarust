@@ -29,6 +29,10 @@ zip= "0.5.13"
 text_io="0.1.9"
 notify="4.0.17"
 futures = "0.3.19"
+strum = "0.23.0"
+strum_macros = "0.23.1"
+
+
 [dev-dependencies]
 clausewitz-parser= {version = "0.1.0", path="../clausewitz-parser"}
 

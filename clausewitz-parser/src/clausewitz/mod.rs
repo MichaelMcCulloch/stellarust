@@ -10,15 +10,15 @@ pub(self) mod tests;
     any(target_arch = "x86", target_arch = "x86_64"),
     target_feature = "sse2"
 ))]
-pub(self) mod simd;
+pub(crate) mod simd;
 
-pub(self) mod bracketed;
-pub(self) mod quoted;
+pub(crate) mod bracketed;
+pub(crate) mod quoted;
 pub mod root;
-pub(self) mod space;
-pub(self) mod tables;
-pub(self) mod unquoted;
-pub(self) mod value;
+pub(crate) mod space;
+pub(crate) mod tables;
+pub(crate) mod unquoted;
+pub(crate) mod value;
 
 pub(crate) type Res<T, S> = IResult<T, S, VerboseError<T>>;
 

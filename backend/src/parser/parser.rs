@@ -1,16 +1,20 @@
 use crate::unzipper::Unzipper;
 use anyhow::Result;
-use clausewitz_parser::clausewitz::root::root;
-use clausewitz_parser::clausewitz::Val;
-use data_model::{EmpireData, ModelDataPoint, Resources};
-use futures::executor::block_on;
-use futures::future::join_all;
-use futures::join;
-use std::collections::HashMap;
-use std::error::Error;
-use std::fmt;
-use std::fmt::{Debug, Display, Formatter};
-use std::path::PathBuf;
+use clausewitz_parser::{
+    root::{par_root, root},
+    Val,
+};
+use data_model::{Budget, EmpireData, ModelDataPoint, Resources};
+use std::{
+    collections::HashMap,
+    error::Error,
+    fmt::{self, Debug, Display, Formatter},
+    path::PathBuf,
+};
+use stellarust::dto::{BudgetComponent, ResourceClass};
+use strum::IntoEnumIterator;
+
+use super::Key;
 
 pub struct Parser {}
 
@@ -53,7 +57,7 @@ impl Parser {
         }
     }
     pub fn from_gamestate<'a>(string: &'a str) -> Result<Val<'a>> {
-        let result = root(string);
+        let result = par_root(string);
         match result {
             Ok((_, val)) => Ok(val),
             Err(e) => Err(anyhow::Error::from(ParseError {
@@ -75,7 +79,7 @@ fn data_point_from_parse_result(result: &ParseResult<'_>) -> ModelDataPoint {
 
     let required_dlcs = get_required_dlcs_from_meta(meta);
 
-    let empire_list = get_empires_from_gamestate(gamestate);
+    let empire_list = get_empires_from_gamestate(gamestate).expect("Parsing Not OK");
 
     ModelDataPoint {
         empires: empire_list,
@@ -108,87 +112,177 @@ fn get_required_dlcs_from_meta(meta: &Val<'_>) -> Vec<String> {
     }
 }
 
-fn get_empires_from_gamestate(gamestate: &Val<'_>) -> Vec<EmpireData> {
-    let key_value_pairs = get_dict_contents(gamestate);
+fn get_empires_from_gamestate(gamestate: &Val<'_>) -> Result<Vec<EmpireData>> {
+    let country_list = get_array_contents(get_val_from_path(PathBuf::from("country"), gamestate)?);
 
-    let array_countries = dict_get(key_value_pairs, "country").unwrap();
-
-    let country_list = get_array_contents(array_countries);
-
-    country_list
+    Ok(country_list
         .into_iter()
-        .filter_map(|val| get_empire_data(val))
-        .collect()
+        .filter_map(|val| get_empire_data(val).ok())
+        .collect())
 }
 
-fn get_empire_data(val: &Val<'_>) -> Option<EmpireData> {
-    let country_detail = get_dict_contents(val);
+#[derive(Debug, PartialEq)]
+pub struct PathParseError {
+    err: String,
+}
 
-    let modules = get_dict_contents(dict_get(country_detail, "modules").unwrap());
-    let opt_economy_module = dict_get(modules, "standard_economy_module");
-    if let Some(val) = opt_economy_module {
-        let economy_module = get_dict_contents(val);
-        let resources = get_dict_contents(dict_get(economy_module, "resources").unwrap());
+impl Error for PathParseError {}
 
-        let resource_values = vec![
-            "energy",
-            "minerals",
-            "food",
-            "physics_research",
-            "society_research",
-            "engineering_research",
-            "influence",
-            "unity",
-            "consumer_goods",
-            "alloys",
-            "volatile_motes",
-            "exotic_gases",
-            "rare_crystals",
-            "sr_living_metal",
-            "sr_zro",
-            "sr_dark_matter",
-        ]
-        .into_iter()
-        .fold(HashMap::new(), |mut acc, key| {
-            acc.insert(
-                key,
-                get_number_contents(dict_get(resources, key).unwrap_or(&Val::Decimal(0.0))),
-            );
-            acc
-        });
-
-        let name = get_string_contents(dict_get(country_detail, "name").unwrap());
-
-        Some(EmpireData {
-            name: String::from(name),
-            resources: Resources {
-                energy: *resource_values.get("energy").unwrap(),
-                minerals: *resource_values.get("minerals").unwrap(),
-                food: *resource_values.get("food").unwrap(),
-                physics_research: *resource_values.get("physics_research").unwrap(),
-                society_research: *resource_values.get("society_research").unwrap(),
-                engineering_research: *resource_values.get("engineering_research").unwrap(),
-                influence: *resource_values.get("influence").unwrap(),
-                unity: *resource_values.get("unity").unwrap(),
-                consumer_goods: *resource_values.get("consumer_goods").unwrap(),
-                alloys: *resource_values.get("alloys").unwrap(),
-                volatile_motes: *resource_values.get("volatile_motes").unwrap(),
-                exotic_gases: *resource_values.get("exotic_gases").unwrap(),
-                rare_crystals: *resource_values.get("rare_crystals").unwrap(),
-                sr_living_metal: *resource_values.get("sr_living_metal").unwrap(),
-                sr_zro: *resource_values.get("sr_zro").unwrap(),
-                sr_dark_matter: *resource_values.get("sr_dark_matter").unwrap(),
-            },
-        })
-    } else {
-        None
+impl Display for PathParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Debug::fmt(&self.err, f)
     }
 }
 
-fn dict_get<'a>(dict: &'a Vec<(&'a str, Val<'a>)>, key: &'a str) -> Option<&'a Val<'a>> {
-    dict.into_iter()
-        .filter_map(|(k, v)| if *k == key { Some(v) } else { None })
-        .next()
+fn get_val_from_path<'a>(pathbuf: PathBuf, root: &'a Val<'a>) -> Result<&'a Val<'a>> {
+    let mut curr_val = root;
+    for path_component in pathbuf.into_iter() {
+        if let Ok(array_index) = path_component.to_str().unwrap().parse::<usize>() {
+            if let Val::Array(array) = curr_val {
+                if array_index < array.len() {
+                    curr_val = array.get(array_index).unwrap();
+                } else {
+                    return Err(anyhow::Error::from(PathParseError {
+                        err: format!("Index {} out of bounds({})", array_index, array.len()),
+                    }));
+                }
+            } else {
+                return Err(anyhow::Error::from(PathParseError {
+                    err: format!("Expected an array"),
+                }));
+            }
+        } else {
+            if let Val::Dict(dict) = curr_val {
+                let mut found = false;
+                for (k, v) in dict.into_iter() {
+                    if k == &path_component.to_str().unwrap() {
+                        curr_val = v;
+                        found = true;
+                        break;
+                    }
+                }
+                if !found {
+                    return Err(anyhow::Error::from(PathParseError {
+                        err: format!("Key {} not found in dict", path_component.to_str().unwrap()),
+                    }));
+                }
+            } else {
+                return Err(anyhow::Error::from(PathParseError {
+                    err: format!("Expected a dict"),
+                }));
+            }
+        }
+    }
+
+    Ok(curr_val)
+}
+
+fn get_resources(economy_module: &Val<'_>) -> Resources {
+    let get_resource = |res: ResourceClass| -> f64 {
+        if let Ok(val) = get_val_from_path(
+            PathBuf::from(format!("resources/{}", res.key())),
+            economy_module,
+        ) {
+            match val {
+                Val::Integer(a) => *a as f64,
+                Val::Decimal(a) => *a,
+                _ => panic!(),
+            }
+        } else {
+            0.0f64
+        }
+    };
+
+    Resources {
+        energy: get_resource(ResourceClass::Energy),
+        minerals: get_resource(ResourceClass::Minerals),
+        food: get_resource(ResourceClass::Food),
+        physics_research: get_resource(ResourceClass::Physics),
+        society_research: get_resource(ResourceClass::Society),
+        engineering_research: get_resource(ResourceClass::Engineering),
+        influence: get_resource(ResourceClass::Influence),
+        unity: get_resource(ResourceClass::Unity),
+        consumer_goods: get_resource(ResourceClass::ConsumerGoods),
+        alloys: get_resource(ResourceClass::Alloys),
+        volatile_motes: get_resource(ResourceClass::Motes),
+        exotic_gases: get_resource(ResourceClass::Gasses),
+        rare_crystals: get_resource(ResourceClass::Crystals),
+        sr_living_metal: get_resource(ResourceClass::LivingMetal),
+        sr_zro: get_resource(ResourceClass::Zro),
+        sr_dark_matter: get_resource(ResourceClass::DarkMatter),
+    }
+}
+
+fn get_budget(budget: &Val) -> Budget {
+    let current_month_dict = get_val_from_path(PathBuf::from("current_month"), &budget).unwrap();
+    let last_month_dict = get_val_from_path(PathBuf::from("last_month"), &budget).unwrap();
+
+    let get_budget_val =
+        |key: BudgetComponent, val: &Val| -> HashMap<ResourceClass, Vec<(String, f64)>> {
+            get_budget_component_map(get_val_from_path(PathBuf::from(key.key()), val).unwrap())
+        };
+
+    Budget {
+        income: get_budget_val(BudgetComponent::Income, current_month_dict),
+        expense: get_budget_val(BudgetComponent::Expenses, current_month_dict),
+        balance: get_budget_val(BudgetComponent::Balance, current_month_dict),
+        income_last_month: get_budget_val(BudgetComponent::Income, last_month_dict),
+        expense_last_month: get_budget_val(BudgetComponent::Expenses, last_month_dict),
+        balance_last_month: get_budget_val(BudgetComponent::Balance, last_month_dict),
+    }
+}
+
+fn get_budget_component_map(component: &Val<'_>) -> HashMap<ResourceClass, Vec<(String, f64)>> {
+    if let Val::Dict(sources) = component {
+        let map =
+            sources
+                .into_iter()
+                .fold(HashMap::new(), |mut map, (contributor, contributions)| {
+                    let resource_contributions: Vec<_> = ResourceClass::iter()
+                        .filter_map(|class| {
+                            if let Ok(val) =
+                                get_val_from_path(PathBuf::from(class.key()), contributions)
+                            {
+                                match val {
+                                    Val::Decimal(d) => Some((class, *d)),
+                                    Val::Integer(i) => Some((class, *i as f64)),
+                                    _ => None,
+                                }
+                            } else {
+                                None
+                            }
+                        })
+                        .collect();
+
+                    for (key, amount) in resource_contributions.into_iter() {
+                        map.entry(key)
+                            .or_insert(vec![])
+                            .push((String::from(*contributor), amount));
+                    }
+                    map
+                });
+        map
+    } else {
+        panic!()
+    }
+}
+
+fn get_empire_data(country: &Val<'_>) -> Result<EmpireData> {
+    let country_detail = get_dict_contents(country);
+
+    // let modules = get_dict_contents(dict_get(country_detail, "modules").unwrap());
+    // let opt_economy_module = dict_get(modules, "standard_economy_module");
+
+    let economy_module =
+        get_val_from_path(PathBuf::from("modules/standard_economy_module"), country)?;
+    let name = get_val_from_path(PathBuf::from("name"), country)?;
+    let budget = get_val_from_path(PathBuf::from("budget"), country)?;
+
+    Ok(EmpireData {
+        name: String::from(get_string_contents(name)),
+        resources: get_resources(economy_module),
+        budget: get_budget(budget),
+    })
 }
 
 fn get_dict_contents<'a>(val: &'a Val<'a>) -> &'a Vec<(&'a str, Val<'a>)> {
@@ -241,10 +335,11 @@ fn get_number_contents<'a>(gamestate: &'a Val<'a>) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, path::PathBuf};
+    use std::{collections::HashMap, fs, path::PathBuf};
 
-    use clausewitz_parser::clausewitz::root::root;
-    use data_model::Resources;
+    use actix_web::Resource;
+    use clausewitz_parser::root::root;
+    use data_model::{Budget, Resources};
     use futures::executor::block_on;
 
     use super::*;
@@ -286,121 +381,228 @@ mod tests {
     fn get_empire_data__valid_country___returns_empire_data_with_name() {
         let home = std::env::var("HOME").unwrap();
         let ext = "Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/empire";
-        let meta_path = PathBuf::from_iter(vec![home.as_str(), ext]);
-        let meta_string = fs::read_to_string(meta_path).unwrap();
+        let empire_path = PathBuf::from_iter(vec![home.as_str(), ext]);
+        let empire_string = fs::read_to_string(empire_path).unwrap();
 
-        let (_, parse) = root(&meta_string.as_str()).unwrap();
+        let (_, parse) = root(&empire_string.as_str()).unwrap();
 
-        let empire = get_empire_data(&parse);
+        let empire = get_empire_data(&parse).unwrap();
+        println!("{:#?}", empire);
         assert_eq!(
             empire,
-            Some(EmpireData {
-                name: String::from("United Nations of Earth"),
+            EmpireData {
+                name: String::from("Queptilium Remnant"),
                 resources: Resources {
-                    energy: 162.17754,
-                    minerals: 127.512,
-                    food: 224.152,
-                    physics_research: 21.056,
-                    society_research: 21.056,
-                    engineering_research: 24.056,
-                    influence: 103.0,
-                    unity: 16.594,
-                    consumer_goods: 105.659,
-                    alloys: 112.8195,
-                    volatile_motes: 0.0,
-                    exotic_gases: 0.0,
-                    rare_crystals: 0.0,
-                    sr_living_metal: 0.0,
-                    sr_zro: 0.0,
-                    sr_dark_matter: 0.0
+                    energy: 11484.2,
+                    minerals: 10302.2,
+                    food: 1119.0,
+                    physics_research: 3.0,
+                    society_research: 0.0,
+                    engineering_research: 9.0,
+                    influence: 503.0,
+                    unity: 245.972,
+                    consumer_goods: 96.0,
+                    alloys: 201.6,
+                    volatile_motes: 16.0,
+                    exotic_gases: 17.6,
+                    rare_crystals: 16.0,
+                    sr_living_metal: 8.0,
+                    sr_zro: 8.0,
+                    sr_dark_matter: 8.0
+                },
+                budget: Budget {
+                    income: HashMap::new(),
+                    expense: HashMap::new(),
+                    balance: HashMap::new(),
+                    income_last_month: HashMap::new(),
+                    expense_last_month: HashMap::new(),
+                    balance_last_month: HashMap::new()
                 }
-            })
+            }
         );
     }
 
     #[test]
-    fn get_empires_from_gamestate__gamestate_file__returns_list() {
+    fn get_resources__given_economy_module__returns_all_resources() {
+        let module_entry = r###"standard_economy_module={
+            resources={
+                energy=11484.2
+                minerals=10302.2
+                food=1119
+                physics_research=3
+                engineering_research=9
+                influence=503
+                unity=245.972
+                consumer_goods=96
+                alloys=201.6
+                volatile_motes=16
+                exotic_gases=17.6
+                rare_crystals=16
+                sr_living_metal=8
+                sr_zro=8
+                sr_dark_matter=8
+            }
+        }"###;
+
+        let (_, val) = root(module_entry).unwrap();
+
+        if let Val::Dict(entries) = val {
+            let (_, economy_module) = entries.into_iter().next().unwrap();
+            let resources = get_resources(&economy_module);
+            assert_eq!(
+                resources,
+                Resources {
+                    energy: 11484.2,
+                    minerals: 10302.2,
+                    food: 1119.0,
+                    physics_research: 3.0,
+                    society_research: 0.0,
+                    engineering_research: 9.0,
+                    influence: 503.0,
+                    unity: 245.972,
+                    consumer_goods: 96.0,
+                    alloys: 201.6,
+                    volatile_motes: 16.0,
+                    exotic_gases: 17.6,
+                    rare_crystals: 16.0,
+                    sr_living_metal: 8.0,
+                    sr_zro: 8.0,
+                    sr_dark_matter: 8.0
+                }
+            );
+        } else {
+            panic!()
+        }
+    }
+
+    #[test]
+    fn get_budget__given_budget__returns_budget() {
         let home = std::env::var("HOME").unwrap();
-        let ext = "Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate";
-        let gamestate_path = PathBuf::from_iter(vec![home.as_str(), ext]);
-        let gamestate_string = fs::read_to_string(gamestate_path).unwrap();
+        let ext = "Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/empire_budget";
+        let empire_budget_path = PathBuf::from_iter(vec![home.as_str(), ext]);
+        let empire_budget_string = fs::read_to_string(empire_budget_path).unwrap();
 
-        let expected_empire_list: Vec<_> = vec![
-            "United Nations of Earth",
-            "Yaanari Imperium",
-            "Confederation of Jakaro",
-            "Scyldari Confederacy",
-            "Maloqui Hierarchy",
-            "Desstican Monopoly",
-            "Techarus Core",
-            "United Panaxala Imperium",
-            "Republic of Yapathinor",
-            "Cormathani Trading Consortium",
-            "Vivisandia Guardians",
-            "Queptilium Remnant",
-            "Mathin Civilization",
-            "Placid Leviathans",
-            "Placid Leviathans",
-            "Tiyanki Space Whale Ancient",
-            "Commonwealth of Man",
-            "Andigonj Corsairs",
-            "Curator Order",
-            "Prism",
-            "Artisan Troupe",
-            "Caravansary Caravan Coalition",
-            "The Numistic Order",
-            "Racket Industrial Enterprise",
-            "XuraCorp",
-            "Space Amoeba Gathering",
-            "Enigmatic Fortress",
-            "Menjeti Freebooters",
-            "Riggan Commerce Exchange",
-            "Automated Dreadnought",
-            "Spaceborne Organics",
-            "Mineral Extraction Operation",
-            "Armistice Initiative",
-            "Tavurite Civilization",
-            "Enigmatic Energy",
-            "Xu'Lokako Civilization",
-            "Sinrath Civilization",
-            "Pelisimus Civilization",
-            "H'Runi Civilization",
-            "Belmacosa Civilization",
-            "global_event_country",
-            "The Shroud",
-            "Creatures of the Shroud",
-            "VLUUR",
-        ]
-        .into_iter()
-        .map(|s| EmpireData {
-            name: String::from(s),
-            resources: Resources {
-                energy: 0.0f64,
-                minerals: 0.0f64,
-                food: 0.0f64,
-                physics_research: 0.0f64,
-                society_research: 0.0f64,
-                engineering_research: 0.0f64,
-                influence: 0f64,
-                unity: 0.0f64,
-                consumer_goods: 0.0f64,
-                alloys: 0.0f64,
-                volatile_motes: 0.0,
-                exotic_gases: 0.0,
-                rare_crystals: 0.0,
-                sr_living_metal: 0.0,
-                sr_zro: 0.0,
-                sr_dark_matter: 0.0,
-            },
-        })
-        .collect();
+        let (_, parse) = root(&empire_budget_string.as_str()).unwrap();
 
-        let (_, parse) = root(&gamestate_string.as_str()).unwrap();
+        if let Val::Dict(entries) = parse {
+            let (_, budget_dict) = entries.into_iter().next().unwrap();
+            let budget = get_budget(&budget_dict);
+        } else {
+            panic!()
+        }
+    }
 
-        let country_list = get_empires_from_gamestate(&parse);
+    #[test]
+    fn get_income__given_income__returns_income() {
+        let income_entry_text = r###"income={
+            none={
+            }
+            source_A={
+                energy=1
+                minerals=3
+                food=5
+                
+            }
+            source_B={
+                energy=8
+                minerals=13
+                food=21
+                
+            }
+            
+        }"###;
 
-        // println!("{:#?}", country_list);
+        let num_resources = 3;
+        let mut map: HashMap<ResourceClass, Vec<(String, f64)>> =
+            HashMap::with_capacity(num_resources);
+        map.insert(
+            ResourceClass::Energy,
+            vec![
+                (String::from("source_A"), 1.0),
+                (String::from("source_B"), 8.0),
+            ],
+        );
+        map.insert(
+            ResourceClass::Minerals,
+            vec![
+                (String::from("source_A"), 3.0),
+                (String::from("source_B"), 13.0),
+            ],
+        );
 
-        // assert_eq!(country_list, expected_empire_list);
+        map.insert(
+            ResourceClass::Food,
+            vec![
+                (String::from("source_A"), 5.0),
+                (String::from("source_B"), 21.0),
+            ],
+        );
+
+        let (_, val) = root(income_entry_text).unwrap();
+        let income = if let Val::Dict(kv) = val {
+            kv.into_iter().next().unwrap().1
+        } else {
+            panic!()
+        };
+
+        let income = get_budget_component_map(&income);
+        assert_eq!(income, map);
+    }
+
+    #[test]
+    fn get_expenses__given_income__returns_income() {
+        let income_entry_text = r###"income={
+            none={
+            }
+            source_A={
+                energy=1
+                minerals=3
+                food=5
+                
+            }
+            source_B={
+                energy=8
+                minerals=13
+                food=21
+                
+            }
+            
+        }"###;
+
+        let num_resources = 3;
+        let mut map: HashMap<ResourceClass, Vec<(String, f64)>> =
+            HashMap::with_capacity(num_resources);
+        map.insert(
+            ResourceClass::Energy,
+            vec![
+                (String::from("source_A"), 1.0),
+                (String::from("source_B"), 8.0),
+            ],
+        );
+        map.insert(
+            ResourceClass::Minerals,
+            vec![
+                (String::from("source_A"), 3.0),
+                (String::from("source_B"), 13.0),
+            ],
+        );
+
+        map.insert(
+            ResourceClass::Food,
+            vec![
+                (String::from("source_A"), 5.0),
+                (String::from("source_B"), 21.0),
+            ],
+        );
+
+        let (_, val) = root(income_entry_text).unwrap();
+        let income = if let Val::Dict(kv) = val {
+            kv.into_iter().next().unwrap().1
+        } else {
+            panic!()
+        };
+
+        let income = get_budget_component_map(&income);
+        assert_eq!(income, map);
     }
 }

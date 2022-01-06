@@ -34,7 +34,7 @@ impl DirectoryEventHandler {
                 Ok(data_point) => custodian_message_sender
                     .send(CustodianMsg::Data(data_point))
                     .unwrap(),
-                Err(e) => log::error!(" WHAT {:?}", e),
+                Err(e) => log::error!("{}", e),
             };
         }
 
@@ -50,6 +50,7 @@ impl DirectoryEventHandler {
         thread::spawn(move || -> () {
             loop {
                 match raw_event_receiver.recv() {
+                    Err(_error) => break,
                     Ok(RawEvent {
                         op: Ok(Op::CLOSE_WRITE),
                         path: Some(path),
@@ -73,7 +74,6 @@ impl DirectoryEventHandler {
                         }
                         continue;
                     }
-                    Err(_error) => break,
                     _ => continue,
                 }
             }

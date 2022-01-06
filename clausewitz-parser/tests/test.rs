@@ -2,7 +2,7 @@
 mod test {
     use std::fs::{self, File};
 
-    use clausewitz_parser::clausewitz::{
+    use clausewitz_parser::{
         root::{par_root, root},
         Val,
     };
