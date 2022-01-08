@@ -275,8 +275,6 @@ fn get_contributions_per_class(contributions: &Val<'_>) -> Vec<(ResourceClass, f
 }
 
 fn get_empire_data(country: &Val<'_>) -> Result<EmpireData> {
-    let country_detail = get_dict_contents(country);
-
     let economy_module =
         get_val_from_path(PathBuf::from("modules/standard_economy_module"), country)?;
     let name = get_val_from_path(PathBuf::from("name"), country)?;

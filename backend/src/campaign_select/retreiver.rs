@@ -23,7 +23,6 @@ fn get_campaign_option(path: &PathBuf) -> Result<CampaignDto> {
     let (meta_str, gamestate_str) = Unzipper::get_zipped_content(&most_recent_path)?;
 
     let meta = Parser::from_meta(meta_str.as_str())?;
-    println!("{:?}", path);
     let gamestate = Parser::from_gamestate(gamestate_str.as_str())?;
 
     let model = ModelDataPoint::from(ParseResult { meta, gamestate });
