@@ -1,8 +1,7 @@
 use nom::bytes::complete::take_while;
 
 use std::arch::x86_64::{
-    _mm_cmpestri, _mm_cmpistri, _mm_loadu_si128, _SIDD_CMP_RANGES, _SIDD_LEAST_SIGNIFICANT,
-    _SIDD_UBYTE_OPS,
+    _mm_cmpestri, _mm_loadu_si128, _SIDD_CMP_RANGES, _SIDD_LEAST_SIGNIFICANT, _SIDD_UBYTE_OPS,
 };
 use std::cmp::min;
 
@@ -54,7 +53,7 @@ fn simd_loop16<'a>(str: &'a str, ranges: &[u8; 16]) -> Res<&'a str, &'a str> {
     let start = str.as_ptr() as usize;
     let mut i = str.as_ptr() as usize;
     let ranges16 = unsafe { _mm_loadu_si128(ranges.as_ptr() as *const _) };
-    let ranges_len = ranges.len() as i32;
+    let _ranges_len = ranges.len() as i32;
     loop {
         let s1 = unsafe { _mm_loadu_si128(i as *const _) };
 

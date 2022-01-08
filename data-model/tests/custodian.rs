@@ -17,7 +17,7 @@ fn get_resource_dir() -> PathBuf {
 mod tests {
 
     use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint};
-    use std::{collections::HashMap, hash::Hash, sync::mpsc::channel, thread, time::Duration};
+    use std::{collections::HashMap, sync::mpsc::channel, thread, time::Duration};
 
     #[test]
     fn test_custodian() {

@@ -74,7 +74,7 @@ fn data_point_from_parse_result(result: &ParseResult<'_>) -> ModelDataPoint {
     let meta = &result.meta;
     let gamestate = &result.gamestate;
 
-    let required_dlcs = get_required_dlcs_from_meta(meta);
+    let _required_dlcs = get_required_dlcs_from_meta(meta);
     let campaign_name = get_name_from_meta(meta);
 
     let empires = get_empires_from_gamestate(gamestate).expect("Parsing Not OK");
@@ -339,10 +339,8 @@ fn get_number_contents<'a>(gamestate: &'a Val<'a>) -> f64 {
 mod tests {
     use std::{collections::HashMap, fs, path::PathBuf};
 
-    use actix_web::Resource;
     use clausewitz_parser::root;
     use data_model::{Budget, Resources};
-    use futures::executor::block_on;
 
     use super::*;
 
@@ -619,7 +617,7 @@ mod tests {
 
         if let Val::Dict(entries) = parse {
             let (_, budget_dict) = entries.into_iter().next().unwrap();
-            let budget = get_budget(&budget_dict);
+            let _budget = get_budget(&budget_dict);
         } else {
             panic!()
         }

@@ -4,14 +4,15 @@ use clausewitz_parser::root;
 use memmap::Mmap;
 
 fn main() {
-    let filename = "/home/michael/Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/gamestate";
+    let filename = "/path/to/unzipped/gamestate/or/meta";
+
     let file = File::open(filename).expect("File not found");
     let mmap = unsafe { Mmap::map(&file).expect(&format!("Error mapping file {:?}", file)) };
 
     let str = std::str::from_utf8(&mmap[..]).unwrap();
 
     let start = Instant::now();
-    let result = root(str);
+    let _result = root(str);
 
     let end = start.elapsed();
 

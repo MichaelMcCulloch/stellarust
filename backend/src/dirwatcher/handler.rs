@@ -1,5 +1,4 @@
 use crate::dirwatcher::DirWatcher;
-use anyhow::{private::kind::TraitKind, Result};
 use data_model::CustodianMsg;
 use notify::{Op, RawEvent};
 use std::{
