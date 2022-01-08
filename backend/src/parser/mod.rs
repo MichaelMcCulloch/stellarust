@@ -2,4 +2,4 @@ mod key;
 mod parser;
 
 pub(self) use key::Key;
-pub use parser::Parser;
+pub use parser::{ParseResult, Parser};

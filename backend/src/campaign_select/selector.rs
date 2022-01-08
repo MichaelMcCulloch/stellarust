@@ -18,7 +18,7 @@ impl CampaignSelector {
         let home = std::env::var("HOME").unwrap();
         let home_str = home.as_str();
         let path = PathBuf::from_iter(vec![home_str, SAVE_DATA_PATH]);
-        let campaign_path = Self::select_from_path(&PathBuf::from(path))?;
+        let campaign_path = Self::select_from_path(&path)?;
         Ok(campaign_path)
     }
 

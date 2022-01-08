@@ -1,9 +1,6 @@
 use crate::unzipper::Unzipper;
 use anyhow::Result;
-use clausewitz_parser::{
-    root::{par_root, root},
-    Val,
-};
+use clausewitz_parser::{root, Val};
 use data_model::{Budget, EmpireData, ModelDataPoint, Resources};
 use std::{
     collections::HashMap,
@@ -19,8 +16,8 @@ use super::Key;
 pub struct Parser {}
 
 pub struct ParseResult<'a> {
-    meta: Val<'a>,
-    gamestate: Val<'a>,
+    pub meta: Val<'a>,
+    pub gamestate: Val<'a>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -57,7 +54,7 @@ impl Parser {
         }
     }
     pub fn from_gamestate<'a>(string: &'a str) -> Result<Val<'a>> {
-        let result = par_root(string);
+        let result = root(string);
         match result {
             Ok((_, val)) => Ok(val),
             Err(e) => Err(anyhow::Error::from(ParseError {
@@ -78,12 +75,20 @@ fn data_point_from_parse_result(result: &ParseResult<'_>) -> ModelDataPoint {
     let gamestate = &result.gamestate;
 
     let required_dlcs = get_required_dlcs_from_meta(meta);
+    let campaign_name = get_name_from_meta(meta);
 
-    let empire_list = get_empires_from_gamestate(gamestate).expect("Parsing Not OK");
+    let empires = get_empires_from_gamestate(gamestate).expect("Parsing Not OK");
 
     ModelDataPoint {
-        empires: empire_list,
+        campaign_name,
+        empires,
     }
+}
+
+fn get_name_from_meta(meta: &Val<'_>) -> String {
+    String::from(get_string_contents(
+        get_val_from_path(PathBuf::from("name"), meta).unwrap(),
+    ))
 }
 
 fn get_required_dlcs_from_meta(meta: &Val<'_>) -> Vec<String> {
@@ -238,23 +243,9 @@ fn get_budget_component_map(component: &Val<'_>) -> HashMap<ResourceClass, Vec<(
             sources
                 .into_iter()
                 .fold(HashMap::new(), |mut map, (contributor, contributions)| {
-                    let resource_contributions: Vec<_> = ResourceClass::iter()
-                        .filter_map(|class| {
-                            if let Ok(val) =
-                                get_val_from_path(PathBuf::from(class.key()), contributions)
-                            {
-                                match val {
-                                    Val::Decimal(d) => Some((class, *d)),
-                                    Val::Integer(i) => Some((class, *i as f64)),
-                                    _ => None,
-                                }
-                            } else {
-                                None
-                            }
-                        })
-                        .collect();
+                    let contribitions_per_class = get_contributions_per_class(contributions);
 
-                    for (key, amount) in resource_contributions.into_iter() {
+                    for (key, amount) in contribitions_per_class.into_iter() {
                         map.entry(key)
                             .or_insert(vec![])
                             .push((String::from(*contributor), amount));
@@ -267,11 +258,24 @@ fn get_budget_component_map(component: &Val<'_>) -> HashMap<ResourceClass, Vec<(
     }
 }
 
+fn get_contributions_per_class(contributions: &Val<'_>) -> Vec<(ResourceClass, f64)> {
+    ResourceClass::iter()
+        .filter_map(|class| {
+            if let Ok(val) = get_val_from_path(PathBuf::from(class.key()), contributions) {
+                match val {
+                    Val::Decimal(d) => Some((class, *d)),
+                    Val::Integer(i) => Some((class, *i as f64)),
+                    _ => None,
+                }
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 fn get_empire_data(country: &Val<'_>) -> Result<EmpireData> {
     let country_detail = get_dict_contents(country);
-
-    // let modules = get_dict_contents(dict_get(country_detail, "modules").unwrap());
-    // let opt_economy_module = dict_get(modules, "standard_economy_module");
 
     let economy_module =
         get_val_from_path(PathBuf::from("modules/standard_economy_module"), country)?;
@@ -338,7 +342,7 @@ mod tests {
     use std::{collections::HashMap, fs, path::PathBuf};
 
     use actix_web::Resource;
-    use clausewitz_parser::root::root;
+    use clausewitz_parser::root;
     use data_model::{Budget, Resources};
     use futures::executor::block_on;
 
@@ -379,12 +383,143 @@ mod tests {
 
     #[test]
     fn get_empire_data__valid_country___returns_empire_data_with_name() {
-        let home = std::env::var("HOME").unwrap();
-        let ext = "Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/empire";
-        let empire_path = PathBuf::from_iter(vec![home.as_str(), ext]);
-        let empire_string = fs::read_to_string(empire_path).unwrap();
+        let empire_string = r###"
+        name="Queptilium Remnant"
+        budget={
+			current_month={
+				income={
+					none={
+					}
+					source_1={
+						energy=1000
+					}
+					source_2={
+						energy=1000
+						minerals=300
+					}
+				}
+				expenses={
+					none={
+					}
+					sink_1={
+						energy=500
+					}
+					sink_2={
+						energy=500
+						minerals=150
+					}
+				}
+				balance={
+					none={
+					}
+					source_1={
+						energy=1000
+					}
+					source_2={
+						energy=1000
+						minerals=300
+					}
+                    sink_1={
+						energy=-500
+					}
+					sink_2={
+						energy=-500
+						minerals=-150
+					}
+				}
+				extra_income={
+					none={
+					}
+				}
+				extra_expenses={
+					none={
+					}
+				}
+				extra_balance={
+					none={
+					}
+				}
+			}
+			last_month={
+				income={
+					none={
+					}
+					source_1={
+						energy=1000
+					}
+					source_2={
+						energy=1000
+						minerals=300
+					}
+				}
+				expenses={
+					none={
+					}
+					sink_1={
+						energy=500
+					}
+					sink_2={
+						energy=500
+						minerals=150
+					}
+				}
+				balance={
+					none={
+					}
+					source_1={
+						energy=1000
+					}
+					source_2={
+						energy=1000
+						minerals=300
+					}
+                    sink_1={
+						energy=-500
+					}
+					sink_2={
+						energy=-500
+						minerals=-150
+					}
+				}
+				extra_income={
+					none={
+					}
+				}
+				extra_expenses={
+					none={
+					}
+				}
+				extra_balance={
+					none={
+					}
+				}
+			}
+		}
+        modules={
+			standard_economy_module={
+				resources={
+					energy=11484.2
+					minerals=10302.2
+					food=1119
+					physics_research=3
+					engineering_research=9
+					influence=503
+					unity=245.972
+					consumer_goods=96
+					alloys=201.6
+					volatile_motes=16
+					exotic_gases=17.6
+					rare_crystals=16
+					sr_living_metal=8
+					sr_zro=8
+					sr_dark_matter=8
+				}
+			}
+		}
+        
+        "###;
 
-        let (_, parse) = root(&empire_string.as_str()).unwrap();
+        let (_, parse) = root(empire_string).unwrap();
 
         let empire = get_empire_data(&parse).unwrap();
         println!("{:#?}", empire);
@@ -604,5 +739,16 @@ mod tests {
 
         let income = get_budget_component_map(&income);
         assert_eq!(income, map);
+    }
+
+    #[test]
+    fn get_name_from_meta__contains_keyvalue_name__returns_value() {
+        let text = "name=\"Eat My Shorts\"\n";
+
+        let (_, dict) = root(text).unwrap();
+
+        let name = get_name_from_meta(&dict);
+
+        assert_eq!(name, "Eat My Shorts");
     }
 }

@@ -6,16 +6,22 @@ use std::arch::x86_64::{
 use std::cmp::min;
 
 //the range of all the characters which should be REJECTED
-pub const SPACE_RANGES: &[u8] = b"\x00\x08\x0e\x1f\x21\xff";
+pub const SPACE_RANGES: &[u8] = &[b'\x00', b'\x08', b'\x0e', b'\x1f', b'!', b'\xff'];
 
-pub const TOKEN_RANGES: &[u8] = b"\x00\x3c\x3e\x7a\x7c\x7c\x7e\xff";
-pub const NOT_TOKEN_RANGES: &[u8] = b"\x3d\x3d\x7b\x7b\x7d\x7d";
+pub const TOKEN_RANGES: &[u8] = &[
+    b'\x00', b'\x3c', b'\x3e', b'\x7a', b'\x7c', b'\x7c', b'\x7e', b'\xff',
+];
+pub const NOT_TOKEN_RANGES: &[u8] = &[b'=', b'=', b'{', b'{', b'}', b'}'];
 
-pub const NUMBER_RANGES: &[u8] = b"\x00\x2f\x3a\xff";
-pub const ALPHABET_RANGES: &[u8] = b"\x00\x40\x5b\x60\x7b\xff";
-pub const STRING_LITTERAL_CONTENT_RANGES: &[u8] =
-    b"\x00\x08\x0e\x1f\x22\x22\x3d\x3d\x7b\x7b\x7d\x7d\x7f\xff";
-pub const IDENTIFIER_RANGES: &[u8] = b"\x00\x2f\x3a\x40\x5b\x5e\x60\x60\x7b\xff";
+pub const NUMBER_RANGES: &[u8] = &[b'\x00', b'\x2f', b':', b'\xff'];
+pub const ALPHABET_RANGES: &[u8] = &[b'\x00', b'@', b'[', b'`', b'{', b'\xff'];
+pub const STRING_LITTERAL_CONTENT_RANGES: &[u8] = &[
+    b'\x00', b'\x08', b'\x0e', b'\x1f', b'"', b'"', b'=', b'=', b'{', b'{', b'}', b'}', b'\x7f',
+    b'\xff',
+];
+pub const IDENTIFIER_RANGES: &[u8] = &[
+    b'\x00', b'\x2d', b'\x2f', b'\x2f', b':', b'@', b'[', b'^', b'`', b'`', b'{', b'\xff',
+];
 
 const SIMD_RANGE: usize = 16;
 

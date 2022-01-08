@@ -45,5 +45,6 @@ pub struct EmpireData {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ModelDataPoint {
+    pub campaign_name: String,
     pub empires: Vec<EmpireData>,
 }

@@ -2,10 +2,7 @@
 mod test {
     use std::fs::{self, File};
 
-    use clausewitz_parser::{
-        root::{par_root, root},
-        Val,
-    };
+    use clausewitz_parser::{root, Val};
     use memmap::Mmap;
 
     use time::{Date, Month};
@@ -37,7 +34,7 @@ mod test {
         let str = std::str::from_utf8(&mmap[..]).unwrap();
         let prepared_input = str.replace("\n}\n", "\n}\n#");
 
-        let result = par_root(prepared_input.as_str());
+        let result = root(prepared_input.as_str());
 
         // println!("{:#?}", result);
         println!("{}", result.unwrap().1);

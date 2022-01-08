@@ -165,6 +165,7 @@ const fn identifier_table() -> [bool; 256] {
     table[b'Y' as usize] = true;
     table[b'Z' as usize] = true;
     table[b'_' as usize] = true;
+    table[b'.' as usize] = true;
     table[b'0' as usize] = true;
     table[b'1' as usize] = true;
     table[b'2' as usize] = true;

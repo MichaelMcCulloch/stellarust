@@ -1,6 +1,6 @@
 use std::{fs::File, os::unix::prelude::MetadataExt, time::Instant};
 
-use clausewitz_parser::root::par_root;
+use clausewitz_parser::root;
 use memmap::Mmap;
 
 fn main() {
@@ -10,12 +10,10 @@ fn main() {
 
     let str = std::str::from_utf8(&mmap[..]).unwrap();
 
-    let s1 = Instant::now();
-    let prepared_input = str.replace("\n}\n", "\n}\n#");
     // println!("{}", s1.elapsed().as_millis());
 
     let start = Instant::now();
-    let result = par_root(prepared_input.as_str());
+    let result = root(str);
 
     // let end = start.elapsed();
 

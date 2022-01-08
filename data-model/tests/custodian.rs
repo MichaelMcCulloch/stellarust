@@ -17,7 +17,7 @@ fn get_resource_dir() -> PathBuf {
 mod tests {
 
     use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint};
-    use std::{collections::HashMap, sync::mpsc::channel, thread, time::Duration};
+    use std::{collections::HashMap, hash::Hash, sync::mpsc::channel, thread, time::Duration};
 
     #[test]
     fn test_custodian() {
@@ -55,6 +55,7 @@ mod tests {
 
     fn get_model_data_point(name: &str) -> ModelDataPoint {
         ModelDataPoint {
+            campaign_name: String::from("The Great Campaign"),
             empires: vec![EmpireData {
                 name: String::from(name),
                 resources: data_model::Resources {
@@ -76,12 +77,12 @@ mod tests {
                     sr_dark_matter: 0f64,
                 },
                 budget: Budget {
-                    income: todo!(),
-                    expense: todo!(),
-                    balance: todo!(),
-                    income_last_month: todo!(),
-                    expense_last_month: todo!(),
-                    balance_last_month: todo!(),
+                    income: HashMap::new(),
+                    expense: HashMap::new(),
+                    balance: HashMap::new(),
+                    income_last_month: HashMap::new(),
+                    expense_last_month: HashMap::new(),
+                    balance_last_month: HashMap::new(),
                 },
             }],
         }

@@ -148,7 +148,7 @@ mod tests {
     #[test]
     fn bracketed__dict__dict() {
         let text = r###"{
-			first="first"
+			first.0="first"
 			second="second"
 	}"###;
         let result = bracketed(text);

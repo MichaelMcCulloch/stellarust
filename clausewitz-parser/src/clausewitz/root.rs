@@ -7,6 +7,7 @@ pub fn root<'a>(input: &'a str) -> Res<&'a str, Val<'a>> {
     map(hash_map, Val::Dict)(input)
 }
 
+//Just a bit sloppy
 pub fn par_root<'a>(prepared_input: &'a str) -> Res<&'a str, Val<'a>> {
     let vec: Vec<(&str, Val)> = prepared_input
         .par_split('#')
