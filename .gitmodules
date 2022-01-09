@@ -1,0 +1,4 @@
+[submodule "clausewitz-parser"]
+	path = clausewitz-parser
+	url = git@github.com:MichaelMcCulloch/clausewitz-parser.git
+	branch = master
