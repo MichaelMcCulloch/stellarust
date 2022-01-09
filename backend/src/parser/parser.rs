@@ -1,6 +1,6 @@
 use crate::unzipper::Unzipper;
 use anyhow::Result;
-use clausewitz_parser::{root, Val};
+use clausewitz_parser::{par_root, root, Val};
 use data_model::{Budget, EmpireData, ModelDataPoint, Resources};
 use std::{
     collections::HashMap,
@@ -38,7 +38,9 @@ impl Parser {
         let (meta, gamestate) = Unzipper::get_zipped_content(&path)?;
 
         let meta = Parser::from_meta(meta.as_str())?;
-        let gamestate = Parser::from_gamestate(gamestate.as_str())?;
+
+        let gamestate_prepared = gamestate.replace("\n}\n", "\n}\n#");
+        let gamestate = Parser::from_gamestate(gamestate_prepared.as_str())?;
 
         let result = ParseResult { meta, gamestate };
 
@@ -54,7 +56,7 @@ impl Parser {
         }
     }
     pub fn from_gamestate<'a>(string: &'a str) -> Result<Val<'a>> {
-        let result = root(string);
+        let result = par_root(string);
         match result {
             Ok((_, val)) => Ok(val),
             Err(e) => Err(anyhow::Error::from(ParseError {
