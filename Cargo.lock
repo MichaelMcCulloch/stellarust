@@ -393,7 +393,6 @@ dependencies = [
  "strum_macros",
  "text_io",
  "time 0.3.5",
- "tokio 1.15.0",
  "zip",
 ]
 

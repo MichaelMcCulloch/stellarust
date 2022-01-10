@@ -16,8 +16,8 @@ mod tests {
     use backend::unzipper::Unzipper;
 
     use super::*;
-    #[tokio::test]
-    async fn unzipper__get_zipped_content() {
+    #[test]
+    fn unzipper__get_zipped_content() {
         let test_resource_dir = {
             let mut dir = get_resource_dir();
             dir.push("unzipper/zipped.sav");
