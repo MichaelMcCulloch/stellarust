@@ -379,6 +379,7 @@ dependencies = [
  "actix-rt 2.5.0",
  "actix-web",
  "anyhow",
+ "chrono",
  "clausewitz-parser",
  "data-model",
  "env_logger",
@@ -392,7 +393,6 @@ dependencies = [
  "strum",
  "strum_macros",
  "text_io",
- "time 0.3.5",
  "zip",
 ]
 
@@ -528,14 +528,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chrono"
+version = "0.4.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
+dependencies = [
+ "libc",
+ "num-integer",
+ "num-traits",
+ "serde",
+ "time 0.1.43",
+ "winapi 0.3.9",
+]
+
+[[package]]
 name = "clausewitz-parser"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "memmap",
  "nom",
  "rayon",
- "time 0.3.5",
 ]
 
 [[package]]
@@ -669,6 +683,7 @@ name = "data-model"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "log",
  "stellarust",
 ]
 
@@ -1638,6 +1653,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-integer"
+version = "0.1.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
+dependencies = [
+ "autocfg",
+ "num-traits",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
+dependencies = [
+ "autocfg",
+]
+
+[[package]]
 name = "num_cpus"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2294,11 +2328,11 @@ name = "stellarust"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "fantoccini",
  "serde",
  "strum",
  "strum_macros",
- "time 0.3.5",
  "tokio 1.15.0",
  "wasm-bindgen-test",
 ]
