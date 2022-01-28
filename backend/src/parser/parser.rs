@@ -50,7 +50,7 @@ impl Parser {
         match result {
             Ok((_, val)) => Ok(val),
             Err(e) => Err(anyhow::Error::from(ParseError {
-                err: format!("Error parsing meta \n{}", e),
+                err: format!("Error parsing meta:\n{}", e),
             })),
         }
     }
@@ -338,7 +338,7 @@ fn get_number_contents<'a>(gamestate: &'a Val<'a>) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, fs, path::PathBuf};
+    use std::{collections::HashMap, fs, hash::Hash, path::PathBuf};
 
     use clausewitz_parser::root;
     use data_model::{Budget, Resources};
@@ -513,8 +513,52 @@ mod tests {
 				}
 			}
 		}
-        
         "###;
+
+        let mut expected_income = HashMap::new();
+        let mut expected_expense = HashMap::new();
+        let mut expected_balance = HashMap::new();
+
+        expected_income.insert(
+            ResourceClass::Minerals,
+            vec![(String::from("source_2"), 300f64)],
+        );
+        expected_income.insert(
+            ResourceClass::Energy,
+            vec![
+                (String::from("source_1"), 1000f64),
+                (String::from("source_2"), 1000f64),
+            ],
+        );
+
+        expected_expense.insert(
+            ResourceClass::Minerals,
+            vec![(String::from("sink_2"), 150f64)],
+        );
+        expected_expense.insert(
+            ResourceClass::Energy,
+            vec![
+                (String::from("sink_1"), 500f64),
+                (String::from("sink_2"), 500f64),
+            ],
+        );
+
+        expected_balance.insert(
+            ResourceClass::Minerals,
+            vec![
+                (String::from("source_2"), 300f64),
+                (String::from("sink_2"), -150f64),
+            ],
+        );
+        expected_balance.insert(
+            ResourceClass::Energy,
+            vec![
+                (String::from("source_1"), 1000f64),
+                (String::from("source_2"), 1000f64),
+                (String::from("sink_1"), -500f64),
+                (String::from("sink_2"), -500f64),
+            ],
+        );
 
         let (_, parse) = root(empire_string).unwrap();
 
@@ -542,12 +586,12 @@ mod tests {
                     sr_dark_matter: 8.0
                 },
                 budget: Budget {
-                    income: HashMap::new(),
-                    expense: HashMap::new(),
-                    balance: HashMap::new(),
-                    income_last_month: HashMap::new(),
-                    expense_last_month: HashMap::new(),
-                    balance_last_month: HashMap::new()
+                    income: expected_income.clone(),
+                    expense: expected_expense.clone(),
+                    balance: expected_balance.clone(),
+                    income_last_month: expected_income.clone(),
+                    expense_last_month: expected_expense.clone(),
+                    balance_last_month: expected_balance.clone()
                 }
             }
         );
