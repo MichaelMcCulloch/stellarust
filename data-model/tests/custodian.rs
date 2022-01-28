@@ -36,17 +36,9 @@ mod tests {
 
         thread::sleep(Duration::from_millis(500));
 
-        let actual = model.get_campaign_data().unwrap();
+        let actual = model.get_empire_names().unwrap();
 
-        assert_eq!(
-            actual,
-            vec![
-                get_model_data_point("0"),
-                get_model_data_point("2"),
-                get_model_data_point("3"),
-                get_model_data_point("6"),
-            ]
-        );
+        assert_eq!(actual, vec![String::from("6"),]);
     }
 
     fn get_custodian_message(name: &str) -> CustodianMsg {

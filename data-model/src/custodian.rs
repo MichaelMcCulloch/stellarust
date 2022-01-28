@@ -31,7 +31,17 @@ impl ModelCustodian {
         thread::spawn(move || loop {
             match receiver.recv() {
                 Ok(data) => match data {
-                    CustodianMsg::Data(i) => history.lock().unwrap().push(i),
+                    CustodianMsg::Data(i) => {
+                        let x: Vec<_> = i
+                            .clone()
+                            .empires
+                            .into_iter()
+                            .map(|empire| empire.name)
+                            .collect();
+                        log::info!("{:?}", x);
+
+                        history.lock().unwrap().push(i)
+                    }
                     CustodianMsg::Exit => break,
                 },
                 _err => break,
@@ -39,10 +49,18 @@ impl ModelCustodian {
         });
     }
 
-    pub fn get_campaign_data(&self) -> Result<Vec<ModelDataPoint>> {
-        Ok(self.history.lock().unwrap().clone())
+    pub fn get_empire_names(&self) -> Result<Vec<String>> {
+        let empires = self.history.lock().unwrap().last().unwrap().empires.clone();
+
+        let names = empires.into_iter().map(|empire| empire.name).collect();
+
+        Ok(names)
     }
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+
+    #[test]
+    fn get_campaign_data__given_no_data__returns_empty_list() {}
+}
