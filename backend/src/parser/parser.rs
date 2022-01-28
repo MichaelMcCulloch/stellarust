@@ -35,12 +35,11 @@ impl Display for ParseError {
 
 impl Parser {
     pub fn from_file(path: &PathBuf) -> Result<ModelDataPoint> {
-        let (meta, gamestate) = Unzipper::get_zipped_content(&path)?;
+        let (meta_file, gamestate_file) = Unzipper::get_zipped_content(&path)?;
 
-        let meta = Parser::from_meta(meta.as_str())?;
+        let meta = Parser::from_meta(meta_file.as_str())?;
 
-        let gamestate_prepared = gamestate.replace("\n}\n", "\n}\n#");
-        let gamestate = Parser::from_gamestate(gamestate_prepared.as_str())?;
+        let gamestate = Parser::from_gamestate(gamestate_file.as_str())?;
 
         let result = ParseResult { meta, gamestate };
 
@@ -56,7 +55,7 @@ impl Parser {
         }
     }
     pub fn from_gamestate<'a>(string: &'a str) -> Result<Val<'a>> {
-        let result = par_root(string);
+        let result = root(string);
         match result {
             Ok((_, val)) => Ok(val),
             Err(e) => Err(anyhow::Error::from(ParseError {
@@ -79,7 +78,7 @@ fn data_point_from_parse_result(result: &ParseResult<'_>) -> ModelDataPoint {
     let _required_dlcs = get_required_dlcs_from_meta(meta);
     let campaign_name = get_name_from_meta(meta);
 
-    let empires = get_empires_from_gamestate(gamestate).expect("Parsing Not OK");
+    let empires = get_empires_from_gamestate(gamestate).unwrap();
 
     ModelDataPoint {
         campaign_name,
@@ -520,7 +519,6 @@ mod tests {
         let (_, parse) = root(empire_string).unwrap();
 
         let empire = get_empire_data(&parse).unwrap();
-        println!("{:#?}", empire);
         assert_eq!(
             empire,
             EmpireData {
