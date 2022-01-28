@@ -8,7 +8,7 @@ use std::{
     thread,
 };
 
-use crate::parser::Parser;
+use crate::parser::DataImport;
 
 #[cfg(target_os = "linux")]
 use crate::dirwatcher::linux::LinuxWatcher as DirectoryWatcher;
@@ -28,7 +28,7 @@ impl DirectoryEventHandler {
 
         for path in existant_files {
             log::info!("Discovered {:?}", path);
-            let parse_result = Parser::from_file(&path);
+            let parse_result = DataImport::from_file(&path);
             match parse_result {
                 Ok(data_point) => custodian_message_sender
                     .send(CustodianMsg::Data(data_point))
@@ -55,7 +55,7 @@ impl DirectoryEventHandler {
                         path: Some(path),
                         cookie: _cookie,
                     }) => {
-                        match Parser::from_file(&path) {
+                        match DataImport::from_file(&path) {
                             Ok(data) => {
                                 match custodian_message_sender.send(CustodianMsg::Data(data)) {
                                     Ok(_) => {}

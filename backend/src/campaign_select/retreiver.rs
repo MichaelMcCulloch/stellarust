@@ -1,5 +1,5 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    parser::{DataImport, DataImportResult},
     unzipper::Unzipper,
 };
 use anyhow::Result;
@@ -21,10 +21,10 @@ fn get_campaign_option(path: &PathBuf) -> Result<CampaignDto> {
 
     let (meta_str, gamestate_str) = Unzipper::get_zipped_content(&most_recent_path)?;
 
-    let meta = Parser::from_meta(meta_str.as_str())?;
-    let gamestate = Parser::from_gamestate(gamestate_str.as_str())?;
+    let meta = DataImport::from_meta(meta_str.as_str())?;
+    let gamestate = DataImport::from_gamestate(gamestate_str.as_str())?;
 
-    let model = ModelDataPoint::from(ParseResult { meta, gamestate });
+    let model = ModelDataPoint::from(DataImportResult { meta, gamestate });
 
     Ok(CampaignDto {
         name: model.campaign_name,

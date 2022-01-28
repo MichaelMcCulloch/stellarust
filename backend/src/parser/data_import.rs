@@ -1,6 +1,6 @@
 use crate::unzipper::Unzipper;
 use anyhow::Result;
-use clausewitz_parser::{par_root, root, Val};
+use clausewitz_parser::{root, Val};
 use data_model::{Budget, EmpireData, ModelDataPoint, Resources};
 use std::{
     collections::HashMap,
@@ -13,35 +13,35 @@ use strum::IntoEnumIterator;
 
 use super::Key;
 
-pub struct Parser {}
+pub struct DataImport {}
 
-pub struct ParseResult<'a> {
+pub struct DataImportResult<'a> {
     pub meta: Val<'a>,
     pub gamestate: Val<'a>,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct ParseError {
+pub struct DataImportError {
     err: String,
 }
 
-impl Error for ParseError {}
+impl Error for DataImportError {}
 
-impl Display for ParseError {
+impl Display for DataImportError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Debug::fmt(&self.err, f)
     }
 }
 
-impl Parser {
+impl DataImport {
     pub fn from_file(path: &PathBuf) -> Result<ModelDataPoint> {
         let (meta_file, gamestate_file) = Unzipper::get_zipped_content(&path)?;
 
-        let meta = Parser::from_meta(meta_file.as_str())?;
+        let meta = DataImport::from_meta(meta_file.as_str())?;
 
-        let gamestate = Parser::from_gamestate(gamestate_file.as_str())?;
+        let gamestate = DataImport::from_gamestate(gamestate_file.as_str())?;
 
-        let result = ParseResult { meta, gamestate };
+        let result = DataImportResult { meta, gamestate };
 
         Ok(ModelDataPoint::from(result))
     }
@@ -49,8 +49,8 @@ impl Parser {
         let result = root(string);
         match result {
             Ok((_, val)) => Ok(val),
-            Err(e) => Err(anyhow::Error::from(ParseError {
-                err: format!("Error parsing meta:\n{}", e),
+            Err(e) => Err(anyhow::Error::from(DataImportError {
+                err: format!("Error importing meta:\n{}", e),
             })),
         }
     }
@@ -58,20 +58,20 @@ impl Parser {
         let result = root(string);
         match result {
             Ok((_, val)) => Ok(val),
-            Err(e) => Err(anyhow::Error::from(ParseError {
-                err: format!("Error parsing gamestate:\n{}", e),
+            Err(e) => Err(anyhow::Error::from(DataImportError {
+                err: format!("Error importing gamestate:\n{}", e),
             })),
         }
     }
 }
 
-impl From<ParseResult<'_>> for ModelDataPoint {
-    fn from(result: ParseResult<'_>) -> Self {
+impl From<DataImportResult<'_>> for ModelDataPoint {
+    fn from(result: DataImportResult<'_>) -> Self {
         data_point_from_parse_result(&result)
     }
 }
 
-fn data_point_from_parse_result(result: &ParseResult<'_>) -> ModelDataPoint {
+fn data_point_from_parse_result(result: &DataImportResult<'_>) -> ModelDataPoint {
     let meta = &result.meta;
     let gamestate = &result.gamestate;
 
