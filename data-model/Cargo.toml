@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.52"
-log = "0.4.14"
+anyhow = "1"
+log = "0.4"
 stellarust = {version  ="0.1.0", path = "../"}

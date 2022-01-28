@@ -148,9 +148,9 @@ dependencies = [
 
 [[package]]
 name = "actix-rt"
-version = "2.5.0"
+version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05c2f80ce8d0c990941c7a7a931f69fd0701b76d521f8d36298edf59cd3fbf1f"
+checksum = "cdf3f2183be1241ed4dd22611850b85d38de0b08a09f1f7bcccbd0809084b359"
 dependencies = [
  "actix-macros 0.2.3",
  "futures-core",
@@ -250,9 +250,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web"
-version = "3.3.2"
+version = "3.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e641d4a172e7faa0862241a20ff4f1f5ab0ab7c279f00c2d4587b77483477b86"
+checksum = "b6534a126df581caf443ba2751cab42092c89b3f1d06a9d829b1e17edfe3e277"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -315,9 +315,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.52"
+version = "1.0.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84450d0b4a8bd1ba4144ce8ce718fbc5d071358b1e5384bace6536b3d1f2d5b3"
+checksum = "94a45b455c14666b85fc40a019e8ab9eb75e3a124e05494f5397122bc9eb06e0"
 
 [[package]]
 name = "async-trait"
@@ -376,7 +376,7 @@ name = "backend"
 version = "0.1.0"
 dependencies = [
  "actix-cors",
- "actix-rt 2.5.0",
+ "actix-rt 2.6.0",
  "actix-web",
  "anyhow",
  "chrono",
@@ -595,6 +595,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "cookie"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "94d4706de1b0fa5b132270cddffa8585166037822e260a944fe161acd137ca05"
+dependencies = [
+ "percent-encoding",
+ "time 0.3.5",
+ "version_check",
+]
+
+[[package]]
 name = "copyless"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -757,12 +768,12 @@ dependencies = [
 
 [[package]]
 name = "fantoccini"
-version = "0.17.7"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba99d7d0c55268b233bc8f5a3b4815c4b65218b629fcf65d492830249d14ea86"
+checksum = "e359288d148a65cb47deb43f0b3ab8f84724a3ab26d70fe598c36b0651abd515"
 dependencies = [
  "base64 0.13.0",
- "cookie 0.14.4",
+ "cookie 0.16.0",
  "futures-core",
  "futures-util",
  "http",
@@ -771,7 +782,7 @@ dependencies = [
  "mime",
  "serde",
  "serde_json",
- "time 0.2.27",
+ "time 0.3.5",
  "tokio 1.15.0",
  "url",
  "webdriver",
@@ -1414,9 +1425,9 @@ checksum = "7fb9b38af92608140b86b693604b9ffcc5824240a484d1ecd4795bacb2fe88f3"
 
 [[package]]
 name = "listenfd"
-version = "0.3.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "809e514e2cb8a9624701346ea3e694c1766d76778e343e537d873c1c366e79a7"
+checksum = "c02b14f35d9f5f082fd0b1b34aa0ef32e3354c859c721d7f3325b3f79a42ba54"
 dependencies = [
  "libc",
  "uuid",
@@ -2456,6 +2467,7 @@ version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41effe7cfa8af36f439fac33861b66b049edc6f9a32331e2312660529c1c24ad"
 dependencies = [
+ "itoa 0.4.8",
  "libc",
  "serde",
  "time-macros 0.2.3",
@@ -2886,15 +2898,17 @@ dependencies = [
 
 [[package]]
 name = "webdriver"
-version = "0.43.1"
+version = "0.44.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58b518b8057ea03bbec21d8e502697991d17840476e22b3793aceea659e33fae"
+checksum = "3484940751923901dc09b362740cad90bcfb62ec93d8abf38add2c3ac728c596"
 dependencies = [
  "base64 0.12.3",
  "bytes 0.5.6",
  "cookie 0.12.0",
  "http",
  "log",
+ "once_cell",
+ "regex",
  "serde",
  "serde_derive",
  "serde_json",
