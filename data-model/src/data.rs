@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use stellarust::dto::ResourceClass;
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub struct Resources {
     pub energy: f64,
     pub minerals: f64,
@@ -25,7 +25,7 @@ pub struct Resources {
     pub sr_dark_matter: f64,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub struct Budget {
     pub income: HashMap<ResourceClass, Vec<(String, f64)>>,
     pub expense: HashMap<ResourceClass, Vec<(String, f64)>>,

@@ -16,8 +16,8 @@ fn get_resource_dir() -> PathBuf {
 #[cfg(test)]
 mod tests {
 
-    use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint};
-    use std::{collections::HashMap, sync::mpsc::channel, thread, time::Duration};
+    use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint, Resources};
+    use std::{sync::mpsc::channel, thread, time::Duration};
 
     #[test]
     fn test_custodian() {
@@ -58,32 +58,8 @@ mod tests {
             campaign_name: String::from("The Great Campaign"),
             empires: vec![EmpireData {
                 name: String::from(name),
-                resources: data_model::Resources {
-                    energy: 0f64,
-                    minerals: 0f64,
-                    food: 0f64,
-                    physics_research: 0f64,
-                    society_research: 0f64,
-                    engineering_research: 0f64,
-                    influence: 0f64,
-                    unity: 0f64,
-                    consumer_goods: 0f64,
-                    alloys: 0f64,
-                    volatile_motes: 0f64,
-                    exotic_gases: 0f64,
-                    rare_crystals: 0f64,
-                    sr_living_metal: 0f64,
-                    sr_zro: 0f64,
-                    sr_dark_matter: 0f64,
-                },
-                budget: Budget {
-                    income: HashMap::new(),
-                    expense: HashMap::new(),
-                    balance: HashMap::new(),
-                    income_last_month: HashMap::new(),
-                    expense_last_month: HashMap::new(),
-                    balance_last_month: HashMap::new(),
-                },
+                resources: Resources::default(),
+                budget: Budget::default(),
             }],
         }
     }
