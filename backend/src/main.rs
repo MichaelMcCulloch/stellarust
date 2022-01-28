@@ -6,15 +6,14 @@ use listenfd::ListenFd;
 use std::{panic, path::PathBuf, process::exit};
 
 #[get("/empires")]
-pub async fn empires(empire_list: Data<Vec<String>>) -> impl Responder {
-    let data = empire_list.get_ref().clone();
-    HttpResponse::Ok().json(data)
-}
+pub async fn empires(model_custodian: Data<ModelCustodian>) -> impl Responder {
+    let names = model_custodian
+        .get_ref()
+        .clone()
+        .get_empire_names()
+        .expect("Could not get empire names");
 
-#[get("/")]
-pub async fn index(vec_32: Data<Vec<i32>>) -> impl Responder {
-    let data = vec_32.get_ref().clone();
-    HttpResponse::Ok().json(data)
+    HttpResponse::Ok().json(names)
 }
 
 #[actix_web::main]
@@ -35,28 +34,14 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    let data = Data::new(vec![0]);
-    let empire_list = Data::new(vec![
-        String::from("The Great Khanate"),
-        String::from("The Federation Of The Planets"),
-        String::from("The Borg"),
-        String::from("Q"),
-        String::from("123434"),
-        String::from("!@##$$()(*&())"),
-    ]);
-
     let (receiver, _dir_watcher) = DirectoryEventHandler::create(&_campaign_path);
-    let _custodian = ModelCustodian::create(receiver);
-
-    //empire list:= fileReader.get()
+    let custodian = Data::new(ModelCustodian::create(receiver));
 
     let mut server = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
             .wrap(Cors::default().allow_any_origin())
-            .app_data(data.clone())
-            .app_data(empire_list.clone())
-            .service(index)
+            .app_data(custodian.clone())
             .service(empires)
     });
 
@@ -74,39 +59,34 @@ async fn main() -> std::io::Result<()> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{empires, index};
+    use std::sync::mpsc::channel;
+
+    use crate::empires;
     use actix_web::{body::Body, test, web::Data, App};
+    use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint, Resources};
     use serde_json::json;
 
     #[actix_rt::test]
-    async fn test_index__returns_json_vec0() {
-        let vec_0 = vec![0];
+    async fn test_empires__from_custodian__returns_list_of_empire_names() {
+        let expected_empire_names = vec![String::from("NAME")];
+
+        let (sender, receiver) = channel();
+
+        sender
+            .send(CustodianMsg::Data(ModelDataPoint {
+                campaign_name: String::new(),
+                empires: vec![EmpireData {
+                    name: String::from("NAME"),
+                    budget: Budget::default(),
+                    resources: Resources::default(),
+                }],
+            }))
+            .unwrap();
+
+        let custodian = ModelCustodian::create(receiver);
+
         let mut app =
-            test::init_service(App::new().app_data(Data::new(vec_0.clone())).service(index)).await;
-        let req = test::TestRequest::with_header("content-type", "application/json")
-            .uri("/")
-            .to_request();
-
-        let mut resp = test::call_service(&mut app, req).await;
-
-        let body = resp.take_body();
-        let body = body.as_ref().unwrap();
-        assert!(resp.status().is_success());
-        assert_eq!(&Body::from(json!(vec_0)), body);
-    }
-
-    #[actix_rt::test]
-    async fn test_empires__returns_list_of_empire_names() {
-        let empire_names = vec![
-            String::from("The Great Khanate"),
-            String::from("The Federation Of The Planets"),
-        ];
-        let mut app = test::init_service(
-            App::new()
-                .app_data(Data::new(empire_names.clone()))
-                .service(empires),
-        )
-        .await;
+            test::init_service(App::new().app_data(Data::new(custodian)).service(empires)).await;
         let req = test::TestRequest::with_header("content-type", "application/json")
             .uri("/empires")
             .to_request();
@@ -116,6 +96,6 @@ mod tests {
         let body = resp.take_body();
         let body = body.as_ref().unwrap();
         assert!(resp.status().is_success());
-        assert_eq!(&Body::from(json!(empire_names.clone())), body);
+        assert_eq!(&Body::from(json!(expected_empire_names.clone())), body);
     }
 }
