@@ -14,13 +14,13 @@ members = [
 ]
 
 [dependencies]
-chrono = {version = "0.4.19", features = ["serde"]}
-serde = {version = "1.0.132", features=["derive"]}
-strum = "0.23.0"
-strum_macros = "0.23.1"
+chrono = {version = "0.4", features = ["serde"]}
+serde = {version = "1", features=["derive"]}
+strum = "0.23"
+strum_macros = "0.23"
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.28"
-fantoccini = "0.17.5"
-tokio = { version = "1.15.0", features = [ "full" ] }
-anyhow = "1.0.51"
+wasm-bindgen-test = "0.3"
+fantoccini = "0.18"
+tokio = { version = "1", features = [ "full" ] }
+anyhow = "1"
