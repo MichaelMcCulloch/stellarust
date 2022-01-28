@@ -338,7 +338,7 @@ fn get_number_contents<'a>(gamestate: &'a Val<'a>) -> f64 {
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, fs, hash::Hash, path::PathBuf};
+    use std::{collections::HashMap, fs, path::PathBuf};
 
     use clausewitz_parser::root;
     use data_model::{Budget, Resources};

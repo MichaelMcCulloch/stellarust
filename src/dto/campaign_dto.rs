@@ -1,9 +1,6 @@
-use std::{
-    fmt::Display,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fmt::Display, time::SystemTime};
 
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq, Hash, Clone)]
