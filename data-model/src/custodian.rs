@@ -32,15 +32,8 @@ impl ModelCustodian {
             match receiver.recv() {
                 Ok(data) => match data {
                     CustodianMsg::Data(i) => {
-                        let x: Vec<_> = i
-                            .clone()
-                            .empires
-                            .into_iter()
-                            .map(|empire| empire.name)
-                            .collect();
-                        log::info!("{:?}", x);
-
-                        history.lock().unwrap().push(i)
+                        history.lock().unwrap().push(i);
+                        log::info!("Received New Data");
                     }
                     CustodianMsg::Exit => break,
                 },

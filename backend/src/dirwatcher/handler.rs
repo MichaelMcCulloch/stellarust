@@ -27,7 +27,7 @@ impl DirectoryEventHandler {
         let existant_files = get_existing_files(directory);
 
         for path in existant_files {
-            log::info!("Discovered {:?}", path);
+            log::info!("Discovered {:?}", path.file_name().unwrap());
             let parse_result = DataImport::from_file(&path);
             match parse_result {
                 Ok(data_point) => custodian_message_sender
