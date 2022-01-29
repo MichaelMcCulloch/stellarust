@@ -42,7 +42,7 @@ impl ModelCustodian {
         });
     }
 
-    pub fn get_empire_names(&self) -> Result<Vec<String>> {
+    pub async fn get_empire_names(&self) -> Result<Vec<String>> {
         match self.history.lock().unwrap().last() {
             Some(data_point) => {
                 let empires = &data_point.empires;
@@ -64,8 +64,8 @@ mod tests {
 
     const EMPIRE_NAME: &str = "EMPIRE_NAME";
 
-    #[test]
-    fn get_empire_names__given_no_data__returns_empty_list() {
+    #[actix_rt::test]
+    async fn get_empire_names__given_no_data__returns_empty_list() {
         let (sender, receiver) = channel();
         sender.send(CustodianMsg::Exit).unwrap();
 
@@ -73,13 +73,13 @@ mod tests {
 
         thread::sleep(Duration::from_millis(5));
 
-        let actual = model.get_empire_names().unwrap();
+        let actual = (model.get_empire_names()).await.unwrap();
 
         assert!(actual.is_empty());
     }
 
-    #[test]
-    fn get_empire_names__given_single_data__returns_name_from_data() {
+    #[actix_rt::test]
+    async fn get_empire_names__given_single_data__returns_name_from_data() {
         let (sender, receiver) = channel();
         sender.send(get_custodian_message(EMPIRE_NAME)).unwrap();
         sender.send(CustodianMsg::Exit).unwrap();
@@ -87,13 +87,13 @@ mod tests {
 
         thread::sleep(Duration::from_millis(5));
 
-        let actual = model.get_empire_names().unwrap();
+        let actual = model.get_empire_names().await.unwrap();
 
         assert_eq!(actual, vec![String::from(EMPIRE_NAME),]);
     }
 
-    #[test]
-    fn get_empire_names__given_series_of_data__returns_list_of_names_from_last_in_series() {
+    #[actix_rt::test]
+    async fn get_empire_names__given_series_of_data__returns_list_of_names_from_last_in_series() {
         let (sender, receiver) = channel();
         sender.send(get_custodian_message("0")).unwrap();
         sender.send(get_custodian_message("2")).unwrap();
@@ -104,7 +104,7 @@ mod tests {
 
         thread::sleep(Duration::from_millis(5));
 
-        let actual = model.get_empire_names().unwrap();
+        let actual = model.get_empire_names().await.unwrap();
 
         assert_eq!(actual, vec![String::from(EMPIRE_NAME),]);
     }
