@@ -45,7 +45,7 @@ impl DataImport {
 
         Ok(ModelDataPoint::from(result))
     }
-    pub fn from_meta<'a>(string: &'a str) -> Result<Val<'a>> {
+    fn from_meta<'a>(string: &'a str) -> Result<Val<'a>> {
         let result = root(string);
         match result {
             Ok((_, val)) => Ok(val),
@@ -54,7 +54,7 @@ impl DataImport {
             })),
         }
     }
-    pub fn from_gamestate<'a>(string: &'a str) -> Result<Val<'a>> {
+    fn from_gamestate<'a>(string: &'a str) -> Result<Val<'a>> {
         let result = root(string);
         match result {
             Ok((_, val)) => Ok(val),
