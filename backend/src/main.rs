@@ -11,6 +11,7 @@ pub async fn empires(model_custodian: Data<ModelCustodian>) -> impl Responder {
         .get_ref()
         .clone()
         .get_empire_names()
+        .await
         .expect("Could not get empire names");
 
     HttpResponse::Ok().json(names)
