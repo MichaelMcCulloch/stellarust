@@ -1,4 +1,4 @@
-use crate::parser::DataImport;
+use crate::data_import::DataImport;
 use anyhow::Result;
 use std::{collections::HashMap, fs, path::PathBuf, time::SystemTime};
 use stellarust::dto::CampaignDto;
