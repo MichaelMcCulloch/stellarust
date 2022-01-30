@@ -11,6 +11,7 @@ pub async fn empires(model_custodian: Data<ModelCustodian>) -> impl Responder {
         .get_ref()
         .clone()
         .get_empire_names()
+        .await
         .expect("Could not get empire names");
 
     HttpResponse::Ok().json(names)
@@ -22,7 +23,7 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let _campaign_path = if let Some(arg) = args.get(1) {
+    let campaign_path = if let Some(arg) = args.get(1) {
         PathBuf::from(arg)
     } else {
         match CampaignSelector::select() {
@@ -34,14 +35,15 @@ async fn main() -> std::io::Result<()> {
         }
     };
 
-    let (receiver, _dir_watcher) = DirectoryEventHandler::create(&_campaign_path);
-    let custodian = Data::new(ModelCustodian::create(receiver));
+    let (receiver, _dir_watcher) = DirectoryEventHandler::create(&campaign_path);
+
+    let custodian_data = Data::new(ModelCustodian::create(receiver));
 
     let mut server = HttpServer::new(move || {
         App::new()
             .wrap(middleware::Logger::default())
             .wrap(Cors::default().allow_any_origin())
-            .app_data(custodian.clone())
+            .app_data(custodian_data.clone())
             .service(empires)
     });
 

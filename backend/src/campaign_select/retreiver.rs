@@ -1,9 +1,5 @@
-use crate::{
-    parser::{DataImport, DataImportResult},
-    unzipper::Unzipper,
-};
+use crate::data_import::DataImport;
 use anyhow::Result;
-use data_model::ModelDataPoint;
 use std::{collections::HashMap, fs, path::PathBuf, time::SystemTime};
 use stellarust::dto::CampaignDto;
 
@@ -19,12 +15,7 @@ fn get_campaign_option(path: &PathBuf) -> Result<CampaignDto> {
     let paths = std::fs::read_dir(path)?;
     let (modified, most_recent_path) = find_newest_save(paths)?;
 
-    let (meta_str, gamestate_str) = Unzipper::get_zipped_content(&most_recent_path)?;
-
-    let meta = DataImport::from_meta(meta_str.as_str())?;
-    let gamestate = DataImport::from_gamestate(gamestate_str.as_str())?;
-
-    let model = ModelDataPoint::from(DataImportResult { meta, gamestate });
+    let model = DataImport::from_file(&most_recent_path)?;
 
     Ok(CampaignDto {
         name: model.campaign_name,
