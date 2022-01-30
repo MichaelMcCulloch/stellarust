@@ -753,6 +753,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "data-core"
+version = "0.1.0"
+dependencies = [
+ "sqlx",
+]
+
+[[package]]
 name = "data-model"
 version = "0.1.0"
 dependencies = [

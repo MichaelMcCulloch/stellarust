@@ -92,6 +92,7 @@
                 "Cargo Fix Stellarust",
                 "Cargo Fix Clausewitz Parser",
                 "Cargo Fix Data Model",
+                "Cargo Fix Data Core",
                 "Cargo Fix Test Helper",
             ]
         },
@@ -133,6 +134,14 @@
             "command": "cargo fix --allow-dirty --allow-staged",
             "options": {
                 "cwd": "${workspaceFolder}/data-model"
+            }
+        },
+        {
+            "label": "Cargo Fix Data Core",
+            "type": "shell",
+            "command": "cargo fix --allow-dirty --allow-staged",
+            "options": {
+                "cwd": "${workspaceFolder}/data-core"
             }
         },
         {
