@@ -1,9 +1,5 @@
 use anyhow::Result;
-use std::{
-    fs,
-    io::Read,
-    path::{Path, PathBuf},
-};
+use std::{fs, io::Read, path::Path};
 pub struct Unzipper {}
 impl Unzipper {
     pub fn get_zipped_content<P: AsRef<Path>>(zip: &P) -> Result<(String, String)> {
