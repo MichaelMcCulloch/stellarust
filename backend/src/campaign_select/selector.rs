@@ -3,7 +3,7 @@ use anyhow::Result;
 use std::{
     fs,
     io::{stdout, Write},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 use stellarust::dto::CampaignDto;
 use text_io::read;
@@ -22,7 +22,7 @@ impl CampaignSelector {
         Ok(campaign_path)
     }
 
-    pub fn select_from_path(dir: &PathBuf) -> Result<PathBuf> {
+    fn select_from_path(dir: &Path) -> Result<PathBuf> {
         println!("Reading list of saves...");
         let read_dir = fs::read_dir(dir)?;
         let paths: Vec<PathBuf> = read_dir

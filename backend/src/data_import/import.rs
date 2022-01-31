@@ -6,7 +6,7 @@ use std::{
     collections::HashMap,
     error::Error,
     fmt::{self, Debug, Display, Formatter},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 use stellarust::dto::{BudgetComponent, ResourceClass};
 use strum::IntoEnumIterator;
@@ -34,7 +34,10 @@ impl Display for DataImportError {
 }
 
 impl DataImport {
-    pub fn from_file(path: &PathBuf) -> Result<ModelDataPoint> {
+    pub fn from_file<P: AsRef<Path>>(path: &P) -> Result<ModelDataPoint> {
+        DataImport::_from_file(path.as_ref())
+    }
+    fn _from_file(path: &Path) -> Result<ModelDataPoint> {
         let (meta_file, gamestate_file) = Unzipper::get_zipped_content(&path)?;
 
         let meta = DataImport::from_meta(meta_file.as_str())?;

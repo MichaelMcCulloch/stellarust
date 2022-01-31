@@ -1,6 +1,11 @@
 use crate::data_import::DataImport;
 use anyhow::Result;
-use std::{collections::HashMap, fs, path::PathBuf, time::SystemTime};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
 use stellarust::dto::CampaignDto;
 
 pub fn get_campaign_options(paths: Vec<PathBuf>) -> Result<HashMap<CampaignDto, PathBuf>> {
@@ -11,7 +16,7 @@ pub fn get_campaign_options(paths: Vec<PathBuf>) -> Result<HashMap<CampaignDto, 
     Ok(map)
 }
 
-fn get_campaign_option(path: &PathBuf) -> Result<CampaignDto> {
+fn get_campaign_option(path: &Path) -> Result<CampaignDto> {
     let paths = std::fs::read_dir(path)?;
     let (modified, most_recent_path) = find_newest_save(paths)?;
 

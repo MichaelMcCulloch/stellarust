@@ -1,5 +1,5 @@
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::mpsc::{channel, Receiver},
 };
 
@@ -12,7 +12,7 @@ pub struct LinuxWatcher {
 }
 
 impl DirWatcher for LinuxWatcher {
-    fn create(path: &PathBuf) -> (Receiver<RawEvent>, Self) {
+    fn create(path: &Path) -> (Receiver<RawEvent>, Self) {
         let (sender, receiver) = channel();
         let mut watcher = raw_watcher(sender).unwrap();
         watcher

@@ -1,11 +1,14 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 
 pub struct DataCore {}
 
 impl DataCore {
-    fn create(path: &PathBuf) -> Result<Self> {
+    pub fn create<P: AsRef<Path>>(path: &P) -> Result<Self> {
+        DataCore::_create(path.as_ref())
+    }
+    fn _create(path: &Path) -> Result<Self> {
         todo!()
     }
 }

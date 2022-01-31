@@ -1,5 +1,8 @@
 pub mod utility {
-    use std::{path::PathBuf, process::Command};
+    use std::{
+        path::{Path, PathBuf},
+        process::Command,
+    };
 
     use anyhow::Result;
 
@@ -21,7 +24,10 @@ pub mod utility {
         Ok(PathBuf::from_iter(vec![&cwd, &PathBuf::from(path)]))
     }
 
-    pub fn create_sqlite_db(full_path: &PathBuf) -> Result<()> {
+    pub fn create_sqlite_db<P: AsRef<Path>>(full_path: &P) -> Result<()> {
+        _create_sqlite_db(full_path.as_ref())
+    }
+    fn _create_sqlite_db(full_path: &Path) -> Result<()> {
         let database_url = format!("sqlite:{}", full_path.to_str().unwrap());
 
         Command::new("sqlx")
@@ -36,7 +42,10 @@ pub mod utility {
         Ok(())
     }
 
-    pub fn drop_sqlite_db(full_path: &PathBuf) -> Result<()> {
+    pub fn drop_sqlite_db<P: AsRef<Path>>(full_path: &P) -> Result<()> {
+        _drop_sqlite_db(full_path.as_ref())
+    }
+    fn _drop_sqlite_db(full_path: &Path) -> Result<()> {
         let database_url = format!("sqlite:{}", full_path.to_str().unwrap());
 
         Command::new("sqlx")
