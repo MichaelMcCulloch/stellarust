@@ -17,22 +17,26 @@ mod tests {
         let test_working_dir_path = get_path(TEST_WORKING_DIRECTORY_SOURCE);
 
         fs::create_dir_all(test_working_dir_path.clone()).unwrap();
-
         cleanup_sqlite(&test_working_dir_path, &NO_DB);
 
         let core = DataCore::create(&test_working_dir_path, &NO_DB)
             .await
             .unwrap();
 
-        let x: Vec<_> = fs::read_dir(&test_working_dir_path)
+        let directory_file_names: Vec<_> = fs::read_dir(&test_working_dir_path)
             .unwrap()
-            .filter_map(|r| if let Ok(x) = r { Some(x) } else { None })
-            .filter(|entry| entry.file_name() == NO_DB)
+            .filter_map(|r| {
+                if let Ok(x) = r {
+                    Some(x.file_name().into_string().unwrap())
+                } else {
+                    None
+                }
+            })
             .collect();
 
         cleanup_sqlite(&test_working_dir_path, &NO_DB);
 
-        assert_eq!(x.len(), 1);
+        assert!(directory_file_names.contains(&NO_DB.to_string()));
     }
 
 }
