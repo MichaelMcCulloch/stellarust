@@ -1,11 +1,10 @@
 use actix_web::{get, web::Data, Responder};
-use data_core_mock::MockDataCore;
 use data_model::ModelCustodian;
 
 use crate::api::implementation::empires_impl;
 
 #[get("/empires")]
-pub async fn empires_test(model_custodian: Data<ModelCustodian<MockDataCore>>) -> impl Responder {
+pub async fn empires_test(model_custodian: Data<ModelCustodian>) -> impl Responder {
     empires_impl(model_custodian).await
 }
 
@@ -15,7 +14,6 @@ mod api_tests {
     use std::sync::mpsc::channel;
 
     use actix_web::{body::Body, get, test, web::Data, App, Responder};
-    use data_core_mock::MockDataCore;
     use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint, Resources};
     use serde_json::json;
 
@@ -38,7 +36,7 @@ mod api_tests {
             }))
             .unwrap();
 
-        let custodian = ModelCustodian::create(receiver, MockDataCore {});
+        let custodian = ModelCustodian::create(receiver);
 
         let mut app = test::init_service(
             App::new()

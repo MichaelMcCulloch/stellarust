@@ -416,8 +416,6 @@ dependencies = [
  "anyhow",
  "chrono",
  "clausewitz-parser",
- "data-core",
- "data-core-mock",
  "data-model",
  "env_logger",
  "futures",
@@ -778,8 +776,6 @@ version = "0.1.0"
 dependencies = [
  "actix-rt 2.6.0",
  "anyhow",
- "data-core",
- "data-core-mock",
  "log",
  "stellarust",
 ]
