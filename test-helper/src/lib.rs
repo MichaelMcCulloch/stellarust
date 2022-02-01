@@ -10,18 +10,18 @@ pub mod utility {
         "stellarust/res/test_data/campaign/unitednationsofearth_-15512622/";
 
     pub fn get_test_campaign_une_root() -> PathBuf {
-        get_path(CAMPAIGN_UNE_ROOT_RELATIVE).unwrap()
+        get_path(CAMPAIGN_UNE_ROOT_RELATIVE)
     }
 
-    pub fn get_path(path: &str) -> Result<PathBuf> {
-        let mut cwd = std::env::current_dir()?;
+    pub fn get_path(path: &str) -> PathBuf {
+        let mut cwd = std::env::current_dir().unwrap();
         loop {
             cwd.pop();
             if cwd.into_iter().last().unwrap() != "stellarust" {
                 break;
             };
         }
-        Ok(PathBuf::from_iter(vec![&cwd, &PathBuf::from(path)]))
+        PathBuf::from_iter(vec![&cwd, &PathBuf::from(path)])
     }
 
     pub fn create_sqlite_db<P: AsRef<Path>>(full_path: &P) -> Result<()> {

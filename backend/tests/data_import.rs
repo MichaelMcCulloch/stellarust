@@ -13,8 +13,7 @@ mod data_import_tests {
 
     #[actix_rt::test]
     async fn on_data_import__fresh_database_and_new_data__db_is_populated() {
-        let testing_data_path = get_test_campaign_une_root();
-        let test_working_dir_path = get_path(TEST_WORKING_DIRECTORY_SOURCE).unwrap();
+        let test_working_dir_path = &get_path(TEST_WORKING_DIRECTORY_SOURCE);
 
         fs::create_dir_all(test_working_dir_path.clone()).unwrap();
 
@@ -33,8 +32,7 @@ mod data_import_tests {
 
     #[actix_rt::test]
     async fn on_data_import__existing_database_and_same_data__db_is_untouched() {
-        let testing_data_path = get_test_campaign_une_root();
-        let test_working_dir_path = get_path(TEST_WORKING_DIRECTORY_SOURCE).unwrap();
+        let test_working_dir_path = &get_path(TEST_WORKING_DIRECTORY_SOURCE);
 
         let sqlite_db_path =
             PathBuf::from_iter(vec![test_working_dir_path, PathBuf::from("existing_db")]);
