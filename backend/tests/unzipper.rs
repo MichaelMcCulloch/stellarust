@@ -1,7 +1,7 @@
 #[cfg(test)]
-mod tests {
+mod unzipper_tests {
     use backend::unzipper::Unzipper;
-    use test_helper::utility::get_path;
+    use test_helper::get_path;
     const TEST_ZIP_FILE: &str = "stellarust/res/test_data/unzipper/zipped.sav";
     #[test]
     fn unzipper__get_zipped_content() {

@@ -6,6 +6,9 @@ use std::{
 use anyhow::Result;
 use sqlx::SqlitePool;
 
+pub trait DataCoreBackend {}
+impl DataCoreBackend for DataCore {}
+
 pub struct DataCore {
     _pool: SqlitePool,
 }

@@ -12,6 +12,7 @@ members = [
     "backend",
     "data-model",
     "data-core",
+    "data-core-mock",
     "clausewitz-parser"
 ]
 

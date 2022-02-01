@@ -6,7 +6,7 @@ mod tests {
     };
 
     use data_core::DataCore;
-    use test_helper::utility::{cleanup_sqlite, create_sqlite_db, drop_sqlite_db, get_path};
+    use test_helper::{cleanup_sqlite, create_sqlite_db, drop_sqlite_db, get_path};
 
     const TEST_WORKING_DIRECTORY_SOURCE: &str = "stellarust/res/test_data/data_core/";
     const NO_DB: &str = "NO_DB.db";
@@ -44,7 +44,6 @@ mod tests {
         let test_working_dir_path = get_path(TEST_WORKING_DIRECTORY_SOURCE);
 
         fs::create_dir_all(test_working_dir_path.clone()).unwrap();
-
         cleanup_sqlite(&test_working_dir_path, &EXISTING_DB);
 
         create_sqlite_db(&test_working_dir_path, &EXISTING_DB).unwrap();
@@ -60,17 +59,6 @@ mod tests {
         let core = DataCore::create(&test_working_dir_path, &EXISTING_DB)
             .await
             .unwrap();
-
-        let directory_file_names: Vec<_> = fs::read_dir(&test_working_dir_path)
-            .unwrap()
-            .filter_map(|r| {
-                if let Ok(x) = r {
-                    Some(x.file_name().into_string().unwrap())
-                } else {
-                    None
-                }
-            })
-            .collect();
 
         let last_modified_after_create = fs::metadata(&PathBuf::from_iter(vec![
             &test_working_dir_path,

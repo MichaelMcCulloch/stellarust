@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 sqlx = { version = "0.5.10", features = [ "runtime-actix-rustls" , "sqlite", "macros", "chrono"] }
 anyhow = "1.0.53"
+async-trait = "0.1.52"
 
 [dev-dependencies]
 actix-rt="2.6.0"
