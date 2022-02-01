@@ -7,13 +7,14 @@ edition = "2021"
 
 [workspace]
 members = [
-    "test-helper",
     "frontend",
     "backend",
     "data-model",
     "data-core",
+    "clausewitz-parser",
     "data-core-mock",
-    "clausewitz-parser"
+    "test-helper",
+    "ui-test"
 ]
 
 [dependencies]
@@ -21,9 +22,3 @@ chrono = {version = "0.4.19", features = ["serde"]}
 serde = {version = "1.0.136", features=["derive"]}
 strum = "0.23.0"
 strum_macros = "0.23.1"
-
-[dev-dependencies] 
-wasm-bindgen-test = "0.3.29"
-fantoccini = "0.18.0"
-tokio = { version = "1.16.1", features = [ "full" ] }
-anyhow = "1.0.53"

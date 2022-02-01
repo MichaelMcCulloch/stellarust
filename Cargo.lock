@@ -2638,14 +2638,10 @@ checksum = "213701ba3370744dcd1a12960caa4843b3d68b4d1c0a5d575e0d65b2ee9d16c0"
 name = "stellarust"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "chrono",
- "fantoccini",
  "serde",
  "strum",
  "strum_macros",
- "tokio 1.16.1",
- "wasm-bindgen-test",
 ]
 
 [[package]]
@@ -3033,6 +3029,16 @@ name = "typenum"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
+
+[[package]]
+name = "ui-test"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "fantoccini",
+ "tokio 1.16.1",
+ "wasm-bindgen-test",
+]
 
 [[package]]
 name = "unicode-bidi"

@@ -1,0 +1,12 @@
+[package]
+name = "ui-test"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.29"
+fantoccini = "0.18.0"
+tokio = { version = "1.16.1", features = [ "full" ] }
+anyhow = "1.0.53"
