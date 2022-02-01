@@ -106,6 +106,6 @@ mod tests {
 
         let result = obtain_result();
 
-        assert_eq!(result.as_str(), "done");
+        assert_eq!(&result, "done");
     }
 }

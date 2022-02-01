@@ -59,10 +59,8 @@ where
             .as_string()
             .expect("Couldnt get text from Response");
 
-        let data: T = serde_json::from_str(string.as_str()).expect(&format!(
-            "Could not deserialize '{}' to JSON",
-            string.as_str()
-        ));
+        let data: T = serde_json::from_str(&string)
+            .expect(&format!("Could not deserialize '{}' to JSON", string));
         Ok(data)
     }
 }

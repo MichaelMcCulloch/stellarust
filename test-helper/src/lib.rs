@@ -31,12 +31,7 @@ pub mod utility {
         let database_url = format!("sqlite:{}", full_path.to_str().unwrap());
 
         Command::new("sqlx")
-            .args(&[
-                "database",
-                "create",
-                "--database-url",
-                database_url.as_str(),
-            ])
+            .args(&["database", "create", "--database-url", &database_url])
             .output()
             .unwrap();
         Ok(())
@@ -49,13 +44,7 @@ pub mod utility {
         let database_url = format!("sqlite:{}", full_path.to_str().unwrap());
 
         Command::new("sqlx")
-            .args(&[
-                "database",
-                "drop",
-                "--database-url",
-                database_url.as_str(),
-                "-y",
-            ])
+            .args(&["database", "drop", "--database-url", &database_url, "-y"])
             .output()
             .unwrap();
         Ok(())

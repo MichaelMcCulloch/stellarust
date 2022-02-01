@@ -16,7 +16,7 @@ mod tests {
     }
     async fn connect_client(port: u32) -> Result<Client> {
         let client = ClientBuilder::native()
-            .connect(format!("{}:{}", LOCALHOST, port).as_str())
+            .connect(&format!("{}:{}", LOCALHOST, port))
             .await?;
         Ok(client)
     }
@@ -38,7 +38,7 @@ mod tests {
     async fn open_empire_page_read_list_of_empire_names() -> Result<()> {
         let (mut client, mut child) = setup(4445).await.unwrap();
         client
-            .goto(format!("{}:{}/{}", LOCALHOST, 3000, "").as_str())
+            .goto(&format!("{}:{}/{}", LOCALHOST, 3000, ""))
             .await?;
         let _labels = client
             .wait()

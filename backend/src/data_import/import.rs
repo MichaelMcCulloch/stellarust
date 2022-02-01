@@ -40,9 +40,9 @@ impl DataImport {
     fn _from_file(path: &Path) -> Result<ModelDataPoint> {
         let (meta_file, gamestate_file) = Unzipper::get_zipped_content(&path)?;
 
-        let meta = DataImport::from_meta(meta_file.as_str())?;
+        let meta = DataImport::from_meta(&meta_file)?;
 
-        let gamestate = DataImport::from_gamestate(gamestate_file.as_str())?;
+        let gamestate = DataImport::from_gamestate(&gamestate_file)?;
 
         let result = DataImportResult { meta, gamestate };
 
@@ -355,7 +355,7 @@ mod tests {
         let meta_path = PathBuf::from_iter(vec![home.as_str(), ext]);
         let meta_string = fs::read_to_string(meta_path).unwrap();
 
-        let (_, parse) = root(&meta_string.as_str()).unwrap();
+        let (_, parse) = root(&meta_string).unwrap();
 
         let dlcs = get_required_dlcs_from_meta(&parse);
 
@@ -660,7 +660,7 @@ mod tests {
         let empire_budget_path = PathBuf::from_iter(vec![home.as_str(), ext]);
         let empire_budget_string = fs::read_to_string(empire_budget_path).unwrap();
 
-        let (_, parse) = root(&empire_budget_string.as_str()).unwrap();
+        let (_, parse) = root(&empire_budget_string).unwrap();
 
         if let Val::Dict(entries) = parse {
             let (_, budget_dict) = entries.into_iter().next().unwrap();
