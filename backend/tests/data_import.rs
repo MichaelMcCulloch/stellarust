@@ -6,7 +6,7 @@ mod data_import_tests {
     use data_model::ModelCustodian;
     use sqlx::SqlitePool;
     use test_helper::utility::{
-        create_sqlite_db, drop_sqlite_db, get_path, get_test_campaign_une_root,
+        cleanup_sqlite, create_sqlite_db, drop_sqlite_db, get_path, get_test_campaign_une_root,
     };
 
     const TEST_WORKING_DIRECTORY_SOURCE: &str = "stellarust/res/test_data/data_import/";
@@ -27,6 +27,8 @@ mod data_import_tests {
         let pool = SqlitePool::connect(&sqlite_db_path.to_str().unwrap());
 
         let custodian = ModelCustodian::create(receiver);
+
+        cleanup_sqlite(&test_working_dir_path, &EXISTING_DB);
     }
 
     #[actix_rt::test]
@@ -43,7 +45,7 @@ mod data_import_tests {
             .unwrap();
 
         thread::sleep(Duration::from_secs(1));
-        drop_sqlite_db(&sqlite_db_path).unwrap();
+        cleanup_sqlite(&test_working_dir_path, &EXISTING_DB);
     }
 
     #[actix_rt::test]

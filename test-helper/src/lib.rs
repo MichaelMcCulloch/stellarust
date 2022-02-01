@@ -49,4 +49,26 @@ pub mod utility {
             .unwrap();
         Ok(())
     }
+
+    pub fn cleanup_sqlite<PATH, NAME>(path_root: &PATH, name: &NAME)
+    where
+        PATH: AsRef<Path>,
+        NAME: AsRef<str>,
+    {
+        _cleanup_sqlite(path_root.as_ref(), name.as_ref())
+    }
+
+    fn _cleanup_sqlite(path_root: &Path, name: &str) {
+        let name_shm = format!("{}-shm", name);
+        let name_wal = format!("{}-wal", name);
+
+        for file_name in vec![name, &name_shm, &name_wal].into_iter() {
+            fs::remove_file(
+                PathBuf::from_iter(vec![path_root.to_str().unwrap(), file_name])
+                    .to_str()
+                    .unwrap(),
+            )
+            .unwrap_or(());
+        }
+    }
 }
