@@ -1,22 +1,41 @@
-use std::path::Path;
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use anyhow::Result;
+use sqlx::SqlitePool;
 
-pub struct DataCore {}
-
-impl DataCore {
-    pub fn create<P: AsRef<Path>>(path: &P) -> Result<Self> {
-        DataCore::_create(path.as_ref())
-    }
-    fn _create(path: &Path) -> Result<Self> {
-        todo!()
-    }
+pub struct DataCore {
+    _pool: SqlitePool,
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn create__given_path__sqlite_db_created_at_path() {
-        todo!()
+impl DataCore {
+    pub async fn create<PATH, NAME>(path: &PATH, name: &NAME) -> Result<Self>
+    where
+        PATH: AsRef<Path>,
+        NAME: AsRef<str>,
+    {
+        DataCore::_create(path.as_ref(), name.as_ref()).await
+    }
+
+    async fn _create(path: &Path, name: &str) -> Result<Self> {
+        let database_url = format!(
+            "sqlite:{}",
+            PathBuf::from_iter(vec![path.to_str().unwrap(), name])
+                .to_str()
+                .unwrap()
+        );
+
+        Command::new("sqlx")
+            .args(&["database", "create", "--database-url", &database_url])
+            .output()
+            .unwrap();
+
+        let me = DataCore {
+            _pool: SqlitePool::connect(&database_url).await?,
+        };
+
+        Ok(me)
     }
 }

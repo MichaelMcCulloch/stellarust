@@ -8,3 +8,7 @@ edition = "2021"
 [dependencies]
 sqlx = { version = "0.5.10", features = [ "runtime-actix-rustls" , "sqlite", "macros", "chrono"] }
 anyhow = "1.0.53"
+
+[dev-dependencies]
+actix-rt="2.6.0"
+test-helper = {version = "0.1.0", path = "../test-helper"}
