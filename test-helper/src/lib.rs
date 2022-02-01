@@ -1,5 +1,6 @@
 pub mod utility {
     use std::{
+        fs,
         path::{Path, PathBuf},
         process::Command,
     };
@@ -24,11 +25,21 @@ pub mod utility {
         PathBuf::from_iter(vec![&cwd, &PathBuf::from(path)])
     }
 
-    pub fn create_sqlite_db<P: AsRef<Path>>(full_path: &P) -> Result<()> {
-        _create_sqlite_db(full_path.as_ref())
+    pub fn create_sqlite_db<PATH, NAME>(path_root: &PATH, name: &NAME) -> Result<()>
+    where
+        PATH: AsRef<Path>,
+        NAME: AsRef<str>,
+    {
+        _create_sqlite_db(path_root.as_ref(), name.as_ref())
     }
-    fn _create_sqlite_db(full_path: &Path) -> Result<()> {
-        let database_url = format!("sqlite:{}", full_path.to_str().unwrap());
+
+    fn _create_sqlite_db(path_root: &Path, name: &str) -> Result<()> {
+        let database_url = format!(
+            "sqlite:{}",
+            PathBuf::from_iter(vec![path_root.to_str().unwrap(), name])
+                .to_str()
+                .unwrap()
+        );
 
         Command::new("sqlx")
             .args(&["database", "create", "--database-url", &database_url])
@@ -37,11 +48,20 @@ pub mod utility {
         Ok(())
     }
 
-    pub fn drop_sqlite_db<P: AsRef<Path>>(full_path: &P) -> Result<()> {
-        _drop_sqlite_db(full_path.as_ref())
+    pub fn drop_sqlite_db<PATH, NAME>(path_root: &PATH, name: &NAME) -> Result<()>
+    where
+        PATH: AsRef<Path>,
+        NAME: AsRef<str>,
+    {
+        _drop_sqlite_db(path_root.as_ref(), name.as_ref())
     }
-    fn _drop_sqlite_db(full_path: &Path) -> Result<()> {
-        let database_url = format!("sqlite:{}", full_path.to_str().unwrap());
+    fn _drop_sqlite_db(path_root: &Path, name: &str) -> Result<()> {
+        let database_url = format!(
+            "sqlite:{}",
+            PathBuf::from_iter(vec![path_root.to_str().unwrap(), name])
+                .to_str()
+                .unwrap()
+        );
 
         Command::new("sqlx")
             .args(&["database", "drop", "--database-url", &database_url, "-y"])
