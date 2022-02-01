@@ -1,7 +1,5 @@
 # Stellarust
 
-[![Build](https://github.com/MichaelMcCulloch/stellarust/actions/workflows/rust.yml/badge.svg)](https://github.com/MichaelMcCulloch/stellarust/actions/workflows/rust.yml)
-
 ## Requirements:
 
 
