@@ -6,7 +6,8 @@ mod tests {
     };
 
     use data_core::DataCore;
-    use test_helper::{cleanup_sqlite, create_sqlite_db, drop_sqlite_db, get_path};
+    use sqlite_test_helper::{cleanup_sqlite, create_sqlite_db};
+    use test_helper::get_path;
 
     const TEST_WORKING_DIRECTORY_SOURCE: &str = "stellarust/res/test_data/data_core/";
     const NO_DB: &str = "NO_DB.db";

@@ -13,4 +13,5 @@ stellarust = {version  ="0.1.0", path = "../"}
 
 [dev-dependencies]
 actix-rt="2.6.0"
+sqlite-test-helper = {version = "0.1.0", path = "../sqlite-test-helper"}
 # data-core-mock = {version = "0.1.0", path ="../data-core-mock"}

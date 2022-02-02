@@ -759,6 +759,7 @@ dependencies = [
  "actix-rt 2.6.0",
  "anyhow",
  "async-trait",
+ "sqlite-test-helper",
  "sqlx",
  "test-helper",
 ]
@@ -777,6 +778,7 @@ dependencies = [
  "actix-rt 2.6.0",
  "anyhow",
  "log",
+ "sqlite-test-helper",
  "stellarust",
 ]
 
@@ -2491,6 +2493,9 @@ dependencies = [
 [[package]]
 name = "sqlite-test-helper"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+]
 
 [[package]]
 name = "sqlx"
