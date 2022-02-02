@@ -8,7 +8,7 @@ use std::{
     thread,
 };
 
-use crate::data_import::DataImport;
+use data_import::DataImport;
 
 #[cfg(target_os = "linux")]
 use crate::dirwatcher::linux::LinuxWatcher as DirectoryWatcher;
