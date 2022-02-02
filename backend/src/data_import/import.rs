@@ -1,4 +1,3 @@
-use crate::unzipper::Unzipper;
 use anyhow::Result;
 use clausewitz_parser::{root, Val};
 use data_model::{Budget, EmpireData, ModelDataPoint, Resources};
@@ -10,6 +9,7 @@ use std::{
 };
 use stellarust::dto::{BudgetComponent, ResourceClass};
 use strum::IntoEnumIterator;
+use unzipper::Unzipper;
 
 use super::Key;
 

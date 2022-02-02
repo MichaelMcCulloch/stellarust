@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.53"
-zip= "0.5.13"
+zip = "0.5.13"
 
 [dev-dependencies]
 path-test-helper = {version = "0.1.0", path = "../path-test-helper"}

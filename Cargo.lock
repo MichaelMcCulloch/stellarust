@@ -308,7 +308,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "text_io",
- "zip",
+ "unzipper",
 ]
 
 [[package]]
