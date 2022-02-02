@@ -72,6 +72,5 @@ mod tests {
         cleanup_sqlite(&test_working_dir_path, &EXISTING_DB);
 
         assert_eq!(last_modified_original, last_modified_after_create);
-        //TODO assert contents unchanged
     }
 }

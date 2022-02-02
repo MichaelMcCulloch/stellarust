@@ -34,4 +34,6 @@ strum_macros = "0.23.1"
 
 [dev-dependencies]
 path-test-helper = {version = "0.1.0", path = "../path-test-helper"}
+sqlite-test-helper = {version = "0.1.0", path = "../sqlite-test-helper"}
 data-core-mock = {version = "0.1.0", path ="../data-core-mock"}
+sqlx = { version = "0.5.10", features = [ "runtime-actix-rustls" , "sqlite", "macros", "chrono"] }

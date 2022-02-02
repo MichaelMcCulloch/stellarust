@@ -302,6 +302,8 @@ dependencies = [
  "path-test-helper",
  "serde",
  "serde_json",
+ "sqlite-test-helper",
+ "sqlx",
  "stellarust",
  "strum",
  "strum_macros",
