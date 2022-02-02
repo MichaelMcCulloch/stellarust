@@ -642,6 +642,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "data-import"
+version = "0.1.0"
+dependencies = [
+ "actix-rt",
+ "anyhow",
+ "clausewitz-parser",
+ "data-core-mock",
+ "data-model",
+ "path-test-helper",
+ "sqlite-test-helper",
+ "sqlx",
+ "stellarust",
+ "strum",
+ "strum_macros",
+ "unzipper",
+]
+
+[[package]]
 name = "data-model"
 version = "0.1.0"
 dependencies = [
@@ -685,6 +703,16 @@ dependencies = [
  "block-buffer 0.10.0",
  "crypto-common",
  "generic-array",
+]
+
+[[package]]
+name = "directory-watcher"
+version = "0.1.0"
+dependencies = [
+ "data-import",
+ "data-model",
+ "log",
+ "notify",
 ]
 
 [[package]]
@@ -2616,6 +2644,15 @@ name = "untrusted"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
+
+[[package]]
+name = "unzipper"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "path-test-helper",
+ "zip",
+]
 
 [[package]]
 name = "url"
