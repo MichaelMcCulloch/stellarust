@@ -422,13 +422,13 @@ dependencies = [
  "listenfd",
  "log",
  "notify",
+ "path-test-helper",
  "serde",
  "serde_json",
  "sqlx",
  "stellarust",
  "strum",
  "strum_macros",
- "test-helper",
  "text_io",
  "zip",
 ]
@@ -759,9 +759,9 @@ dependencies = [
  "actix-rt 2.6.0",
  "anyhow",
  "async-trait",
+ "path-test-helper",
  "sqlite-test-helper",
  "sqlx",
- "test-helper",
 ]
 
 [[package]]

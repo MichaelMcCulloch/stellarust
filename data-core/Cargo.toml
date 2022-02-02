@@ -12,5 +12,5 @@ async-trait = "0.1.52"
 
 [dev-dependencies]
 actix-rt="2.6.0"
-test-helper = {version = "0.1.0", path = "../test-helper"}
 sqlite-test-helper = {version = "0.1.0", path = "../sqlite-test-helper"}
+path-test-helper = {version = "0.1.0", path = "../path-test-helper"}
