@@ -2489,6 +2489,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "sqlite-test-helper"
+version = "0.1.0"
+
+[[package]]
 name = "sqlx"
 version = "0.5.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"

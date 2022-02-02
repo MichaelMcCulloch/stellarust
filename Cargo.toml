@@ -12,6 +12,7 @@ members = [
     "data-model",
     "data-core",
     "clausewitz-parser",
+    "sqlite-test-helper",
     "data-core-mock",
     "test-helper",
     "ui-test"
