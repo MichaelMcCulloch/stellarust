@@ -1,2 +1,5 @@
 /target
 frontend/dist/*
+*.db
+*.db-wal
+*.db-shm
