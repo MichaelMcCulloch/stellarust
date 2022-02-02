@@ -15,7 +15,6 @@ members = [
     "sqlite-test-helper",
     "path-test-helper",
     "data-core-mock",
-    "test-helper",
     "ui-test"
 ]
 
