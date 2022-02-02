@@ -27,7 +27,9 @@ impl DirectoryEventHandler {
 
         let me = DirectoryEventHandler { watcher };
 
-        let existant_files = DirectoryEventHandler::get_existing_files(directory);
+        let existant_files = DirectoryEventHandler::get_existing_files(directory)
+            .into_iter()
+            .filter(|path| path.extension().unwrap() == "sav");
 
         for path in existant_files {
             log::info!("Discovered {:?}", path.file_name().unwrap());
