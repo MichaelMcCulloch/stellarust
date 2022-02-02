@@ -38,7 +38,7 @@ impl DirectoryEventHandler {
                 Ok(data_point) => custodian_message_sender
                     .send(CustodianMsg::Data(data_point))
                     .unwrap(),
-                Err(e) => log::error!("{}", e),
+                Err(e) => log::warn!("{}", e),
             };
         }
 
