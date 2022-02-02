@@ -13,9 +13,10 @@ path = "src/main.rs"
 stellarust = {version = "0.1.0", path = "../"}
 clausewitz-parser= {version = "0.1.0", path="../clausewitz-parser"}
 data-model = {version = "0.1.0", path ="../data-model"}
+data-core = {version = "0.1.0", path ="../data-core"}
 env_logger = "0.9.0"
-actix-web = "3.3.3" 
-actix-cors = "0.5.4"   
+actix-web = { version = "4.0.0-beta.10" }
+actix-cors = { version = "0.6.0-beta.1" }   
 actix-rt="2.6.0"
 listenfd="0.5.0"
 anyhow = "1.0.53"
@@ -32,6 +33,5 @@ strum_macros = "0.23.1"
 
 
 [dev-dependencies]
-sqlx = { version = "0.5.10", features = [ "runtime-actix-rustls" , "sqlite", "macros", "chrono"] }
 path-test-helper = {version = "0.1.0", path = "../path-test-helper"}
-
+data-core-mock = {version = "0.1.0", path ="../data-core-mock"}
