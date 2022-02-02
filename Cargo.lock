@@ -295,6 +295,7 @@ dependencies = [
  "data-core-mock",
  "data-import",
  "data-model",
+ "directory-watcher",
  "env_logger",
  "futures",
  "listenfd",
