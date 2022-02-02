@@ -1,9 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs::{self, ReadDir},
-        path::PathBuf,
-    };
+    use std::{fs, path::PathBuf};
 
     use data_core::DataCore;
     use path_test_helper::get_path;
@@ -20,7 +17,7 @@ mod tests {
         fs::create_dir_all(test_working_dir_path.clone()).unwrap();
         cleanup_sqlite(&test_working_dir_path, &NO_DB);
 
-        let core = DataCore::create(&test_working_dir_path, &NO_DB)
+        let _core = DataCore::create(&test_working_dir_path, &NO_DB)
             .await
             .unwrap();
 
@@ -57,7 +54,7 @@ mod tests {
         .modified()
         .unwrap();
 
-        let core = DataCore::create(&test_working_dir_path, &EXISTING_DB)
+        let _core = DataCore::create(&test_working_dir_path, &EXISTING_DB)
             .await
             .unwrap();
 

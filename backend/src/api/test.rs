@@ -14,22 +14,15 @@ mod api_tests {
 
     use std::sync::mpsc::channel;
 
-    use actix_web::{
-        body::{self, BoxBody},
-        http::StatusCode,
-        test,
-        web::Data,
-        App,
-    };
+    use actix_web::{http::StatusCode, test, web::Data, App};
     use data_core_mock::MockDataCore;
     use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint, Resources};
-    use serde_json::json;
 
     use super::empires_test;
 
     #[actix_rt::test]
     async fn test_empires__from_custodian__returns_list_of_empire_names() {
-        let expected_empire_names = vec![String::from("NAME")];
+        let _expected_empire_names = vec![String::from("NAME")];
 
         let (sender, receiver) = channel();
 
@@ -58,7 +51,7 @@ mod api_tests {
             .uri("/empires")
             .to_request();
 
-        let mut resp = test::call_service(&mut app, req).await;
+        let resp = test::call_service(&mut app, req).await;
 
         assert_eq!(resp.status(), StatusCode::OK);
     }
