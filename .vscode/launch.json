@@ -98,7 +98,9 @@
 				},
 				"cwd": "${workspaceFolder}/backend"
 			},
-			"args": [],
+			"args": [
+				"${workspaceFolder}/res/test_data/campaign/unitednationsofearth_-15512622"
+			],
 			"cwd": "${workspaceFolder}/backend"
 		},
 		{
