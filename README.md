@@ -9,6 +9,7 @@
 - [`wasm-pack`](https://crates.io/crates/wasm-pack)
 - [`sqlx-cli`](https://crates.io/crates/sqlx-cli)
 - [`systemfd`](https://crates.io/crates/systemfd)
+- [`cargo-watch`](https://crates.io/crates/cargo-watch)
 
 ## Running
 

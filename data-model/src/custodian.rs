@@ -4,11 +4,13 @@ use std::{
 };
 
 use anyhow::Result;
+use data_core::DataCoreBackend;
 
 use super::data::ModelDataPoint;
 
-pub struct ModelCustodian {
+pub struct ModelCustodian<DATA: DataCoreBackend> {
     history: Arc<Mutex<Vec<ModelDataPoint>>>,
+    _data_core: DATA,
 }
 
 #[derive(Debug, PartialEq)]
@@ -17,10 +19,14 @@ pub enum CustodianMsg {
     Exit,
 }
 
-impl ModelCustodian {
-    pub fn create(receiver: Receiver<CustodianMsg>) -> Self {
+impl<DATA> ModelCustodian<DATA>
+where
+    DATA: DataCoreBackend,
+{
+    pub fn create(receiver: Receiver<CustodianMsg>, core: DATA) -> Self {
         let me = ModelCustodian {
             history: Arc::new(Mutex::new(vec![])),
+            _data_core: core,
         };
 
         me.start(receiver);
@@ -60,6 +66,8 @@ impl ModelCustodian {
 #[cfg(test)]
 mod tests {
 
+    use data_core_mock::MockDataCore;
+
     use crate::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint, Resources};
     use std::{sync::mpsc::channel, thread, time::Duration};
 
@@ -70,7 +78,7 @@ mod tests {
         let (sender, receiver) = channel();
         sender.send(CustodianMsg::Exit).unwrap();
 
-        let model = ModelCustodian::create(receiver);
+        let model = ModelCustodian::create(receiver, MockDataCore {});
 
         thread::sleep(Duration::from_millis(5));
 
@@ -84,7 +92,7 @@ mod tests {
         let (sender, receiver) = channel();
         sender.send(get_custodian_message(EMPIRE_NAME)).unwrap();
         sender.send(CustodianMsg::Exit).unwrap();
-        let model = ModelCustodian::create(receiver);
+        let model = ModelCustodian::create(receiver, MockDataCore {});
 
         thread::sleep(Duration::from_millis(5));
 
@@ -101,7 +109,7 @@ mod tests {
         sender.send(get_custodian_message("3")).unwrap();
         sender.send(get_custodian_message(EMPIRE_NAME)).unwrap();
         sender.send(CustodianMsg::Exit).unwrap();
-        let model = ModelCustodian::create(receiver);
+        let model = ModelCustodian::create(receiver, MockDataCore {});
 
         thread::sleep(Duration::from_millis(5));
 

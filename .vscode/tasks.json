@@ -85,71 +85,10 @@
         },
         {
             "label": "Cargo Fix",
-            "group": "build",
-            "dependsOn": [
-                "Cargo Fix Frontend",
-                "Cargo Fix Backend",
-                "Cargo Fix Stellarust",
-                "Cargo Fix Clausewitz Parser",
-                "Cargo Fix Data Model",
-                "Cargo Fix Data Core",
-                "Cargo Fix Test Helper",
-            ]
-        },
-        {
-            "label": "Cargo Fix Frontend",
             "type": "shell",
-            "command": "cargo fix --allow-dirty --allow-staged",
+            "command": "cargo fix -all",
             "options": {
-                "cwd": "${workspaceFolder}/frontend"
-            }
-        },
-        {
-            "label": "Cargo Fix Backend",
-            "type": "shell",
-            "command": "cargo fix --allow-dirty --allow-staged",
-            "options": {
-                "cwd": "${workspaceFolder}/backend"
-            }
-        },
-        {
-            "label": "Cargo Fix Stellarust",
-            "type": "shell",
-            "command": "cargo fix --allow-dirty --allow-staged",
-            "options": {
-                "cwd": "${workspaceFolder}"
-            }
-        },
-        {
-            "label": "Cargo Fix Clausewitz Parser",
-            "type": "shell",
-            "command": "cargo fix --allow-dirty --allow-staged",
-            "options": {
-                "cwd": "${workspaceFolder}/clausewitz-parser"
-            }
-        },
-        {
-            "label": "Cargo Fix Data Model",
-            "type": "shell",
-            "command": "cargo fix --allow-dirty --allow-staged",
-            "options": {
-                "cwd": "${workspaceFolder}/data-model"
-            }
-        },
-        {
-            "label": "Cargo Fix Data Core",
-            "type": "shell",
-            "command": "cargo fix --allow-dirty --allow-staged",
-            "options": {
-                "cwd": "${workspaceFolder}/data-core"
-            }
-        },
-        {
-            "label": "Cargo Fix Test Helper",
-            "type": "shell",
-            "command": "cargo fix --allow-dirty --allow-staged",
-            "options": {
-                "cwd": "${workspaceFolder}/test-helper"
+                "cwd": "${workspaceFolder}/"
             }
         }
     ]

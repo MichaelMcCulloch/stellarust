@@ -1,12 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use std::{
-        fs::{self, ReadDir},
-        path::PathBuf,
-    };
+    use std::{fs, path::PathBuf};
 
     use data_core::DataCore;
-    use test_helper::{cleanup_sqlite, create_sqlite_db, drop_sqlite_db, get_path};
+    use path_test_helper::get_path;
+    use sqlite_test_helper::{cleanup_sqlite, create_sqlite_db};
 
     const TEST_WORKING_DIRECTORY_SOURCE: &str = "stellarust/res/test_data/data_core/";
     const NO_DB: &str = "NO_DB.db";
@@ -19,7 +17,7 @@ mod tests {
         fs::create_dir_all(test_working_dir_path.clone()).unwrap();
         cleanup_sqlite(&test_working_dir_path, &NO_DB);
 
-        let core = DataCore::create(&test_working_dir_path, &NO_DB)
+        let _core = DataCore::create(&test_working_dir_path, &NO_DB)
             .await
             .unwrap();
 
@@ -56,7 +54,7 @@ mod tests {
         .modified()
         .unwrap();
 
-        let core = DataCore::create(&test_working_dir_path, &EXISTING_DB)
+        let _core = DataCore::create(&test_working_dir_path, &EXISTING_DB)
             .await
             .unwrap();
 
@@ -71,6 +69,5 @@ mod tests {
         cleanup_sqlite(&test_working_dir_path, &EXISTING_DB);
 
         assert_eq!(last_modified_original, last_modified_after_create);
-        //TODO assert contents unchanged
     }
 }

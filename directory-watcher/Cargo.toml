@@ -1,0 +1,12 @@
+[package]
+name = "directory-watcher"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+data-model = {version = "0.1.0", path = "../data-model"}
+data-import = {version = "0.1.0", path = "../data-import"} 
+notify="4.0.17"
+log = "0.4.14"

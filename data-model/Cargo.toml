@@ -9,8 +9,9 @@ edition = "2021"
 anyhow = "1.0.53"
 log = "0.4.14"
 stellarust = {version  ="0.1.0", path = "../"} 
-# data-core = {version = "0.1.0", path ="../data-core"}
+data-core = {version = "0.1.0", path ="../data-core"}
 
 [dev-dependencies]
 actix-rt="2.6.0"
-# data-core-mock = {version = "0.1.0", path ="../data-core-mock"}
+sqlite-test-helper = {version = "0.1.0", path = "../sqlite-test-helper"}
+data-core-mock = {version = "0.1.0", path ="../data-core-mock"}

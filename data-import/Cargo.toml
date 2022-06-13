@@ -1,0 +1,22 @@
+[package]
+name = "data-import"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+stellarust = {version = "0.1.0", path = "../"}
+unzipper = {version = "0.1.0", path = "../unzipper"}
+clausewitz-parser = {version = "0.1.0", path = "../clausewitz-parser"}
+data-model = {version = "0.1.0", path = "../data-model"}
+strum = "0.23.0" 
+strum_macros = "0.23.1"
+anyhow = "1.0.53"
+
+[dev-dependencies]
+path-test-helper = {version = "0.1.0", path = "../path-test-helper"}
+sqlite-test-helper = {version = "0.1.0", path = "../sqlite-test-helper"}
+data-core-mock = {version = "0.1.0", path ="../data-core-mock"}
+sqlx = { version = "0.5.10", features = [ "runtime-actix-rustls" , "sqlite", "macros", "chrono"] }
+actix-rt = "2.6.0"

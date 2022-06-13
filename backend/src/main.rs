@@ -1,9 +1,9 @@
 use actix_cors::Cors;
-use actix_web::{middleware, web::Data, App, HttpResponse, HttpServer, Responder};
-use backend::{
-    api::empires, campaign_select::selector::CampaignSelector, dirwatcher::DirectoryEventHandler,
-};
+use actix_web::{middleware, web::Data, App, HttpServer};
+use backend::{api::empires, campaign_select::selector::CampaignSelector};
+use data_core::DataCore;
 use data_model::ModelCustodian;
+use directory_watcher::DirectoryEventHandler;
 use listenfd::ListenFd;
 use std::{panic, path::PathBuf, process::exit};
 
@@ -27,7 +27,11 @@ async fn main() -> std::io::Result<()> {
 
     let (receiver, _dir_watcher) = DirectoryEventHandler::create(&campaign_path);
 
-    let custodian_data = Data::new(ModelCustodian::create(receiver));
+    let data_core = DataCore::create(&campaign_path, &"stellarust.db")
+        .await
+        .expect("could not create DB");
+
+    let custodian_data = Data::new(ModelCustodian::create(receiver, data_core));
 
     let mut server = HttpServer::new(move || {
         App::new()

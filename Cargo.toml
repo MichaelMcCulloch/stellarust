@@ -9,11 +9,15 @@ edition = "2021"
 members = [
     "frontend",
     "backend",
+    "directory-watcher",
+    "unzipper",
+    "data-import",
     "data-model",
     "data-core",
     "clausewitz-parser",
+    "sqlite-test-helper", 
+    "path-test-helper",
     "data-core-mock",
-    "test-helper",
     "ui-test"
 ]
 

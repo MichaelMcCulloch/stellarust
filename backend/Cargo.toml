@@ -13,27 +13,22 @@ path = "src/main.rs"
 stellarust = {version = "0.1.0", path = "../"}
 clausewitz-parser= {version = "0.1.0", path="../clausewitz-parser"}
 data-model = {version = "0.1.0", path ="../data-model"}
-# data-core = {version = "0.1.0", path ="../data-core"}
+data-core = {version = "0.1.0", path ="../data-core"}
+data-import = {version = "0.1.0", path ="../data-import"}
+unzipper = {version = "0.1.0", path ="../unzipper"}
+directory-watcher = {version = "0.1.0", path ="../directory-watcher"}
 env_logger = "0.9.0"
-actix-web = "3.3.3" 
-actix-cors = "0.5.4"   
+actix-web = { version = "4.0.0-beta.10" }
+actix-cors = { version = "0.6.0-beta.1" }   
 actix-rt="2.6.0"
 listenfd="0.5.0"
 anyhow = "1.0.53"
 log = "0.4.14"
-serde = "1.0.136"
-serde_json = "1.0.78"
-chrono = {version = "0.4.19", features = ["serde"]}
-zip= "0.5.13"
 text_io="0.1.9"
-notify="4.0.17"
-futures = "0.3.19"
-strum = "0.23.0" 
-strum_macros = "0.23.1"
 
 
 [dev-dependencies]
+data-core-mock = {version = "0.1.0", path ="../data-core-mock"}
 sqlx = { version = "0.5.10", features = [ "runtime-actix-rustls" , "sqlite", "macros", "chrono"] }
-test-helper = {version = "0.1.0", path = "../test-helper"}
-# data-core-mock = {version = "0.1.0", path ="../data-core-mock"}
-
+serde = "1.0.136"
+serde_json = "1.0.78"
