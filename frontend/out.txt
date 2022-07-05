@@ -1,0 +1,96 @@
+[2m2022-07-04T03:44:13.171994Z[0m [32m INFO[0m 📦 starting build
+[2m2022-07-04T03:44:13.172781Z[0m [32m INFO[0m spawning asset pipelines
+[2m2022-07-04T03:44:13.366898Z[0m [32m INFO[0m building frontend
+[2m2022-07-04T03:44:13.366898Z[0m [32m INFO[0m copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:44:13.366985Z[0m [32m INFO[0m compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:44:13.368519Z[0m [32m INFO[0m finished copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:44:13.375513Z[0m [32m INFO[0m finished compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:44:14.311660Z[0m [31mERROR[0m ❌ error
+error from HTML pipeline
+
+Caused by:
+    0: error from asset pipeline
+    1: error during cargo build execution
+    2: cargo call returned a bad status
+[2m2022-07-04T03:44:14.312047Z[0m [32m INFO[0m 📡 serving static assets at -> /
+[2m2022-07-04T03:44:14.312154Z[0m [32m INFO[0m 📡 server listening at http://127.0.0.1:3000
+[2m2022-07-04T03:44:17.744943Z[0m [32m INFO[0m 📦 starting build
+[2m2022-07-04T03:44:17.746776Z[0m [32m INFO[0m spawning asset pipelines
+[2m2022-07-04T03:44:17.960473Z[0m [32m INFO[0m copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:44:17.960483Z[0m [32m INFO[0m building frontend
+[2m2022-07-04T03:44:17.960618Z[0m [32m INFO[0m compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:44:17.961667Z[0m [32m INFO[0m finished copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:44:17.968773Z[0m [32m INFO[0m finished compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:44:18.952883Z[0m [31mERROR[0m ❌ error
+error from HTML pipeline
+
+Caused by:
+    0: error from asset pipeline
+    1: error during cargo build execution
+    2: cargo call returned a bad status
+[2m2022-07-04T03:44:18.953418Z[0m [32m INFO[0m 📡 serving static assets at -> /
+[2m2022-07-04T03:44:18.953550Z[0m [32m INFO[0m 📡 server listening at http://127.0.0.1:3000
+[2m2022-07-04T03:44:43.275440Z[0m [32m INFO[0m 📦 starting build
+[2m2022-07-04T03:44:43.276487Z[0m [32m INFO[0m spawning asset pipelines
+[2m2022-07-04T03:44:43.480186Z[0m [32m INFO[0m building frontend
+[2m2022-07-04T03:44:43.480186Z[0m [32m INFO[0m copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:44:43.480437Z[0m [32m INFO[0m compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:44:43.481644Z[0m [32m INFO[0m finished copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:44:43.487887Z[0m [32m INFO[0m finished compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:44:44.443964Z[0m [31mERROR[0m ❌ error
+error from HTML pipeline
+
+Caused by:
+    0: error from asset pipeline
+    1: error during cargo build execution
+    2: cargo call returned a bad status
+[2m2022-07-04T03:44:44.444296Z[0m [32m INFO[0m 📡 serving static assets at -> /
+[2m2022-07-04T03:44:44.444357Z[0m [32m INFO[0m 📡 server listening at http://127.0.0.1:3000
+[2m2022-07-04T03:45:17.056670Z[0m [32m INFO[0m 📦 starting build
+[2m2022-07-04T03:45:17.059664Z[0m [32m INFO[0m spawning asset pipelines
+[2m2022-07-04T03:45:17.275322Z[0m [32m INFO[0m building frontend
+[2m2022-07-04T03:45:17.275322Z[0m [32m INFO[0m copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:45:17.275534Z[0m [32m INFO[0m compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:45:17.276919Z[0m [32m INFO[0m finished copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:45:17.284334Z[0m [32m INFO[0m finished compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:45:18.176113Z[0m [31mERROR[0m ❌ error
+error from HTML pipeline
+
+Caused by:
+    0: error from asset pipeline
+    1: error during cargo build execution
+    2: cargo call returned a bad status
+[2m2022-07-04T03:45:18.176510Z[0m [32m INFO[0m 📡 serving static assets at -> /
+[2m2022-07-04T03:45:18.176610Z[0m [32m INFO[0m 📡 server listening at http://127.0.0.1:3000
+[2m2022-07-04T03:45:29.475219Z[0m [32m INFO[0m 📦 starting build
+[2m2022-07-04T03:45:29.475854Z[0m [32m INFO[0m spawning asset pipelines
+[2m2022-07-04T03:45:29.668823Z[0m [32m INFO[0m building frontend
+[2m2022-07-04T03:45:29.668830Z[0m [32m INFO[0m copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:45:29.669234Z[0m [32m INFO[0m compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:45:29.670360Z[0m [32m INFO[0m finished copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:45:29.678353Z[0m [32m INFO[0m finished compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:45:29.810144Z[0m [31mERROR[0m ❌ error
+error from HTML pipeline
+
+Caused by:
+    0: error from asset pipeline
+    1: error during cargo build execution
+    2: cargo call returned a bad status
+[2m2022-07-04T03:45:29.810554Z[0m [32m INFO[0m 📡 serving static assets at -> /
+[2m2022-07-04T03:45:29.810611Z[0m [32m INFO[0m 📡 server listening at http://127.0.0.1:3000
+[2m2022-07-04T03:45:31.686523Z[0m [32m INFO[0m 📦 starting build
+[2m2022-07-04T03:45:31.688184Z[0m [32m INFO[0m spawning asset pipelines
+[2m2022-07-04T03:45:31.900765Z[0m [32m INFO[0m building frontend
+[2m2022-07-04T03:45:31.900772Z[0m [32m INFO[0m copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:45:31.900915Z[0m [32m INFO[0m compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:45:31.902479Z[0m [32m INFO[0m finished copying & hashing icon [3mpath[0m[2m=[0m"favicon.ico"
+[2m2022-07-04T03:45:31.909444Z[0m [32m INFO[0m finished compiling sass/scss [3mpath[0m[2m=[0m"styles.scss"
+[2m2022-07-04T03:45:32.195964Z[0m [31mERROR[0m ❌ error
+error from HTML pipeline
+
+Caused by:
+    0: error from asset pipeline
+    1: error during cargo build execution
+    2: cargo call returned a bad status
+[2m2022-07-04T03:45:32.196188Z[0m [32m INFO[0m 📡 serving static assets at -> /
+[2m2022-07-04T03:45:32.196275Z[0m [32m INFO[0m 📡 server listening at http://127.0.0.1:3000
