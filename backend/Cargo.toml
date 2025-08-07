@@ -35,5 +35,9 @@ strum_macros = "0.23.1"
 [dev-dependencies]
 sqlx = { version = "0.5.10", features = [ "runtime-actix-rustls" , "sqlite", "macros", "chrono"] }
 test-helper = {version = "0.1.0", path = "../test-helper"}
+criterion = "0.3"
 # data-core-mock = {version = "0.1.0", path ="../data-core-mock"}
 
+[[bench]]
+name = "data_import_benchmark"
+harness = false

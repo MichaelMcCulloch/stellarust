@@ -14,14 +14,9 @@ pub fn get_test_campaign_une_root() -> PathBuf {
 }
 
 pub fn get_path(path: &str) -> PathBuf {
-    let mut cwd = std::env::current_dir().unwrap();
-    loop {
-        cwd.pop();
-        if cwd.into_iter().last().unwrap() != "stellarust" {
-            break;
-        };
-    }
-    PathBuf::from_iter(vec![&cwd, &PathBuf::from(path)])
+    let mut manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    manifest_dir.pop(); // Pop 'test-helper'
+    manifest_dir.join(path)
 }
 
 pub fn create_sqlite_db<PATH, NAME>(path_root: &PATH, name: &NAME) -> Result<()>

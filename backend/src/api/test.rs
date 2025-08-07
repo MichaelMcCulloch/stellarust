@@ -11,7 +11,7 @@ pub async fn empires_test(model_custodian: Data<ModelCustodian>) -> impl Respond
 #[cfg(test)]
 mod api_tests {
 
-    use std::sync::mpsc::channel;
+    use std::{sync::mpsc::channel, thread, time::Duration};
 
     use actix_web::{body::Body, get, test, web::Data, App, Responder};
     use data_model::{Budget, CustodianMsg, EmpireData, ModelCustodian, ModelDataPoint, Resources};
@@ -37,6 +37,8 @@ mod api_tests {
             .unwrap();
 
         let custodian = ModelCustodian::create(receiver);
+
+        thread::sleep(Duration::from_millis(10));
 
         let mut app = test::init_service(
             App::new()

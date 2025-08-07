@@ -350,9 +350,15 @@ mod tests {
 
     #[test]
     fn get_required_dlcs_from_meta__meta__returns_dlc_list() {
-        let home = std::env::var("HOME").unwrap();
-        let ext = "Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/meta";
-        let meta_path = PathBuf::from_iter(vec![home.as_str(), ext]);
+        let meta_path = PathBuf::from_iter(vec![
+            "..",
+            "res",
+            "test_data",
+            "campaign_raw",
+            "unitednationsofearth_-15512622",
+            "autosave_2200.02.01",
+            "meta",
+        ]);
         let meta_string = fs::read_to_string(meta_path).unwrap();
 
         let (_, parse) = root(&meta_string).unwrap();
@@ -655,9 +661,15 @@ mod tests {
 
     #[test]
     fn get_budget__given_budget__returns_budget() {
-        let home = std::env::var("HOME").unwrap();
-        let ext = "Dev/stellarust/res/test_data/campaign_raw/unitednationsofearth_-15512622/autosave_2200.02.01/empire_budget";
-        let empire_budget_path = PathBuf::from_iter(vec![home.as_str(), ext]);
+        let empire_budget_path = PathBuf::from_iter(vec![
+            "..",
+            "res",
+            "test_data",
+            "campaign_raw",
+            "unitednationsofearth_-15512622",
+            "autosave_2200.02.01",
+            "empire_budget",
+        ]);
         let empire_budget_string = fs::read_to_string(empire_budget_path).unwrap();
 
         let (_, parse) = root(&empire_budget_string).unwrap();
